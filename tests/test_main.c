@@ -17,6 +17,10 @@ void test_adf_rejects_damaged_images(void);
 void test_disks_opens_zip_or_adf_by_volume_name(void);
 void test_disks_reports_missing_volume(void);
 void test_disks_real_images(void);
+void test_hunk_loads_crunched_data_hunk_with_reloc(void);
+void test_hunk_rejects_truncated_file(void);
+void test_tables_real_sk(void);
+void test_tables_rejects_bad_pointers(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -31,6 +35,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "disks_opens_zip_or_adf_by_volume_name", test_disks_opens_zip_or_adf_by_volume_name },
     { "disks_reports_missing_volume", test_disks_reports_missing_volume },
     { "disks_real_images", test_disks_real_images },
+    { "hunk_loads_crunched_data_hunk_with_reloc", test_hunk_loads_crunched_data_hunk_with_reloc },
+    { "hunk_rejects_truncated_file", test_hunk_rejects_truncated_file },
+    { "tables_real_sk", test_tables_real_sk },
+    { "tables_rejects_bad_pointers", test_tables_rejects_bad_pointers },
 };
 
 int main(int argc, char **argv) {

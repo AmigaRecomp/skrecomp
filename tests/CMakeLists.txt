@@ -5,7 +5,9 @@ add_executable(sk_tests
   test_bytekiller.c
   test_zipfile.c
   test_adf.c
-  test_disks.c)
+  test_disks.c
+  test_hunk.c
+  test_tables.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -23,7 +25,11 @@ set(SK_TEST_NAMES
   adf_rejects_damaged_images
   disks_opens_zip_or_adf_by_volume_name
   disks_reports_missing_volume
-  disks_real_images)
+  disks_real_images
+  hunk_loads_crunched_data_hunk_with_reloc
+  hunk_rejects_truncated_file
+  tables_real_sk
+  tables_rejects_bad_pointers)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
