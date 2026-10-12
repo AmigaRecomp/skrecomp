@@ -3,7 +3,9 @@ add_executable(sk_tests
   fixture.c
   test_err.c
   test_bytekiller.c
-  test_zipfile.c)
+  test_zipfile.c
+  test_adf.c
+  test_disks.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -16,7 +18,12 @@ set(SK_TEST_NAMES
   bk_rejects_overrun
   zip_reads_deflated_adf_entry
   zip_reports_missing_entry_and_bad_file
-  file_read_all_reads_and_reports)
+  file_read_all_reads_and_reports
+  adf_opens_volume_and_reads_file
+  adf_rejects_damaged_images
+  disks_opens_zip_or_adf_by_volume_name
+  disks_reports_missing_volume
+  disks_real_images)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

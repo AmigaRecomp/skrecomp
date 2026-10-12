@@ -8,6 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 add_compile_options(-Wall -Wextra -Werror -Wshadow -Wconversion -Wno-sign-conversion)
+add_compile_definitions(_POSIX_C_SOURCE=200809L _DARWIN_C_SOURCE)
 
 find_package(SDL3 CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -15,7 +16,10 @@ find_package(ZLIB REQUIRED)
 add_library(skcore STATIC
   src/core/err.c
   src/core/bytekiller.c
-  src/core/zipfile.c)
+  src/core/zipfile.c
+  src/core/adf.c
+  src/core/dirlist.c
+  src/core/disks.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB)
 
