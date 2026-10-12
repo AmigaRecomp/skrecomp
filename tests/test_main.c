@@ -38,6 +38,10 @@ void test_tile_blit_clips(void);
 void test_bob_blit_respects_mask_and_clips(void);
 void test_bob_blit_second_group(void);
 void test_display_model_constants(void);
+void test_rgb12_to_xrgb(void);
+void test_palette_from_tilesets_follows_the_register_layout(void);
+void test_present_rows_resolves_dual_playfield_and_sky(void);
+void test_present_screen_places_the_play_window(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -73,6 +77,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "bob_blit_respects_mask_and_clips", test_bob_blit_respects_mask_and_clips },
     { "bob_blit_second_group", test_bob_blit_second_group },
     { "display_model_constants", test_display_model_constants },
+    { "rgb12_to_xrgb", test_rgb12_to_xrgb },
+    { "palette_from_tilesets_follows_the_register_layout", test_palette_from_tilesets_follows_the_register_layout },
+    { "present_rows_resolves_dual_playfield_and_sky", test_present_rows_resolves_dual_playfield_and_sky },
+    { "present_screen_places_the_play_window", test_present_screen_places_the_play_window },
 };
 
 int main(int argc, char **argv) {

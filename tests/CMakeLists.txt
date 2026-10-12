@@ -12,7 +12,8 @@ add_executable(sk_tests
   test_level.c
   test_sections.c
   test_screens.c
-  test_framebuffer.c)
+  test_framebuffer.c
+  test_present.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -51,7 +52,11 @@ set(SK_TEST_NAMES
   tile_blit_clips
   bob_blit_respects_mask_and_clips
   bob_blit_second_group
-  display_model_constants)
+  display_model_constants
+  rgb12_to_xrgb
+  palette_from_tilesets_follows_the_register_layout
+  present_rows_resolves_dual_playfield_and_sky
+  present_screen_places_the_play_window)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -1,0 +1,45 @@
+#include <stdlib.h>
+#include "gfx/present.h"
+#include "gfx/display_model.h"
+
+static inline uint32_t resolve(const sk_palette *pal, uint8_t v, uint32_t c17, uint32_t c18, int has_sky) {
+#if SK_DUAL_PLAYFIELD
+    int pf1 = v & 15, pf2 = v >> 4;
+    if (pf1) return pal->xrgb[pf1];
+    if (has_sky) {
+        if (pf2 == 1) return c17;
+        if (pf2 == 2) return c18;
+    }
+    return pal->xrgb[SK_PF2_COLOUR_BASE + pf2];
+#else
+    (void)c17; (void)c18; (void)has_sky;
+    return pal->xrgb[v];
+#endif
+}
+
+void present_rows(const sk_fb *fb, const sk_palette *pal, const sk_line_colours *sky,
+                  int src_x, int src_y, int w, int h, uint32_t *out) {
+    int pairs = sky && sky->words ? sky->len / 2 : 0;
+    for (int y = 0; y < h; y++) {
+        uint32_t c17 = 0, c18 = 0;
+        if (pairs) {
+            int k = y < pairs ? y : pairs - 1;
+            c17 = rgb12_to_xrgb(sky->words[2 * k]);
+            c18 = rgb12_to_xrgb(sky->words[2 * k + 1]);
+        }
+        const uint8_t *row = fb->px + (size_t)(src_y + y) * (size_t)fb->w + src_x;
+        uint32_t *dst = out + (size_t)y * (size_t)w;
+        for (int x = 0; x < w; x++) dst[x] = resolve(pal, row[x], c17, c18, pairs != 0);
+    }
+}
+
+void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_line_colours *sky, uint32_t *out) {
+    for (size_t i = 0; i < (size_t)SK_SCREEN_W * SK_SCREEN_H; i++) out[i] = pal->xrgb[0];
+    static uint32_t window[SK_VIEW_W * SK_VIEW_H];
+    present_rows(fb, pal, sky, SK_VIEW_X, 0, SK_VIEW_W, SK_VIEW_H, window);
+    for (int y = 0; y < SK_VIEW_H; y++) {
+        uint32_t *dst = out + (size_t)(SK_PLAY_Y + y) * SK_SCREEN_W + SK_PLAY_X;
+        const uint32_t *src = window + (size_t)y * SK_VIEW_W;
+        for (int x = 0; x < SK_VIEW_W; x++) dst[x] = src[x];
+    }
+}
