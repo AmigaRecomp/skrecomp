@@ -11,7 +11,8 @@ add_executable(sk_tests
   bk_test_pack.c
   test_level.c
   test_sections.c
-  test_screens.c)
+  test_screens.c
+  test_framebuffer.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -45,7 +46,12 @@ set(SK_TEST_NAMES
   bobs_rejects_partial_frame
   bobs_real_kid
   screen_parse_synthetic_with_palette_tail
-  screen_real_title_palette)
+  screen_real_title_palette
+  tile_blit_writes_nibble_and_keeps_other_group
+  tile_blit_clips
+  bob_blit_respects_mask_and_clips
+  bob_blit_second_group
+  display_model_constants)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

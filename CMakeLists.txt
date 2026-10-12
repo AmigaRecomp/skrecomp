@@ -25,7 +25,8 @@ add_library(skcore STATIC
   src/formats/level.c
   src/formats/sections.c
   src/formats/bobs.c
-  src/formats/screens.c)
+  src/formats/screens.c
+  src/gfx/framebuffer.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB)
 

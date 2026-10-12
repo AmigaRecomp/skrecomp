@@ -33,6 +33,11 @@ void test_bobs_rejects_partial_frame(void);
 void test_bobs_real_kid(void);
 void test_screen_parse_synthetic_with_palette_tail(void);
 void test_screen_real_title_palette(void);
+void test_tile_blit_writes_nibble_and_keeps_other_group(void);
+void test_tile_blit_clips(void);
+void test_bob_blit_respects_mask_and_clips(void);
+void test_bob_blit_second_group(void);
+void test_display_model_constants(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -63,6 +68,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "bobs_real_kid", test_bobs_real_kid },
     { "screen_parse_synthetic_with_palette_tail", test_screen_parse_synthetic_with_palette_tail },
     { "screen_real_title_palette", test_screen_real_title_palette },
+    { "tile_blit_writes_nibble_and_keeps_other_group", test_tile_blit_writes_nibble_and_keeps_other_group },
+    { "tile_blit_clips", test_tile_blit_clips },
+    { "bob_blit_respects_mask_and_clips", test_bob_blit_respects_mask_and_clips },
+    { "bob_blit_second_group", test_bob_blit_second_group },
+    { "display_model_constants", test_display_model_constants },
 };
 
 int main(int argc, char **argv) {
