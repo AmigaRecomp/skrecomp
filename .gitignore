@@ -1,0 +1,11 @@
+# build output
+build/
+cmake-build-*/
+
+# game data, extracted from the user-owned ADFs
+data/
+
+# editors / macOS
+.DS_Store
+.vscode/
+.idea/
