@@ -13,7 +13,9 @@ find_package(SDL3 CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 
 add_library(skcore STATIC
-  src/core/err.c)
+  src/core/err.c
+  src/core/bytekiller.c
+  src/core/zipfile.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB)
 

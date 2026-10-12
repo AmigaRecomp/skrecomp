@@ -6,9 +6,21 @@
 int sk_failures = 0;
 
 void test_sk_fail_formats_and_returns_false(void);
+void test_bk_unpacks_literal_fixture(void);
+void test_bk_rejects_bad_checksum(void);
+void test_bk_rejects_overrun(void);
+void test_zip_reads_deflated_adf_entry(void);
+void test_zip_reports_missing_entry_and_bad_file(void);
+void test_file_read_all_reads_and_reports(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
+    { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
+    { "bk_rejects_bad_checksum", test_bk_rejects_bad_checksum },
+    { "bk_rejects_overrun", test_bk_rejects_overrun },
+    { "zip_reads_deflated_adf_entry", test_zip_reads_deflated_adf_entry },
+    { "zip_reports_missing_entry_and_bad_file", test_zip_reports_missing_entry_and_bad_file },
+    { "file_read_all_reads_and_reports", test_file_read_all_reads_and_reports },
 };
 
 int main(int argc, char **argv) {
