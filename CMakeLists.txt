@@ -22,7 +22,10 @@ add_library(skcore STATIC
   src/core/disks.c
   src/core/hunk.c
   src/core/tables.c
-  src/formats/level.c)
+  src/formats/level.c
+  src/formats/sections.c
+  src/formats/bobs.c
+  src/formats/screens.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB)
 

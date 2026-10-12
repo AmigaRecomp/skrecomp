@@ -9,7 +9,9 @@ add_executable(sk_tests
   test_hunk.c
   test_tables.c
   bk_test_pack.c
-  test_level.c)
+  test_level.c
+  test_sections.c
+  test_screens.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -36,7 +38,14 @@ set(SK_TEST_NAMES
   level_parses_tiny_fixture
   level_rejects_short_map
   level_rejects_wrong_tags_and_truncation
-  level_real_level0)
+  level_real_level0
+  sections_parses_packed_and_raw
+  sections_rejects_bad_layouts
+  bobs_split_and_pixels
+  bobs_rejects_partial_frame
+  bobs_real_kid
+  screen_parse_synthetic_with_palette_tail
+  screen_real_title_palette)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

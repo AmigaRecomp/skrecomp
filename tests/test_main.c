@@ -26,6 +26,13 @@ void test_level_parses_tiny_fixture(void);
 void test_level_rejects_short_map(void);
 void test_level_rejects_wrong_tags_and_truncation(void);
 void test_level_real_level0(void);
+void test_sections_parses_packed_and_raw(void);
+void test_sections_rejects_bad_layouts(void);
+void test_bobs_split_and_pixels(void);
+void test_bobs_rejects_partial_frame(void);
+void test_bobs_real_kid(void);
+void test_screen_parse_synthetic_with_palette_tail(void);
+void test_screen_real_title_palette(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -49,6 +56,13 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "level_rejects_short_map", test_level_rejects_short_map },
     { "level_rejects_wrong_tags_and_truncation", test_level_rejects_wrong_tags_and_truncation },
     { "level_real_level0", test_level_real_level0 },
+    { "sections_parses_packed_and_raw", test_sections_parses_packed_and_raw },
+    { "sections_rejects_bad_layouts", test_sections_rejects_bad_layouts },
+    { "bobs_split_and_pixels", test_bobs_split_and_pixels },
+    { "bobs_rejects_partial_frame", test_bobs_rejects_partial_frame },
+    { "bobs_real_kid", test_bobs_real_kid },
+    { "screen_parse_synthetic_with_palette_tail", test_screen_parse_synthetic_with_palette_tail },
+    { "screen_real_title_palette", test_screen_real_title_palette },
 };
 
 int main(int argc, char **argv) {
