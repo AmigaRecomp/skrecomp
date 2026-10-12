@@ -21,6 +21,11 @@ void test_hunk_loads_crunched_data_hunk_with_reloc(void);
 void test_hunk_rejects_truncated_file(void);
 void test_tables_real_sk(void);
 void test_tables_rejects_bad_pointers(void);
+void test_bk_test_pack_round_trips(void);
+void test_level_parses_tiny_fixture(void);
+void test_level_rejects_short_map(void);
+void test_level_rejects_wrong_tags_and_truncation(void);
+void test_level_real_level0(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -39,6 +44,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "hunk_rejects_truncated_file", test_hunk_rejects_truncated_file },
     { "tables_real_sk", test_tables_real_sk },
     { "tables_rejects_bad_pointers", test_tables_rejects_bad_pointers },
+    { "bk_test_pack_round_trips", test_bk_test_pack_round_trips },
+    { "level_parses_tiny_fixture", test_level_parses_tiny_fixture },
+    { "level_rejects_short_map", test_level_rejects_short_map },
+    { "level_rejects_wrong_tags_and_truncation", test_level_rejects_wrong_tags_and_truncation },
+    { "level_real_level0", test_level_real_level0 },
 };
 
 int main(int argc, char **argv) {

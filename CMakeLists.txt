@@ -21,7 +21,8 @@ add_library(skcore STATIC
   src/core/dirlist.c
   src/core/disks.c
   src/core/hunk.c
-  src/core/tables.c)
+  src/core/tables.c
+  src/formats/level.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB)
 

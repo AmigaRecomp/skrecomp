@@ -7,7 +7,9 @@ add_executable(sk_tests
   test_adf.c
   test_disks.c
   test_hunk.c
-  test_tables.c)
+  test_tables.c
+  bk_test_pack.c
+  test_level.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -29,7 +31,12 @@ set(SK_TEST_NAMES
   hunk_loads_crunched_data_hunk_with_reloc
   hunk_rejects_truncated_file
   tables_real_sk
-  tables_rejects_bad_pointers)
+  tables_rejects_bad_pointers
+  bk_test_pack_round_trips
+  level_parses_tiny_fixture
+  level_rejects_short_map
+  level_rejects_wrong_tags_and_truncation
+  level_real_level0)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
