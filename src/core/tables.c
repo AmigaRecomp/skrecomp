@@ -14,6 +14,8 @@ static void parse_record(const uint8_t *raw, sk_level_record *r) {
     r->music = raw[43];
     for (int i = 44; i < 47 && raw[i] != 0xFF; i++)
         r->extra[r->n_extra++] = raw[i];
+    for (int i = 47; i < SK_LEVEL_RECORD && raw[i] != 0xFF; i++)
+        r->sfx[r->n_sfx++] = raw[i];
 }
 
 bool tables_load(sk_tables *t, const sk_image *sk, sk_err *e) {
@@ -56,6 +58,12 @@ bool tables_load(sk_tables *t, const sk_image *sk, sk_err *e) {
             memcpy(t->par[d][i].bytes, q + 2, 6);
         }
         t->n_par[d] = pe ? (int)n_par : 0;
+        int64_t n_sfx = ((int64_t)p_par - (int64_t)p_tab2) / 4;
+        const uint8_t *se = n_sfx > 0 && n_sfx <= 256 ? image_ptr(sk, p_tab2, (size_t)n_sfx * 4) : NULL;
+        t->sfx[d] = calloc(se ? (size_t)n_sfx : 1, sizeof(sk_sfx_entry));
+        if (!t->sfx[d]) { tables_free(t); return sk_fail(e, "out of memory"); }
+        for (int64_t i = 0; se && i < n_sfx; i++) t->sfx[d][i] = (sk_sfx_entry){ se[4 * i], se[4 * i + 1], se[4 * i + 2] };
+        t->n_sfx[d] = se ? (int)n_sfx : 0;
     }
     return true;
 }
@@ -68,6 +76,9 @@ void tables_free(sk_tables *t) {
         free(t->par[d]);
         t->par[d] = NULL;
         t->n_par[d] = 0;
+        free(t->sfx[d]);
+        t->sfx[d] = NULL;
+        t->n_sfx[d] = 0;
     }
 }
 
@@ -79,4 +90,9 @@ const sk_resource *tables_resource(const sk_tables *t, int disk, int idx) {
 const sk_param_entry *tables_param(const sk_tables *t, int disk, int idx) {
     if (disk < 0 || disk >= SK_TABLE_DISKS || idx < 0 || idx >= t->n_par[disk]) return NULL;
     return &t->par[disk][idx];
+}
+
+const sk_sfx_entry *tables_sfx(const sk_tables *t, int disk, int idx) {
+    if (disk < 0 || disk >= SK_TABLE_DISKS || idx < 0 || idx >= t->n_sfx[disk]) return NULL;
+    return &t->sfx[disk][idx];
 }

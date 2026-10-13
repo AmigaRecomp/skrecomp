@@ -20,7 +20,8 @@
 #define SK_PARAM_ENTRY 8
 
 typedef struct { uint8_t slot, file, section; } sk_resource;
-typedef struct { uint8_t file, section, bytes[6]; } sk_param_entry;   /* the per-disk param table (8 bytes an entry) */
+typedef struct { uint8_t file, section, bytes[6]; } sk_param_entry;
+typedef struct { uint8_t effect, file, section; } sk_sfx_entry;      /* table 2: an effect sample (sub_10307E) */   /* the per-disk param table (8 bytes an entry) */
 
 typedef struct {
     uint8_t disk;               /* 0..3 = SKDisk1..SKDisk4 */
@@ -28,7 +29,8 @@ typedef struct {
     uint8_t music;              /* music file number */
     uint8_t n_params, params[4];
     uint8_t param_raw[4];       /* the four positions as stored (0xFF = none): load_param_resources keeps positions */
-    uint8_t n_extra, extra[3];
+    uint8_t n_extra, extra[3];  /* more music modules: slots 1..3 */
+    uint8_t n_sfx, sfx[17];     /* +47: indices into the disk's table 2, 0xFF-terminated */
 } sk_level_record;
 
 typedef struct {
@@ -38,6 +40,8 @@ typedef struct {
     int n_res[SK_TABLE_DISKS];
     sk_param_entry *par[SK_TABLE_DISKS];        /* owned */
     int n_par[SK_TABLE_DISKS];
+    sk_sfx_entry *sfx[SK_TABLE_DISKS];          /* owned: table 2 */
+    int n_sfx[SK_TABLE_DISKS];
 } sk_tables;
 
 bool tables_load(sk_tables *t, const sk_image *sk, sk_err *e);
@@ -46,5 +50,6 @@ void tables_free(sk_tables *t);
 /* Entry idx of disk's resource table, or NULL when out of range. */
 const sk_resource *tables_resource(const sk_tables *t, int disk, int idx);
 const sk_param_entry *tables_param(const sk_tables *t, int disk, int idx);
+const sk_sfx_entry *tables_sfx(const sk_tables *t, int disk, int idx);
 
 #endif

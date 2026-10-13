@@ -26,6 +26,12 @@ void test_tables_real_sk(void) {                       /* ROM-backed */
     CHECK_EQ(t.record[0].disk, 0);
     CHECK_EQ(t.record[17].disk, 2);
     CHECK_EQ(t.record[17].music, 81);
+    CHECK_EQ(t.record[0].n_sfx, 2); CHECK_EQ(t.record[0].sfx[0], 0); CHECK_EQ(t.record[0].sfx[1], 4);   /* +47: the effect list */
+    CHECK_EQ(t.record[11].n_extra, 2); CHECK_EQ(t.record[11].extra[0], 88); CHECK_EQ(t.record[11].n_sfx, 4);
+    CHECK_EQ(t.n_sfx[0], 10); CHECK_EQ(t.n_sfx[1], 11);
+    const sk_sfx_entry *x = tables_sfx(&t, 0, 4);
+    CHECK(x != NULL); CHECK_EQ(x->effect, 18); CHECK_EQ(x->file, 122); CHECK_EQ(x->section, 0);
+    CHECK(tables_sfx(&t, 0, 10) == NULL);
     CHECK_EQ(t.n_res[0], 41);
     CHECK_EQ(t.n_res[3], 66);
     CHECK(t.record[0].n_res > 0);
