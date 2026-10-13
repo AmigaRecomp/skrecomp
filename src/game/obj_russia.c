@@ -690,6 +690,38 @@ static void obj_cannon_flash_update(sk_game *g, sk_slot *s, int index) {      /*
     if (wrapped || object_offscreen(g, d->x, d->y, 64) < 0) free_fixed_object(g, s);
 }
 
+/* ---- type 71: the sea leaper (slot 109): jumps out of the sea 100 px under its marker, dives, waits 25 frames ---- */
+static void obj_sea_leaper_init(sk_game *g, sk_slot *s, int x, int y) {       /* 0x119718 */
+    init_object_slot(g, s, x, y + 100, s->type4);
+    s->vx = 2; s->vy = -28; s->hits = 2;
+    s->flags |= 4 | 8;
+    const uint8_t *f = res(g, 109);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 64, 40, f, 1);                                  /* sub_107F44 */
+}
+static void obj_sea_leaper_update(sk_game *g, sk_slot *s, int index) {        /* 0x11975A */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    if (s->flags & 2) { apply_velocity(s); despawn_if_far(g, s); return; }
+    if (!aux_c(s)) {
+        apply_velocity(s);
+        int fr = 0;
+        if (!(s->vy < -4)) { s->vx = 4; fr = 1; }
+        set_frame2(s, fr, fr, 0);
+        if ((int16_t)(d->y - s->y) >= 0) {                          /* back in the sea */
+            d->dflags |= 4;
+            s->vx = 2; s->vy = -28;
+            d->x = s->x;
+            s->t0 = 25;
+            set_aux_c(s, 1);
+        }
+    } else if (--s->t0 == 0) { d->dflags &= (uint8_t)~4; set_aux_c(s, 0); }
+    touch_player(g, d->x + 4, d->y, 56, 32);
+    ball_hits_object(g, s, 8, 0, 48, 32, 2, 0x400);
+    despawn_if_far(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
@@ -701,6 +733,7 @@ void obj_russia_install(void) {
     object_init_table[52] = obj_cannon_init;           object_update_table[52] = obj_cannon_update;
     object_init_table[91] = obj_cannon_shot_init;      object_update_table[91] = obj_cannon_shot_update;
     object_init_table[90] = obj_cannon_flash_init;     object_update_table[90] = obj_cannon_flash_update;
+    object_init_table[71] = obj_sea_leaper_init;       object_update_table[71] = obj_sea_leaper_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;

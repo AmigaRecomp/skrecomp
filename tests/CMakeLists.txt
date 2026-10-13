@@ -320,7 +320,8 @@ set(SK_TEST_NAMES
   conveyor_42_pushes_and_feeds_its_belt
   gunner_46_fires_both_ways
   bullet_97_bursts_on_the_kid
-  wall_cannon_52_fires_every_100)
+  wall_cannon_52_fires_every_100
+  leaper_71_leaps_from_the_sea)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

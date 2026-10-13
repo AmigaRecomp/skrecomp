@@ -229,3 +229,22 @@ void test_wall_cannon_52_fires_every_100(void) {                    /* types 52,
     CHECK_EQ(bd->x, x + 10);
     drop_game();
 }
+
+void test_leaper_71_leaps_from_the_sea(void) {                      /* type 71 */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 4 * 16, 71, 0);
+    CHECK_EQ(s->y, 4 * 16 + 100); CHECK_EQ(s->vy, -28); CHECK_EQ(s->vx, 2); CHECK_EQ(s->hits, 2); CHECK(s->flags & 4);
+    CHECK_EQ(s->draw->w, 64); CHECK_EQ(s->draw->h, 40);
+    tick(1);
+    CHECK(s->draw->y < s->y); CHECK_EQ(s->frame, 0);                 /* rising */
+    int i = 0;
+    while (s->vy < -4 && i++ < 60) tick(1);
+    tick(1);
+    CHECK_EQ(s->frame, 1); CHECK_EQ(s->vx, 4);                      /* over the top */
+    i = 0;
+    while (aux_c(s) == 0 && i++ < 100) tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK(s->draw->dflags & 4); CHECK_EQ(s->vy, -28); CHECK_EQ(s->draw->x, s->x);   /* under: 25 frames */
+    tick(25);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->draw->dflags & 4, 0);
+    drop_game();
+}
