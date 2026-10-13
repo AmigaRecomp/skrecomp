@@ -28,6 +28,9 @@ sk_platform *alloc_platform(sk_game *g, int *index);                /* 0x118154:
 sk_platform *slot_platform(sk_game *g, const sk_slot *s);           /* 0x11819E */
 void free_platform(sk_game *g, sk_slot *s);                         /* 0x118184 */
 int  platform_carry(sk_game *g, sk_platform *pf, int dx, int dy);   /* -1 when the kid rides it */
+int  sin_1024(int a);                                               /* 0x105F5C: sin * 256 */
+int  cos_1024(int a);                                               /* 0x105F58 */
+void platform_velocity(int angle, int speed, int32_t *vx, int32_t *vy);   /* 0x118108 */
 void merge_platform_masks(sk_game *g, uint8_t *mask, int origin_x, int origin_y, bool ball);   /* player_on / ball_on records */
 
 #endif

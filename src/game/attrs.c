@@ -1,5 +1,6 @@
 #include <string.h>
 #include "game/attrs.h"
+#include "game/attr_country_london.h"
 #include "game/attr_england.h"
 #include "game/game.h"
 
@@ -11,6 +12,7 @@ static const uint8_t bplcon2_default[4] = { 0x20, 0x21, 0x21, 0x22 };
 void attrs_reset(sk_game *g) {
     memset(&g->attrs, 0, sizeof g->attrs);
     attr_england_install();
+    attr_country_london_install();
     if (!attr_table[2]) attr_table[2] = attr_checkpoint;
     if (!attr_table[13]) attr_table[13] = attr_exit;
     if (!attr_table[53]) attr_table[53] = attr_layer_switch_a;

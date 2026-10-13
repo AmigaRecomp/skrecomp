@@ -176,6 +176,9 @@ void test_ball_rides_a_platform(void);
 void test_platform_carry_against_a_ceiling(void);
 void test_platform_records_full(void);
 void test_bumped_block_carries_the_kid(void);
+void test_platform_type_5_moves_and_reverses(void);
+void test_triggered_platform_type_10_starts_when_stood_on(void);
+void test_sin_1024_quadrants(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -349,6 +352,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "platform_carry_against_a_ceiling", test_platform_carry_against_a_ceiling },
     { "platform_records_full", test_platform_records_full },
     { "bumped_block_carries_the_kid", test_bumped_block_carries_the_kid },
+    { "platform_type_5_moves_and_reverses", test_platform_type_5_moves_and_reverses },
+    { "triggered_platform_type_10_starts_when_stood_on", test_triggered_platform_type_10_starts_when_stood_on },
+    { "sin_1024_quadrants", test_sin_1024_quadrants },
 };
 
 int main(int argc, char **argv) {

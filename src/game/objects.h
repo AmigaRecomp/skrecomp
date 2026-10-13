@@ -59,7 +59,9 @@ void init_object_slot_fixed(sk_game *g, sk_slot *s, int x, int y, int type4);
 void init_object_slot_fixed_nodraw(sk_game *g, sk_slot *s, int x, int y, int type4);
 void init_object_slot_shared(sk_game *g, sk_slot *s, int x, int y, int type4, sk_draw *shared);
 void init_object_slot_invisible(sk_game *g, sk_slot *s, int x, int y, int type4);
-sk_draw *slot_draw_record(sk_game *g, const sk_slot *s);   /* dynamic or fixed record of the slot, or NULL */
+sk_draw *slot_draw_record(sk_game *g, const sk_slot *s);
+sk_draw *alloc_draw_record(sk_game *g, sk_slot *s);   /* 0x10D7F6: the next record of the dynamic list */
+void free_draw_record(sk_game *g, sk_draw *d);         /* 0x10D820 */   /* dynamic or fixed record of the slot, or NULL */
 void free_object(sk_game *g, sk_slot *s);
 void free_object_deferred(sk_game *g, sk_slot *s);
 void free_fixed_object(sk_game *g, sk_slot *s);

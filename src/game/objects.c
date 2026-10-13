@@ -4,6 +4,7 @@
 #include "game/objects.h"
 #include "formats/bobs.h"
 #include "game/obj_england.h"
+#include "game/obj_london.h"
 
 sk_obj_init_fn object_init_table[128];
 sk_obj_update_fn object_update_table[128];
@@ -19,6 +20,7 @@ void objects_reset(sk_game *g) {                                /* clear_object_
     for (int i = 0; i < 8; i++) { o->fixed[i].x = -1; o->fixed[i].y = -1; }
     g->object_count = 0;
     obj_england_install();
+    obj_london_install();
     for (int i = 0; i < 128; i++) {
         if (!object_init_table[i]) object_init_table[i] = obj_stub_init;
         if (!object_update_table[i]) object_update_table[i] = obj_stub_update;
@@ -45,7 +47,7 @@ sk_slot *find_free_slot(sk_game *g) {                           /* 0x10D852 */
     return NULL;
 }
 
-static sk_draw *alloc_draw_record(sk_game *g, sk_slot *s) {     /* 0x10D7F6 */
+sk_draw *alloc_draw_record(sk_game *g, sk_slot *s) {     /* 0x10D7F6 */
     sk_objects *o = &g->objs;
     if (o->draw_count >= 16) { s->draw_index = -1; return NULL; }   /* the port's bound: the original runs off the list */
     sk_draw *d = o->ptrs[o->draw_count];
@@ -61,7 +63,7 @@ static sk_draw *alloc_fixed_record(sk_game *g, sk_slot *s) {    /* 0x10D8F4 */
     return NULL;
 }
 
-static void free_draw_record(sk_game *g, sk_draw *d) {          /* 0x10D820: remove from the list, append at the end */
+void free_draw_record(sk_game *g, sk_draw *d) {          /* 0x10D820: remove from the list, append at the end */
     sk_objects *o = &g->objs;
     int i = 0;
     while (i < o->draw_count && o->ptrs[i] != d) i++;

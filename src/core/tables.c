@@ -46,6 +46,15 @@ bool tables_load(sk_tables *t, const sk_image *sk, sk_err *e) {
             t->res[d][i] = (sk_resource){ q[0], q[1], q[2] };
         }
         t->n_res[d] = (int)n_res;
+        const uint8_t *pe = n_par > 0 && n_par <= 256 ? image_ptr(sk, p_par, (size_t)n_par * SK_PARAM_ENTRY) : NULL;
+        t->par[d] = calloc(pe ? (size_t)n_par : 1, sizeof(sk_param_entry));
+        if (!t->par[d]) { tables_free(t); return sk_fail(e, "out of memory"); }
+        for (int64_t i = 0; pe && i < n_par; i++) {
+            const uint8_t *q = pe + i * SK_PARAM_ENTRY;
+            t->par[d][i].file = q[0]; t->par[d][i].section = q[1];
+            memcpy(t->par[d][i].bytes, q + 2, 6);
+        }
+        t->n_par[d] = pe ? (int)n_par : 0;
     }
     return true;
 }
@@ -55,10 +64,18 @@ void tables_free(sk_tables *t) {
         free(t->res[d]);
         t->res[d] = NULL;
         t->n_res[d] = 0;
+        free(t->par[d]);
+        t->par[d] = NULL;
+        t->n_par[d] = 0;
     }
 }
 
 const sk_resource *tables_resource(const sk_tables *t, int disk, int idx) {
     if (disk < 0 || disk >= SK_TABLE_DISKS || idx < 0 || idx >= t->n_res[disk]) return NULL;
     return &t->res[disk][idx];
+}
+
+const sk_param_entry *tables_param(const sk_tables *t, int disk, int idx) {
+    if (disk < 0 || disk >= SK_TABLE_DISKS || idx < 0 || idx >= t->n_par[disk]) return NULL;
+    return &t->par[disk][idx];
 }

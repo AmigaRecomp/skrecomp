@@ -20,6 +20,7 @@
 #define SK_PARAM_ENTRY 8
 
 typedef struct { uint8_t slot, file, section; } sk_resource;
+typedef struct { uint8_t file, section, bytes[6]; } sk_param_entry;   /* the per-disk param table (8 bytes an entry) */
 
 typedef struct {
     uint8_t disk;               /* 0..3 = SKDisk1..SKDisk4 */
@@ -34,6 +35,8 @@ typedef struct {
     sk_level_record record[SK_LEVEL_RECORDS];
     sk_resource *res[SK_TABLE_DISKS];           /* owned */
     int n_res[SK_TABLE_DISKS];
+    sk_param_entry *par[SK_TABLE_DISKS];        /* owned */
+    int n_par[SK_TABLE_DISKS];
 } sk_tables;
 
 bool tables_load(sk_tables *t, const sk_image *sk, sk_err *e);
@@ -41,5 +44,6 @@ void tables_free(sk_tables *t);
 
 /* Entry idx of disk's resource table, or NULL when out of range. */
 const sk_resource *tables_resource(const sk_tables *t, int disk, int idx);
+const sk_param_entry *tables_param(const sk_tables *t, int disk, int idx);
 
 #endif

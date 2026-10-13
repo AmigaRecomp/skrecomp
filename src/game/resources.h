@@ -18,6 +18,7 @@ typedef struct sk_resources {
     struct { int file; sk_sections secs; } files[SK_RES_FILES];   /* each graphics-set file loaded once */
     int n_files;
     const sk_section *slot[SK_SLOTS];
+    struct { const sk_section *sec; uint8_t bytes[6]; } param[4];   /* param_resources (0x301AB8): load_param_resources 0x103114 */
 } sk_resources;
 
 bool resources_load(sk_resources *r, sk_disks *d, const sk_tables *t, int data_index, sk_err *e);
