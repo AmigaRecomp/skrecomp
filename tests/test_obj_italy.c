@@ -285,3 +285,16 @@ void test_frog_31_hops_its_pattern_and_spits(void) {          /* type 31, child 
     CHECK_EQ(s->aux, 0);                                             /* the -1 end wraps to entry 0 */
     drop_game();
 }
+
+void test_pendulum_knocks_the_kid_along_its_swing(void) {     /* type 36: player.knock_dir (0x302B4A) */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 2 * 16, 36, 0);
+    tick(1);
+    const sk_draw *ball = &g_g.objs.chain[7];
+    g_g.player.x = (int16_t)(ball->x + 8 + 8); g_g.player.y = (int16_t)(ball->y + 7 - 10);
+    g_g.player.health = 3; g_g.player.invulnerable = 0; g_g.player.knock_dir = 5;
+    tick(1);
+    CHECK_EQ(s->flags & 0xFF, 0);
+    CHECK_EQ(g_g.player.knock_dir, -1);                              /* not.w of ext.w of the swing direction 0 */
+    drop_game();
+}

@@ -100,7 +100,8 @@ static void obj_pendulum_update(sk_game *g, sk_slot *s, int index) {           /
     b->x = (int16_t)(((int16_t)dx >> 4) + s->x - 8);
     b->y = (int16_t)(((int16_t)dy >> 4) + s->y - 8);
     set_draw_frame_ptr(b, ball);
-    touch_player(g, b->x + 8, b->y + 7, 16, 15);                    /* the hurt side lands in 0x302B4A, never read */
+    if (touch_player(g, b->x + 8, b->y + 7, 16, 15) < 0)
+        g->player.knock_dir = (int16_t)~(int16_t)(int8_t)s->flags;  /* along the swing: ext.w, not.w */
     if (object_offscreen(g, s->x, s->y, 160) < 0) { g->objs.chain_a = false; free_object(g, s); }
 }
 

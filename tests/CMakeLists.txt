@@ -263,7 +263,8 @@ set(SK_TEST_NAMES
   frog_31_hops_its_pattern_and_spits
   hazard_63_takes_a_rising_ball_and_hurts_from_below
   hazard_64_takes_a_falling_ball_and_hurts_from_above
-  ball_targets_69_71_74_count_apart)
+  ball_targets_69_71_74_count_apart
+  pendulum_knocks_the_kid_along_its_swing)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

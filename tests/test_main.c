@@ -222,6 +222,7 @@ void test_frog_31_hops_its_pattern_and_spits(void);
 void test_hazard_63_takes_a_rising_ball_and_hurts_from_below(void);
 void test_hazard_64_takes_a_falling_ball_and_hurts_from_above(void);
 void test_ball_targets_69_71_74_count_apart(void);
+void test_pendulum_knocks_the_kid_along_its_swing(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -441,6 +442,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "hazard_63_takes_a_rising_ball_and_hurts_from_below", test_hazard_63_takes_a_rising_ball_and_hurts_from_below },
     { "hazard_64_takes_a_falling_ball_and_hurts_from_above", test_hazard_64_takes_a_falling_ball_and_hurts_from_above },
     { "ball_targets_69_71_74_count_apart", test_ball_targets_69_71_74_count_apart },
+    { "pendulum_knocks_the_kid_along_its_swing", test_pendulum_knocks_the_kid_along_its_swing },
 };
 
 int main(int argc, char **argv) {
