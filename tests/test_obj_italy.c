@@ -193,3 +193,21 @@ void test_hopper_49_bounces_and_leaves(void) {                /* type 49 */
     CHECK(bounces >= 2); CHECK(s->flags & 2);
     drop_game();
 }
+
+static int count_type(int type) { int c = 0; for (int i = 0; i < 16; i++) c += g_g.objs.slot[i].x >= 0 && (g_g.objs.slot[i].type4 & 0x1FF) == type * 4; return c; }
+
+void test_thrower_64_patrols_and_throws_at_the_kid(void) {    /* type 64 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 64, 0);
+    CHECK_EQ(s->vx, 2); CHECK_EQ(s->hits, 2); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 64); CHECK_EQ(s->y, 11 * 16 - 48);
+    g_g.player.x = (int16_t)(s->draw->x - 40);                       /* in front of it (it faces left) */
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->vx, 0);                       /* stops to throw */
+    int i = 0;
+    while (count_type(99) == 0 && i++ < 100) tick(1);
+    CHECK_EQ(count_type(99), 1);                                     /* the throw on the 4th attack frame */
+    i = 0;
+    while (aux_c(s) == 1 && i++ < 100) tick(1);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->vx, 2); CHECK_EQ(s->t0, 50); /* walks on, 50 frames before the next */
+    drop_game();
+}
