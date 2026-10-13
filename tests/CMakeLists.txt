@@ -317,7 +317,9 @@ set(SK_TEST_NAMES
   walkers_74_78_patrol
   sprout_11_grows_and_rests
   shell_20_fires_every_100_frames
-  conveyor_42_pushes_and_feeds_its_belt)
+  conveyor_42_pushes_and_feeds_its_belt
+  gunner_46_fires_both_ways
+  bullet_97_bursts_on_the_kid)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

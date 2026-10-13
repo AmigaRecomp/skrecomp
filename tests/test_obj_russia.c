@@ -177,3 +177,33 @@ void test_conveyor_42_pushes_and_feeds_its_belt(void) {             /* types 42 
     CHECK_EQ(s->x0, 3);                                              /* the second: speed 3 (6), 16 px higher */
     drop_game();
 }
+
+void test_gunner_46_fires_both_ways(void) {                         /* types 46 and 97 */
+    CHECK(make_game());
+    sk_slot *s = spawn(300, 12 * 16, 46, 0);
+    CHECK_EQ(s->hits, 4); CHECK_EQ(s->draw->w, 64); CHECK_EQ(s->draw->h, 61); CHECK_EQ(s->y, 12 * 16 - 45);
+    g_g.player.x = (int16_t)(s->draw->x + 32 - 95);                  /* 95 px in front (it faces left) */
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->vx, 0);
+    g_g.player.x = 900;                                              /* out of the bullets' way */
+    int i = 0;
+    while (count_type(97) < 2 && i++ < 100) tick(1);
+    CHECK_EQ(count_type(97), 2);                                     /* frames 13 and 18: one each side */
+    i = 0;
+    while (aux_c(s) == 1 && i++ < 100) tick(1);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->vx, 2); CHECK_EQ(s->t0, 50);
+    drop_game();
+}
+
+void test_bullet_97_bursts_on_the_kid(void) {                       /* type 97 */
+    CHECK(make_game());
+    sk_slot *b = spawn(200, 10 * 16, 97, 1);
+    CHECK_EQ(b->flags & 1, 1); CHECK_EQ(b->vx, 8); CHECK_EQ(b->y, 10 * 16 + 16); CHECK_EQ(b->draw->w, 32);
+    g_g.player.x = (int16_t)(b->draw->x + 30); g_g.player.y = b->draw->y; g_g.player.health = 3; g_g.player.invulnerable = 0;
+    tick(1);
+    CHECK_EQ(aux_c(b), 1); CHECK_EQ(b->draw->h, 28);                 /* hit: the burst */
+    int i = 0;
+    while (b->x >= 0 && i++ < 40) tick(1);
+    CHECK(b->x < 0);
+    drop_game();
+}

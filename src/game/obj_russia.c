@@ -31,6 +31,12 @@ static const uint8_t shell_burst_script[] = { 0, 5, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7
 static const uint8_t belt_script[] = { 0, 4, 0, 2, 0, 1, 2, 3, 0, 1, 2, 3 };                  /* 0x1133AE */
 static const uint8_t belt_fast_script[] = { 0, 4, 0, 3, 4, 5, 6, 7, 4, 5, 6, 7 };             /* 0x1133BA */
 
+static const uint8_t gunner_walk_script[] = { 0, 4, 0, 10, 0, 1, 2, 3, 4, 5, 6, 7 };           /* 0x112D5A */
+static const uint8_t gunner_fire_script[] = { 0, 16, 0, 4, 9, 9, 9, 10, 11, 12, 13, 9, 9, 10, 11, 12, 13, 9, 9, 9,
+                                              14, 14, 14, 15, 16, 17, 18, 14, 14, 15, 16, 17, 18, 14, 14, 14 };   /* 0x112D66 */
+static const uint8_t splash_script[] = { 0, 5, 0, 5, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4 };            /* 0x112D8A */
+static const uint8_t bullet_script[] = { 0, 4, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7 };                 /* 0x112E54 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -503,11 +509,124 @@ static void obj_belt_update(sk_game *g, sk_slot *s, int index) {              /*
     free_if_far(g, s);
 }
 
+/* ---- type 46: the gunner (slots 60, 61 its debris, 62 the splash): fires both ways (type 97), splashes off the ship ---- */
+static void obj_gunner_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x112B7C */
+    init_object_slot(g, s, x, y - 45, s->type4);
+    s->vx = 2; s->vy = 0; s->t0 = 0; s->hits = 4;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 60);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 64, 61, f, 1);                                  /* sub_107FCC */
+}
+static void obj_gunner_update(sk_game *g, sk_slot *s, int index) {            /* 0x112BB6 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    sk_objects *o = &g->objs;
+    if (!(s->flags & 2)) {
+        int wrapped = 0;
+        if (!aux_c(s)) {
+            step_animation(s, gunner_walk_script, s->flags, &wrapped);
+            if (s->t0) s->t0--;
+            else {
+                int k = (int16_t)(d->x + 32 - g->player.x);
+                if (s->flags & 1) k = -k;
+                if (k >= 0x5A && k <= 0x64) { reset_animation(s); set_aux_c(s, 1); s->vx = 0; }
+            }
+            if ((uint16_t)iabs((int16_t)(s->x - d->x)) >= 0xA0) s->flags ^= 1;
+        } else if (step_animation(s, gunner_fire_script, s->flags, &wrapped)) {
+            int fx = d->x - 16;
+            bool fire = s->frame == 13;
+            if (!fire) { fx += 0x50; fire = s->frame == 18; }
+            if (fire) { o->marker_param = s->flags & 0xFF; spawn_object(g, fx, d->y, 97); }
+            if (s->anim_index == 15) { reset_animation(s); set_aux_c(s, 0); s->vx = 2; s->t0 = 50; }
+        }
+        touch_player(g, d->x + 12, d->y, 40, 61);
+        if (ball_hits_object(g, s, 0, 0, 64, 61, 8, 0x1000) < 0) { despawn_if_far(g, s); return; }
+        o->child_frames = res(g, 61);                               /* knocked: its debris */
+        o->child_w = 32; o->child_h = 15;
+        o->child_vx = 0; o->child_vy = -12;
+        spawn_object(g, d->x + 16, d->y, 116);
+        set_aux_c(s, 0);
+    }
+    if (!aux_c(s) && object_offscreen(g, d->x, d->y, 0x8C) < 0) {   /* off the ship: the splash, once */
+        set_aux_c(s, 1);
+        o->child_frames = res(g, 62); o->child_script = splash_script;
+        o->child_w = 64; o->child_h = 48;
+        o->child_vx = 0; o->child_vy = 0;
+        spawn_object(g, d->x, g->camera_y + 0x98, 114);
+    }
+    despawn_if_far(g, s);
+}
+
+/* ---- type 97: the gunner's bullet (slot 66; the burst slot 68) ---- */
+static void obj_bullet_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x112D98 */
+    init_object_slot_nodraw(g, s, x, y + 16, s->type4);
+    s->flags = (int16_t)(g->objs.marker_param & 1);
+    s->vx = 8;
+    set_aux_c(s, 0);
+    const uint8_t *f = res(g, 66);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 11, f, 1);                                  /* sub_107A16 */
+}
+static void obj_bullet_update(sk_game *g, sk_slot *s, int index) {            /* 0x112DD0 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    if (aux_c(s)) {
+        int wrapped = 0;
+        step_animation(s, bullet_script, 0, &wrapped);
+        if (wrapped) { free_object(g, s); return; }
+    } else {
+        int dx = (uint16_t)s->vx >> 1;                              /* sub_10E07C */
+        d->x = (int16_t)(d->x + ((s->flags & 1) ? dx : -dx));
+        step_animation_simple(s, bullet_script, s->flags);
+        if (touch_player(g, d->x, d->y, 32, 11) != 0) {
+            set_aux_c(s, 1);
+            d->x = (int16_t)(d->x + ((s->flags & 1) ? 16 : -16));
+            reset_animation(s);
+            size_frames(g, d, 32, 28, res(g, 68));
+        }
+    }
+    if (object_offscreen(g, d->x, d->y, 64) < 0) free_object(g, s);
+}
+
+/* ---- type 114: a one-shot effect from the child block that hurts (the gunner's splash) ---- */
+static void obj_hurt_effect_init(sk_game *g, sk_slot *s, int x, int y) {      /* 0x10FD76 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->type4 |= (int16_t)0x8000;
+    if (g->objs.child_vx & 0x8000) { g->objs.child_vx = (int16_t)(g->objs.child_vx & 0x7FFF); s->flags |= 1; }
+    s->vx = g->objs.child_vx;
+    s->vy = g->objs.child_vy;
+    if (s->vy) s->flags |= 4;
+    s->script = g->objs.child_script;
+    set_draw_size_at(g, s, g->objs.child_w, g->objs.child_h, g->objs.child_frames);
+    sk_draw *d = slot_draw_record(g, s);
+    if (d) d->dflags |= 4;
+}
+static void obj_hurt_effect_update(sk_game *g, sk_slot *s, int index) {       /* 0x10FDD4 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    d->dflags &= (uint8_t)~4;
+    int wrapped = 0;
+    if (s->script && d->frames) step_animation(s, s->script, s->flags, &wrapped);
+    else wrapped = -1;
+    if (wrapped) { free_object(g, s); return; }
+    touch_player(g, d->x, d->y, d->w, d->h);
+    free_if_far(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
     object_init_table[42] = obj_conveyor_init;         object_update_table[42] = obj_conveyor_update;
     object_init_table[98] = obj_belt_init;             object_update_table[98] = obj_belt_update;
+    object_init_table[46] = obj_gunner_init;           object_update_table[46] = obj_gunner_update;
+    object_init_table[97] = obj_bullet_init;           object_update_table[97] = obj_bullet_update;
+    object_init_table[114] = obj_hurt_effect_init;     object_update_table[114] = obj_hurt_effect_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;
