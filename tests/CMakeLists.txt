@@ -273,7 +273,10 @@ set(SK_TEST_NAMES
   riviera_boss_waits_for_the_arena_wipe
   riviera_boss_rises_on_its_lift_and_shoots
   riviera_boss_suction_and_the_end
-  find_slot_by_type_sees_a_slot_spawned_this_frame)
+  find_slot_by_type_sees_a_slot_spawned_this_frame
+  italy_markers_spawn_real_types
+  italy_slots_cover_the_frames
+  italy_run_without_a_crash)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

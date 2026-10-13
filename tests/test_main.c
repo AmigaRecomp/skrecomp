@@ -232,6 +232,9 @@ void test_riviera_boss_waits_for_the_arena_wipe(void);
 void test_riviera_boss_rises_on_its_lift_and_shoots(void);
 void test_riviera_boss_suction_and_the_end(void);
 void test_find_slot_by_type_sees_a_slot_spawned_this_frame(void);
+void test_italy_markers_spawn_real_types(void);
+void test_italy_slots_cover_the_frames(void);
+void test_italy_run_without_a_crash(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -461,6 +464,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "riviera_boss_rises_on_its_lift_and_shoots", test_riviera_boss_rises_on_its_lift_and_shoots },
     { "riviera_boss_suction_and_the_end", test_riviera_boss_suction_and_the_end },
     { "find_slot_by_type_sees_a_slot_spawned_this_frame", test_find_slot_by_type_sees_a_slot_spawned_this_frame },
+    { "italy_markers_spawn_real_types", test_italy_markers_spawn_real_types },
+    { "italy_slots_cover_the_frames", test_italy_slots_cover_the_frames },
+    { "italy_run_without_a_crash", test_italy_run_without_a_crash },
 };
 
 int main(int argc, char **argv) {

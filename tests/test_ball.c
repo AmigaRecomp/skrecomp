@@ -19,7 +19,7 @@ static bool make_game(void) {
 static void drop_game(void) { game_close(&g_g); level_free(&g_lv); free(g_d); }
 static void place_ball(int x, int y, int32_t vx, int32_t vy) {
     g_g.ball = (sk_ball){0};
-    g_g.ball.x = x << 16; g_g.ball.y = y << 16; g_g.ball.vx = vx; g_g.ball.vy = vy; g_g.ball.rest_timer = 50;
+    g_g.ball.x = x * 65536; g_g.ball.y = y * 65536; g_g.ball.vx = vx; g_g.ball.vy = vy; g_g.ball.rest_timer = 50;
     g_g.player.x = 1000; g_g.player.ball_hold = 0;            /* the kid far away */
 }
 

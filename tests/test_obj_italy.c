@@ -449,3 +449,75 @@ void test_find_slot_by_type_sees_a_slot_spawned_this_frame(void) {   /* sub_10DF
     CHECK(find_slot_by_type(&g_g, 44) == s);
     drop_game();
 }
+
+static bool italy_open(sk_disks *d, sk_image *img, sk_tables *t) {
+    sk_err e = {0}; uint8_t *f = NULL; size_t n = 0;
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!disks_open(d, roms, &e) || !disks_read(d, 0, "sk.pak", &f, &n, &e)) return false;
+    bool ok = hunk_load(f, n, img, &e) && tables_load(t, img, &e);
+    free(f);
+    return ok;
+}
+
+void test_italy_markers_spawn_real_types(void) {               /* ROM-backed, indices 6..11 */
+    if (!getenv("SOCCERKID_ROMS")) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}; sk_image img = {0}; sk_tables t = {0}; sk_err e = {0};
+    CHECK(italy_open(&d, &img, &t));
+    static sk_game g;
+    memset(&g, 0, sizeof g);
+    objects_reset(&g);
+    for (int idx = 6; idx <= 11; idx++) {
+        uint8_t *f = NULL; size_t n = 0;
+        CHECK(disks_read_file_no(&d, t.record[idx].disk + 1, idx, false, &f, &n, &e));
+        sk_level lv = {0}; sk_world w = {0};
+        CHECK(level_parse(f, n, &lv, &e)); free(f);
+        CHECK(world_build(&w, &lv));
+        for (int cy = 0; cy < w.h; cy++)
+            for (int cx = 0; cx < w.w; cx++) {
+                int param = 0, type = world_marker_type(&w, cx, cy, &param);
+                if (type <= 0) continue;
+                bool real = type < 128 && object_init_table[type] && object_init_table[type] != obj_stub_init;
+                if (!real) printf("level %d: type %d at (%d, %d) is a stub\n", idx, type, cx, cy);
+                CHECK(real);
+            }
+        world_free(&w); level_free(&lv);
+    }
+    tables_free(&t); image_free(&img); disks_close(&d);
+}
+
+void test_italy_slots_cover_the_frames(void) {                 /* ROM-backed, Review Focus 1 */
+    if (!getenv("SOCCERKID_ROMS")) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}; sk_image img = {0}; sk_tables t = {0}; sk_err e = {0};
+    CHECK(italy_open(&d, &img, &t));
+    static const struct { int type, slot, frames, frame_bytes; } need[] = {   /* the highest frame each type indexes, + 1 */
+        { 31, 31, 12, 420 }, { 31, 32, 1, 100 }, { 36, 46, 10, 160 }, { 36, 45, 1, 580 }, { 37, 48, 11, 210 }, { 38, 46, 1, 160 },
+        { 43, 53, 10, 1560 }, { 43, 55, 2, 1740 }, { 43, 54, 6, 820 }, { 44, 52, 4, 640 }, { 48, 128, 4, 640 }, { 49, 92, 4, 640 },
+        { 64, 111, 20, 1920 }, { 64, 112, 1, 2320 }, { 64, 113, 8, 520 }, { 68, 102, 20, 1920 }, { 68, 103, 1, 2280 },
+        { 68, 104, 2, 380 }, { 70, 123, 16, 1920 }, { 70, 124, 8, 1170 }, { 51, 69, 25, 2560 }, { 51, 70, 4, 640 },
+        { 51, 71, 1, 3040 }, { 51, 72, 14, 160 }, { 51, 73, 8, 620 }, { 51, 74, 4, 1280 },
+    };
+    int seen = 0;
+    for (int idx = 6; idx <= 11; idx++) {
+        uint8_t *f = NULL; size_t n = 0;
+        CHECK(disks_read_file_no(&d, t.record[idx].disk + 1, idx, false, &f, &n, &e));
+        sk_level lv = {0}; sk_world w = {0};
+        CHECK(level_parse(f, n, &lv, &e)); free(f);
+        CHECK(world_build(&w, &lv));
+        bool present[128] = {0};
+        for (int cy = 0; cy < w.h; cy++)
+            for (int cx = 0; cx < w.w; cx++) { int param = 0, type = world_marker_type(&w, cx, cy, &param); if (type > 0 && type < 128) present[type] = true; }
+        static sk_resources r;
+        CHECK(resources_load(&r, &d, &t, idx, &e));
+        for (size_t k = 0; k < sizeof need / sizeof *need; k++) {
+            if (!present[need[k].type]) continue;
+            size_t len = 0;
+            CHECK(resource_slot(&r, need[k].slot, &len) != NULL);
+            seen++;
+            if (len < (size_t)need[k].frames * (size_t)need[k].frame_bytes) printf("level %d type %d slot %d: %zu bytes\n", idx, need[k].type, need[k].slot, len);
+            CHECK(len >= (size_t)need[k].frames * (size_t)need[k].frame_bytes);
+        }
+        resources_free(&r); world_free(&w); level_free(&lv);
+    }
+    CHECK(seen >= 26);
+    tables_free(&t); image_free(&img); disks_close(&d);
+}
