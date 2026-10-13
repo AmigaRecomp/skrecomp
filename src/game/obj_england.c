@@ -299,7 +299,7 @@ static void obj_crate_update(sk_game *g, sk_slot *s, int index) {              /
         o->marker_param = kind;
         spawn_object(g, x, y - 16, 112);
     }
-    free_object(g, s);                                              /* free_object_keep: the record's bit stays (dynamic list) */
+    free_object_keep(g, s);                                         /* 0x10D7C6: the crate's marker stays used: it does not come back */
 }
 
 /* ---- type 112: the bonus (slot 29) ---- */

@@ -165,6 +165,7 @@ void test_play_home1_kick_scores(void);
 void test_a_reused_record_gets_fresh_draw_flags(void);
 void test_score_popup_blinks_out(void);
 void test_missing_or_short_frames_draw_nothing(void);
+void test_a_marker_spawns_once_while_its_object_lives(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -327,6 +328,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "a_reused_record_gets_fresh_draw_flags", test_a_reused_record_gets_fresh_draw_flags },
     { "score_popup_blinks_out", test_score_popup_blinks_out },
     { "missing_or_short_frames_draw_nothing", test_missing_or_short_frames_draw_nothing },
+    { "a_marker_spawns_once_while_its_object_lives", test_a_marker_spawns_once_while_its_object_lives },
 };
 
 int main(int argc, char **argv) {

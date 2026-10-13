@@ -200,7 +200,8 @@ set(SK_TEST_NAMES
   play_home1_kick_scores
   a_reused_record_gets_fresh_draw_flags
   score_popup_blinks_out
-  missing_or_short_frames_draw_nothing)
+  missing_or_short_frames_draw_nothing
+  a_marker_spawns_once_while_its_object_lives)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

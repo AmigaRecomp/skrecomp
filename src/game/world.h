@@ -12,6 +12,7 @@
 #define SK_PALS_ATTR 1              /* + (flag - 33): the attribute of flags 33..127 */
 #define SK_PALS_TYPE 96             /* + flag: the object type of marker flags 1..31 */
 #define SK_PALS_PARAM 129           /* + flag: its spawn parameter */
+#define SK_SPAWNED_BIT 0x4000       /* bit 30 of the cell long: its object is alive (init_object_slot's bset #6 through +0x18) */
 #define SK_MARKER_BIT 0x8000        /* bit 31 of the original cell long: a spawn marker (flags 1..31) */
 
 typedef struct sk_world {

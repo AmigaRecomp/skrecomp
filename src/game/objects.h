@@ -23,6 +23,7 @@ typedef struct sk_slot {
     sk_draw *draw;
     uint8_t anim, hits, frame, anim_tick, anim_index, timer;
     const uint8_t *script;         /* the long at +0x14 for the child types that keep a script there */
+    int marker_cell;               /* +0x18: the marker cell that spawned it (cell index), -1 none */
 } sk_slot;                         /* x < 0 = free; draw_index: 0..15 dynamic, 100 + n fixed, -1 none */
 
 #define SK_FIXED_INDEX_BASE 100
@@ -32,7 +33,8 @@ typedef struct sk_objects {
     sk_draw dyn[16], fixed[8];     /* draw_records, objects_a */
     sk_draw *ptrs[16];             /* draw_record_ptrs: allocation order */
     int draw_count;                /* draw_record_count */
-    sk_draw *deferred[17]; int n_deferred;
+    int deferred[64]; int n_deferred;   /* 0x300C1E: marker cells of objects freed by free_object_deferred */
+    int spawn_cell;                /* a4 during spawn_marker: the cell index, -1 otherwise */
     int marker_param;              /* 0x300336 */
     sk_slot *last_slot; sk_draw *last_draw;   /* 0x300074 / 0x300078 */
     const uint8_t *child_frames, *child_script; int16_t child_vx, child_vy, child_w, child_h;   /* 0x300270.. */
@@ -44,7 +46,8 @@ extern sk_obj_init_fn object_init_table[128];
 extern sk_obj_update_fn object_update_table[128];
 
 void objects_reset(sk_game *g);                   /* clear_object_slots + the record lists; installs stubs in NULL entries */
-void objects_flush_deferred(sk_game *g);          /* releases the records freed by free_object_deferred */
+void objects_flush_deferred(sk_game *g);          /* init_player (0x10BC68): those markers may spawn again */
+void free_object_keep(sk_game *g, sk_slot *s);    /* 0x10D7C6: its marker stays used */
 sk_slot *find_free_slot(sk_game *g);
 void spawn_marker(sk_game *g, int cx, int cy);    /* type/param from the PALS bytes; types >= 128 ignored */
 sk_slot *spawn_object(sk_game *g, int x, int y, int type);

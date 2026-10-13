@@ -33,13 +33,13 @@ void test_spawn_marker_allocates_a_slot_with_type_and_param(void) {
     sk_slot *s = &g_g.objs.slot[0];
     CHECK_EQ(s->x, 10 * 16); CHECK_EQ(s->y, 11 * 16); CHECK_EQ(s->x0, s->x); CHECK_EQ(s->type4, 7 * 4);
     CHECK_EQ(g_g.objs.marker_param, 0x55); CHECK(s->draw != NULL); CHECK(s->draw->used); CHECK_EQ(g_g.objs.draw_count, 1);
-    scan_cell_for_marker(&g_g, 10, 11);                        /* no dedup: a second slot */
-    CHECK_EQ(g_g.object_count, 2);
+    scan_cell_for_marker(&g_g, 10, 11);                        /* the marker is in use: no second object */
+    CHECK_EQ(g_g.object_count, 1);
     scan_cell_for_marker(&g_g, 16, 11);                        /* an attribute cell is not a marker */
-    CHECK_EQ(g_g.object_count, 2);
+    CHECK_EQ(g_g.object_count, 1);
     free_object(&g_g, s);
-    CHECK(s->x < 0); CHECK_EQ(g_g.object_count, 1); CHECK_EQ(g_g.objs.draw_count, 1); CHECK(!s->draw->used);
-    g_updates = 0; update_objects(&g_g); CHECK_EQ(g_updates, 1);
+    CHECK(s->x < 0); CHECK_EQ(g_g.object_count, 0); CHECK_EQ(g_g.objs.draw_count, 0); CHECK(!s->draw->used);
+    g_updates = 0; update_objects(&g_g); CHECK_EQ(g_updates, 0);
     drop_game();
 }
 
@@ -147,5 +147,31 @@ void test_alloc_draw_record_refuses_past_16(void) {             /* 5a #10 */
     CHECK_EQ(g_g.objs.draw_count, 16);
     init_object_slot(&g_g, &g_g.objs.slot[0], 0, 50, 4);         /* a seventeenth record */
     CHECK_EQ(g_g.objs.draw_count, 16); CHECK(g_g.objs.slot[0].draw == NULL); CHECK_EQ(g_g.objs.slot[0].draw_index, -1);
+    drop_game();
+}
+
+static int g_spawns;
+static void marking_init(sk_game *g, sk_slot *s, int x, int y) { init_object_slot(g, s, x, y, s->type4); g_spawns++; }
+
+void test_a_marker_spawns_once_while_its_object_lives(void) {   /* bset #6 on the marker's cell (0x10D5E2) */
+    CHECK(make_game());
+    object_init_table[7] = marking_init;                          /* the fixture's marker (10, 11): flag 5 -> type 7 */
+    g_spawns = 0;
+    scan_cell_for_marker(&g_g, 10, 11); scan_cell_for_marker(&g_g, 10, 11);
+    CHECK_EQ(g_spawns, 1);
+    sk_slot *s = NULL;
+    for (int i = 0; i < 16; i++) if (g_g.objs.slot[i].x >= 0 && g_g.objs.slot[i].type4 == 28) s = &g_g.objs.slot[i];
+    CHECK(s != NULL);
+    free_object(&g_g, s);                                          /* despawned: the marker is free again */
+    scan_cell_for_marker(&g_g, 10, 11);
+    CHECK_EQ(g_spawns, 2);
+    for (int i = 0; i < 16; i++) if (g_g.objs.slot[i].x >= 0 && g_g.objs.slot[i].type4 == 28) s = &g_g.objs.slot[i];
+    free_object_deferred(&g_g, s);                                 /* knocked out: stays marked until a respawn */
+    for (int f = 0; f < 3; f++) { update_objects(&g_g); scan_cell_for_marker(&g_g, 10, 11); }
+    CHECK_EQ(g_spawns, 2);
+    init_player(&g_g);
+    scan_cell_for_marker(&g_g, 10, 11);
+    CHECK_EQ(g_spawns, 3);
+    object_init_table[7] = obj_stub_init;
     drop_game();
 }

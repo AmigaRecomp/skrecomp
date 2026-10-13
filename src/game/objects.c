@@ -8,12 +8,13 @@
 sk_obj_init_fn object_init_table[128];
 sk_obj_update_fn object_update_table[128];
 
-void obj_stub_init(sk_game *g, sk_slot *s, int x, int y) { init_object_slot_invisible(g, s, x, y, s->type4); }
+void obj_stub_init(sk_game *g, sk_slot *s, int x, int y) { init_object_slot(g, s, x, y, s->type4); }   /* marks its marker: spawns once */
 void obj_stub_update(sk_game *g, sk_slot *s, int index) { (void)index; despawn_if_far(g, s); }
 
 void objects_reset(sk_game *g) {                                /* clear_object_slots 0x10D594 + the lists */
     sk_objects *o = &g->objs;
     memset(o, 0, sizeof *o);
+    o->spawn_cell = -1;
     for (int i = 0; i < 16; i++) { o->slot[i].x = -1; o->slot[i].y = -1; o->ptrs[i] = &o->dyn[i]; }
     for (int i = 0; i < 8; i++) { o->fixed[i].x = -1; o->fixed[i].y = -1; }
     g->object_count = 0;
@@ -24,14 +25,17 @@ void objects_reset(sk_game *g) {                                /* clear_object_
     }
 }
 
+static void unmark(sk_game *g, int cell) {
+    if (cell >= 0 && cell < g->world.w * g->world.h) g->world.tile[cell] &= (uint16_t)~SK_SPAWNED_BIT;
+}
+
+static void mark(sk_game *g, sk_slot *s) {                       /* move.l a4,$18(a6); bset.b #6,(a4) */
+    s->marker_cell = g->objs.spawn_cell;
+    if (s->marker_cell >= 0 && s->marker_cell < g->world.w * g->world.h) g->world.tile[s->marker_cell] |= SK_SPAWNED_BIT;
+}
+
 void objects_flush_deferred(sk_game *g) {
-    for (int i = 0; i < g->objs.n_deferred; i++) {
-        sk_draw *d = g->objs.deferred[i];
-        if (!d) continue;
-        bool live = false;                                       /* re-allocated since: it belongs to a new object */
-        for (int k = 0; k < g->objs.draw_count; k++) live |= g->objs.ptrs[k] == d;
-        if (!live) d->used = false;
-    }
+    for (int i = 0; i < g->objs.n_deferred; i++) unmark(g, g->objs.deferred[i]);
     g->objs.n_deferred = 0;
 }
 
@@ -76,26 +80,26 @@ sk_draw *slot_draw_record(sk_game *g, const sk_slot *s) {
 static void init_common(sk_game *g, sk_slot *s, int x, int y, int type4) {
     s->type4 = (int16_t)type4;
     s->flags = 0; s->aux = 0; s->t0 = 0; s->t1 = 0;
-    s->anim = 0; s->frame = 0; s->anim_tick = 0; s->anim_index = 0; s->timer = 0; s->script = NULL;
+    s->anim = 0; s->frame = 0; s->anim_tick = 0; s->anim_index = 0; s->timer = 0; s->script = NULL; s->marker_cell = -1;
     s->x = s->x0 = (int16_t)x;
     s->y = s->y0 = (int16_t)y;
     g->object_count++;
 }
 
 void init_object_slot(sk_game *g, sk_slot *s, int x, int y, int type4) {            /* 0x10D5D6 */
-    s->draw = alloc_draw_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4);
+    s->draw = alloc_draw_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4); mark(g, s);
 }
 void init_object_slot_nodraw(sk_game *g, sk_slot *s, int x, int y, int type4) {     /* 0x10D620 */
     s->draw = alloc_draw_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4);   /* the original draws the whole dynamic list */
 }
 void init_object_slot_fixed(sk_game *g, sk_slot *s, int x, int y, int type4) {      /* 0x10D666 */
-    s->draw = alloc_fixed_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4);
+    s->draw = alloc_fixed_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4); mark(g, s);
 }
 void init_object_slot_fixed_nodraw(sk_game *g, sk_slot *s, int x, int y, int type4) {   /* 0x10D6B0 */
     alloc_fixed_record(g, s); s->draw = NULL; init_common(g, s, x, y, type4);
 }
 void init_object_slot_shared(sk_game *g, sk_slot *s, int x, int y, int type4, sk_draw *shared) {   /* 0x10D6F6 */
-    s->draw = shared; shared->used = true; s->draw_index = -1; init_common(g, s, x, y, type4); s->timer = s->timer; /* timer not cleared here in the original */
+    s->draw = shared; shared->used = true; s->draw_index = -1; init_common(g, s, x, y, type4); mark(g, s);
 }
 void init_object_slot_invisible(sk_game *g, sk_slot *s, int x, int y, int type4) {  /* 0x10D73A */
     s->draw = NULL; s->draw_index = -1; init_common(g, s, x, y, type4);
@@ -109,7 +113,9 @@ void spawn_marker(sk_game *g, int cx, int cy) {                 /* 0x10CECE */
     if (type < 0 || type >= 128) return;                        /* beyond the 128-entry table: ignored (ruling) */
     g->objs.marker_param = param;
     s->type4 = (int16_t)(type * 4);
+    g->objs.spawn_cell = cy * g->world.w + cx;
     object_init_table[type](g, s, cx * 16, cy * 16);
+    g->objs.spawn_cell = -1;
 }
 
 sk_slot *spawn_object(sk_game *g, int x, int y, int type) {     /* 0x10CEFC */
@@ -125,11 +131,20 @@ sk_slot *spawn_object(sk_game *g, int x, int y, int type) {     /* 0x10CEFC */
 void scan_cell_for_marker(sk_game *g, int cx, int cy) {         /* 0x10CE40 */
     if (g->game_flags) return;
     if (!world_inside(&g->world, cx, cy)) return;
-    if (!(g->world.tile[cy * g->world.w + cx] & SK_MARKER_BIT)) return;
+    uint16_t t = g->world.tile[cy * g->world.w + cx];
+    if (!(t & SK_MARKER_BIT) || (t & SK_SPAWNED_BIT)) return;   /* andi.b #$7f on the top byte: still alive */
     spawn_marker(g, cx, cy);
 }
 
+void free_object_keep(sk_game *g, sk_slot *s) {                 /* 0x10D7C6 */
+    s->x = -1;
+    g->object_count--;
+    sk_draw *d = slot_draw_record(g, s);
+    if (d && s->draw_index < SK_FIXED_INDEX_BASE) free_draw_record(g, d);
+}
+
 void free_object(sk_game *g, sk_slot *s) {                      /* 0x10D77A */
+    unmark(g, s->marker_cell);
     if (s->draw) s->draw->used = false;
     s->x = -1;
     g->object_count--;
@@ -139,13 +154,14 @@ void free_object(sk_game *g, sk_slot *s) {                      /* 0x10D77A */
 
 void free_object_deferred(sk_game *g, sk_slot *s) {             /* 0x10D79C */
     s->x = -1;
-    if (g->objs.n_deferred < 16) g->objs.deferred[g->objs.n_deferred++] = s->draw;
+    if (s->marker_cell >= 0 && g->objs.n_deferred < 64) g->objs.deferred[g->objs.n_deferred++] = s->marker_cell;
     g->object_count--;
     sk_draw *d = slot_draw_record(g, s);
     if (d && s->draw_index < SK_FIXED_INDEX_BASE) free_draw_record(g, d);
 }
 
 void free_fixed_object(sk_game *g, sk_slot *s) {                /* 0x10D878 */
+    unmark(g, s->marker_cell);
     if (s->draw) s->draw->used = false;
     s->x = -1;
     g->object_count--;

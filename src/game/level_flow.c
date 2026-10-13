@@ -154,7 +154,6 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
         if (g->shake_amplitude > 0) g->shake_amplitude--;
     }
     step(g, 8); if (g->timeout_armed) timeout_check(g);
-    objects_flush_deferred(g);                                   /* step 9's place: records freed last frame */
     step(g, 10); update_camera(g);
     step(g, 11); update_player(g, kid);
     step(g, 13); message_box_tick(g);
