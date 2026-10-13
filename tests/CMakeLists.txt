@@ -19,7 +19,8 @@ add_executable(sk_tests
   test_scene.c
   test_window.c
   test_world.c
-  test_collision.c)
+  test_collision.c
+  test_player.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -79,7 +80,14 @@ set(SK_TEST_NAMES
   mask_rebuild_copies_tile_bitmasks
   mask_rebuild_clamps_to_the_map_edges
   mask_rebuild_is_lazy
-  probes_on_fixture_geometry)
+  probes_on_fixture_geometry
+  init_player_values
+  player_lands_on_the_floor_from_the_start
+  player_runs_and_skids
+  player_jump_integrator
+  player_falls_off_a_ledge_and_may_late_jump
+  player_is_stopped_by_a_wall
+  hurt_player_knockback_and_death)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

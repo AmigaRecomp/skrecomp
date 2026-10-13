@@ -59,6 +59,13 @@ void test_mask_rebuild_copies_tile_bitmasks(void);
 void test_mask_rebuild_clamps_to_the_map_edges(void);
 void test_mask_rebuild_is_lazy(void);
 void test_probes_on_fixture_geometry(void);
+void test_init_player_values(void);
+void test_player_lands_on_the_floor_from_the_start(void);
+void test_player_runs_and_skids(void);
+void test_player_jump_integrator(void);
+void test_player_falls_off_a_ledge_and_may_late_jump(void);
+void test_player_is_stopped_by_a_wall(void);
+void test_hurt_player_knockback_and_death(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -115,6 +122,13 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "mask_rebuild_clamps_to_the_map_edges", test_mask_rebuild_clamps_to_the_map_edges },
     { "mask_rebuild_is_lazy", test_mask_rebuild_is_lazy },
     { "probes_on_fixture_geometry", test_probes_on_fixture_geometry },
+    { "init_player_values", test_init_player_values },
+    { "player_lands_on_the_floor_from_the_start", test_player_lands_on_the_floor_from_the_start },
+    { "player_runs_and_skids", test_player_runs_and_skids },
+    { "player_jump_integrator", test_player_jump_integrator },
+    { "player_falls_off_a_ledge_and_may_late_jump", test_player_falls_off_a_ledge_and_may_late_jump },
+    { "player_is_stopped_by_a_wall", test_player_is_stopped_by_a_wall },
+    { "hurt_player_knockback_and_death", test_hurt_player_knockback_and_death },
 };
 
 int main(int argc, char **argv) {
