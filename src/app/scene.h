@@ -13,6 +13,7 @@
 #include "formats/sections.h"
 #include "gfx/framebuffer.h"
 #include "gfx/palette.h"
+#include "gfx/present.h"
 
 typedef struct {
     sk_disks disks;
@@ -44,8 +45,14 @@ void scene_draw(sk_scene *s);
 void scene_present(const sk_scene *s, uint32_t *out);          /* SK_SCREEN_W x SK_SCREEN_H */
 void scene_close(sk_scene *s);
 
-/* Pure parts, also used by the tests. */
+/* Pure parts, also used by the tests and by the play mode. */
 void scene_clamp_camera(const sk_level *lv, int *x, int *y);
+/* backdrop_scroll (0x10661A): bg_x = ((cam_x * 4) / parallax + 3) >> 2, bg_y = cam_y / parallax, both clamped. */
+void scene_backdrop_pos(const sk_level *lv, int cam_x, int cam_y, int *bg_x, int *bg_y);
+void scene_sky(const sk_level *lv, int bg_y, sk_sky *sky);
+void scene_draw_backdrop(const sk_level *lv, sk_fb *fb, int bg_x, int bg_y);
+/* Foreground tiles from an index grid (the map's words or the live cell table), low 9 bits used. */
+void scene_draw_tiles(const sk_level *lv, sk_fb *fb, const uint16_t *indices, int cam_x, int cam_y);
 void scene_draw_level(const sk_level *lv, sk_fb *fb, int cam_x, int cam_y, bool backdrop, const sk_frames *frames);
 
 #endif

@@ -33,6 +33,7 @@ add_library(skcore STATIC
   src/gfx/sprites.c
   src/app/args.c
   src/app/scene.c
+  src/app/play.c
   src/app/window.c
   src/game/world.c
   src/game/collision.c

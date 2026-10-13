@@ -1,11 +1,61 @@
-/* soccerkid: level viewer entry point. */
+/* soccerkid: plays a level (default) or runs the level viewer (--viewer). */
 #include <stdio.h>
 #include <stdlib.h>
 #include "app/args.h"
+#include "app/play.h"
 #include "app/scene.h"
 #include "app/window.h"
 #include "gfx/display_model.h"
 #include "gfx/png.h"
+
+static int write_shot(const char *path, uint32_t *out, sk_err *e) {
+    if (png_write(path, SK_SCREEN_W, SK_SCREEN_H, out, e)) return 0;
+    fprintf(stderr, "soccerkid: %s\n", e->msg);
+    return 1;
+}
+
+static int run_viewer(const sk_args *a, sk_err *e) {
+    sk_scene s;
+    if (!scene_open(&s, a, e)) { fprintf(stderr, "soccerkid: %s\n", e->msg); return 1; }
+    int rc = 0;
+    if (a->screenshot) {
+        uint32_t *out = calloc(SK_SCREEN_W * SK_SCREEN_H, sizeof *out);
+        scene_draw(&s);
+        scene_present(&s, out);
+        rc = write_shot(a->screenshot, out, e);
+        free(out);
+    } else {
+        sk_window w = {0};
+        if (!window_open(&w, a->scale, e)) { fprintf(stderr, "soccerkid: %s\n", e->msg); rc = 1; }
+        else rc = window_run_viewer(&w, &s, a->exit_after);
+        window_close(&w);
+    }
+    scene_close(&s);
+    return rc;
+}
+
+static int run_play(const sk_args *a, sk_err *e) {
+    static sk_play p;
+    if (!play_open(&p, a, e)) { fprintf(stderr, "soccerkid: %s\n", e->msg); return 1; }
+    int rc = 0;
+    if (a->screenshot || a->frames) {
+        for (int i = 0; i < a->frames; i++) play_step(&p, 0);
+        if (a->screenshot) {
+            uint32_t *out = calloc(SK_SCREEN_W * SK_SCREEN_H, sizeof *out);
+            play_draw(&p);
+            play_present(&p, out);
+            rc = write_shot(a->screenshot, out, e);
+            free(out);
+        }
+    } else {
+        sk_window w = {0};
+        if (!window_open(&w, a->scale, e)) { fprintf(stderr, "soccerkid: %s\n", e->msg); rc = 1; }
+        else rc = window_run(&w, &p, a->exit_after);
+        window_close(&w);
+    }
+    play_close(&p);
+    return rc;
+}
 
 int main(int argc, char **argv) {
     sk_args a;
@@ -15,32 +65,6 @@ int main(int argc, char **argv) {
         return 2;
     }
     if (a.help) { fputs(args_usage(), stdout); return 0; }
-    if (a.version) { puts("soccerkid 0.1"); return 0; }
-    sk_scene s;
-    if (!scene_open(&s, &a, &e)) {
-        fprintf(stderr, "soccerkid: %s\n", e.msg);
-        return 1;
-    }
-    int rc = 0;
-    if (a.screenshot) {
-        uint32_t *out = calloc(SK_SCREEN_W * SK_SCREEN_H, sizeof *out);
-        scene_draw(&s);
-        scene_present(&s, out);
-        if (!png_write(a.screenshot, SK_SCREEN_W, SK_SCREEN_H, out, &e)) {
-            fprintf(stderr, "soccerkid: %s\n", e.msg);
-            rc = 1;
-        }
-        free(out);
-    } else {
-        sk_window w = {0};
-        if (!window_open(&w, a.scale, &e)) {
-            fprintf(stderr, "soccerkid: %s\n", e.msg);
-            rc = 1;
-        } else {
-            rc = window_run(&w, &s, a.exit_after);
-        }
-        window_close(&w);
-    }
-    scene_close(&s);
-    return rc;
+    if (a.version) { puts("soccerkid 0.2"); return 0; }
+    return a.viewer ? run_viewer(&a, &e) : run_play(&a, &e);
 }

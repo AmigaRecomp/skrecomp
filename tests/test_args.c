@@ -1,6 +1,8 @@
 #include <string.h>
 #include "check.h"
 #include "app/args.h"
+#include "app/play.h"
+#include "game/input.h"
 
 static bool parse(sk_args *a, sk_err *e, int argc, const char **argv) {
     return args_parse(argc, (char **)argv, a, e);
@@ -65,4 +67,21 @@ void test_args_defaults_and_errors(void) {
     CHECK(parse(&a, &e, 2, version));
     CHECK(a.version);
     CHECK_STR(args_usage(), "--roms");
+}
+
+void test_args_script_and_frames(void) {
+    sk_args a; sk_err e = {0};
+    const char *ok[] = { "soccerkid", "--roms", "d", "--frames", "300", "--script", "R150,RU20,.30", "--viewer" };
+    CHECK(args_parse(8, (char **)ok, &a, &e));
+    CHECK_EQ(a.frames, 300); CHECK(a.viewer); CHECK(a.script && strcmp(a.script, "R150,RU20,.30") == 0);
+    const char *s = a.script; uint8_t in; int n;
+    CHECK(script_parse_step(&s, &in, &n, &e)); CHECK_EQ(in, SK_IN_RIGHT); CHECK_EQ(n, 150);
+    CHECK(script_parse_step(&s, &in, &n, &e)); CHECK_EQ(in, SK_IN_RIGHT | SK_IN_UP); CHECK_EQ(n, 20);
+    CHECK(script_parse_step(&s, &in, &n, &e)); CHECK_EQ(in, 0); CHECK_EQ(n, 30); CHECK_EQ(*s, 0);
+    const char *bad[] = { "soccerkid", "--roms", "d", "--script", "X9" };
+    CHECK(!args_parse(5, (char **)bad, &a, &e)); CHECK_STR(e.msg, "--script");
+    const char *nocount[] = { "soccerkid", "--roms", "d", "--script", "R" };
+    CHECK(!args_parse(5, (char **)nocount, &a, &e)); CHECK_STR(e.msg, "frame count");
+    const char *defaults[] = { "soccerkid", "--roms", "d" };
+    CHECK(args_parse(3, (char **)defaults, &a, &e)); CHECK(!a.viewer); CHECK_EQ(a.frames, 0); CHECK(a.script == NULL);
 }

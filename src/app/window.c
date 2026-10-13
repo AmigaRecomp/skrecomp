@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "app/window.h"
+#include "game/input.h"
 #include "gfx/display_model.h"
 
 #define STEP_NS 20000000ull         /* 50 Hz */
@@ -54,7 +55,25 @@ static void change_section(sk_scene *s, int delta) {
     }
 }
 
-/* Quit and one-shot keys: polled every iteration so the window stays responsive. */
+uint8_t window_input_bits(const bool *keys) {
+    uint8_t in = 0;
+    if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) in |= SK_IN_UP;
+    if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S]) in |= SK_IN_DOWN;
+    if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) in |= SK_IN_LEFT;
+    if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) in |= SK_IN_RIGHT;
+    if (keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_X]) in |= SK_IN_FIRE;
+    return in;
+}
+
+static void present_pixels(sk_window *w) {
+    SDL_UpdateTexture(w->tex, NULL, w->pixels, SK_SCREEN_W * (int)sizeof *w->pixels);
+    SDL_RenderClear(w->ren);
+    SDL_RenderTexture(w->ren, w->tex, NULL, NULL);
+    SDL_RenderPresent(w->ren);
+    w->frames_presented++;
+}
+
+/* Quit and one-shot keys: polled every iteration so the window stays responsive. s may be NULL (play mode). */
 static bool poll_events(sk_window *w, sk_scene *s) {
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
@@ -62,10 +81,10 @@ static bool poll_events(sk_window *w, sk_scene *s) {
         if (ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat) {
             switch (ev.key.key) {
             case SDLK_ESCAPE: return false;
-            case SDLK_PAGEUP: change_level(s, -1); break;
-            case SDLK_PAGEDOWN: change_level(s, 1); break;
-            case SDLK_LEFTBRACKET: change_section(s, -1); break;
-            case SDLK_RIGHTBRACKET: change_section(s, 1); break;
+            case SDLK_PAGEUP: if (s) change_level(s, -1); break;
+            case SDLK_PAGEDOWN: if (s) change_level(s, 1); break;
+            case SDLK_LEFTBRACKET: if (s) change_section(s, -1); break;
+            case SDLK_RIGHTBRACKET: if (s) change_section(s, 1); break;
             case SDLK_F: {
                 bool full = (SDL_GetWindowFlags(w->win) & SDL_WINDOW_FULLSCREEN) != 0;
                 SDL_SetWindowFullscreen(w->win, !full);
@@ -97,7 +116,7 @@ int window_steps_for(uint64_t *acc_ns, uint64_t elapsed_ns) {
     return steps;
 }
 
-int window_run(sk_window *w, sk_scene *s, int exit_after) {
+int window_run_viewer(sk_window *w, sk_scene *s, int exit_after) {
     uint64_t last = SDL_GetTicksNS(), acc = 0;
     bool running = true;
     while (running) {
@@ -108,11 +127,25 @@ int window_run(sk_window *w, sk_scene *s, int exit_after) {
         for (int i = 0; i < steps; i++) step_held_keys(s);
         scene_draw(s);
         scene_present(s, w->pixels);
-        SDL_UpdateTexture(w->tex, NULL, w->pixels, SK_SCREEN_W * (int)sizeof *w->pixels);
-        SDL_RenderClear(w->ren);
-        SDL_RenderTexture(w->ren, w->tex, NULL, NULL);
-        SDL_RenderPresent(w->ren);
-        w->frames_presented++;
+        present_pixels(w);
+        if (exit_after > 0 && w->frames_presented >= exit_after) break;
+        if (steps == 0) SDL_Delay(1);
+    }
+    return 0;
+}
+
+int window_run(sk_window *w, sk_play *p, int exit_after) {
+    uint64_t last = SDL_GetTicksNS(), acc = 0;
+    bool running = true;
+    while (running) {
+        uint64_t now = SDL_GetTicksNS();
+        int steps = window_steps_for(&acc, now - last);
+        last = now;
+        running = poll_events(w, NULL);
+        for (int i = 0; i < steps; i++) play_step(p, window_input_bits(SDL_GetKeyboardState(NULL)));
+        play_draw(p);
+        play_present(p, w->pixels);
+        present_pixels(w);
         if (exit_after > 0 && w->frames_presented >= exit_after) break;
         if (steps == 0) SDL_Delay(1);
     }

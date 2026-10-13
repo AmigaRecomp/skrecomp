@@ -17,6 +17,9 @@ typedef struct {
     bool no_frames;             /* do not draw any graphics-set frames (cross-check renders) */
     int scale;                  /* window scale factor */
     int exit_after;             /* stop the window loop after N frames (tests) */
+    bool viewer;                /* the sub-project 3 level viewer instead of playing */
+    int frames;                 /* headless: run N game frames, then the screenshot */
+    const char *script;         /* scripted input: "R150,RU20,.30" */
     bool help, version;
 } sk_args;
 

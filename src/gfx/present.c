@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include "gfx/present.h"
 #include "gfx/display_model.h"
@@ -17,23 +18,24 @@ static inline uint32_t resolve(const sk_palette *pal, uint8_t v, uint32_t c17, u
 #endif
 }
 
-void present_rows(const sk_fb *fb, const sk_palette *pal, const sk_line_colours *sky,
+static uint32_t sky_word(const uint16_t *t, int len, int i) { return rgb12_to_xrgb(t[i < len ? i : len - 1]); }
+
+void present_rows(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky,
                   int src_x, int src_y, int w, int h, uint32_t *out) {
-    int pairs = sky && sky->words ? sky->len / 2 : 0;
+    bool has = sky && sky->c17 && sky->c17_len > 0 && sky->c18 && sky->c18_len > 0;
     for (int y = 0; y < h; y++) {
         uint32_t c17 = 0, c18 = 0;
-        if (pairs) {
-            int k = y < pairs ? y : pairs - 1;
-            c17 = rgb12_to_xrgb(sky->words[2 * k]);
-            c18 = rgb12_to_xrgb(sky->words[2 * k + 1]);
+        if (has) {
+            c17 = sky_word(sky->c17, sky->c17_len, sky->c17_off + y);
+            c18 = sky_word(sky->c18, sky->c18_len, sky->c18_off + y);
         }
         const uint8_t *row = fb->px + (size_t)(src_y + y) * (size_t)fb->w + src_x;
         uint32_t *dst = out + (size_t)y * (size_t)w;
-        for (int x = 0; x < w; x++) dst[x] = resolve(pal, row[x], c17, c18, pairs != 0);
+        for (int x = 0; x < w; x++) dst[x] = resolve(pal, row[x], c17, c18, has);
     }
 }
 
-void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_line_colours *sky, const sk_sprite_layer *spr, uint32_t *out) {
+void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky, const sk_sprite_layer *spr, int curtain_rows, uint32_t *out) {
     for (size_t i = 0; i < (size_t)SK_SCREEN_W * SK_SCREEN_H; i++) out[i] = pal->xrgb[0];
     static uint32_t window[SK_VIEW_W * SK_VIEW_H];
     present_rows(fb, pal, sky, SK_VIEW_X, 0, SK_VIEW_W, SK_VIEW_H, window);
@@ -53,6 +55,9 @@ void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_line_colour
             }
         }
     }
+    if (curtain_rows > SK_VIEW_H / 2) curtain_rows = SK_VIEW_H / 2;
+    for (int y = 0; y < curtain_rows; y++)
+        for (int x = 0; x < SK_VIEW_W; x++) window[(size_t)y * SK_VIEW_W + x] = window[(size_t)(SK_VIEW_H - 1 - y) * SK_VIEW_W + x] = pal->xrgb[0];
     for (int y = 0; y < SK_VIEW_H; y++) {
         uint32_t *dst = out + (size_t)(SK_PLAY_Y + y) * SK_SCREEN_W + SK_PLAY_X;
         const uint32_t *src = window + (size_t)y * SK_VIEW_W;

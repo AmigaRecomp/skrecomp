@@ -4,6 +4,7 @@
 #include "app/args.h"
 #include "app/scene.h"
 #include "app/window.h"
+#include "game/input.h"
 
 void test_window_runs_headless_frames(void) {         /* ROM-backed; SDL's dummy video driver */
     const char *roms = getenv("SOCCERKID_ROMS");
@@ -16,7 +17,7 @@ void test_window_runs_headless_frames(void) {         /* ROM-backed; SDL's dummy
     sk_window w = {0};
     CHECK(window_open(&w, 1, &e));
     if (!SK_OK(&e)) printf("window_open: %s\n", e.msg);
-    CHECK_EQ(window_run(&w, &s, 3), 0);
+    CHECK_EQ(window_run_viewer(&w, &s, 3), 0);
     CHECK_EQ(w.frames_presented, 3);
     window_close(&w);
     scene_close(&s);
@@ -49,4 +50,13 @@ void test_window_fixed_step_accumulator(void) {
     CHECK_EQ(acc, 15000000ull);
     CHECK_EQ(window_steps_for(&acc, 1000000000ull), 5);   /* a one-second stall: capped at 5 steps */
     CHECK(acc <= 20000000ull);                            /* and the backlog is dropped */
+}
+
+void test_window_input_bits_map_keys(void) {
+    bool keys[SDL_SCANCODE_COUNT] = { false };
+    CHECK_EQ(window_input_bits(keys), 0);
+    keys[SDL_SCANCODE_RIGHT] = true; keys[SDL_SCANCODE_SPACE] = true;
+    CHECK_EQ(window_input_bits(keys), SK_IN_RIGHT | SK_IN_FIRE);
+    keys[SDL_SCANCODE_RIGHT] = false; keys[SDL_SCANCODE_W] = true; keys[SDL_SCANCODE_A] = true;
+    CHECK_EQ(window_input_bits(keys), SK_IN_UP | SK_IN_LEFT | SK_IN_FIRE);
 }

@@ -129,3 +129,23 @@ void test_bobs_estimate_real_sheets(void) {           /* ROM-backed */
     CHECK_EQ(s.frames.count, 24);
     scene_close(&s);
 }
+
+void test_scene_backdrop_pos_and_sky(void) {
+    uint8_t *d = NULL; size_t n = 0; sk_level lv = {0}; sk_err e = {0};
+    CHECK(load_fixture("level_play.bin", &d, &n));
+    CHECK(level_parse(d, n, &lv, &e));                          /* parallax 2, backdrop 30 x 14 cells */
+    int bx, by;
+    scene_backdrop_pos(&lv, 100, 40, &bx, &by);
+    CHECK_EQ(bx, 50); CHECK_EQ(by, 20);                         /* ((100 * 4) / 2 + 3) >> 2 = 50; 40 / 2 */
+    scene_backdrop_pos(&lv, 101, 41, &bx, &by);
+    CHECK_EQ(bx, 51); CHECK_EQ(by, 20);                         /* ((404 / 2) + 3) >> 2 = 51 */
+    scene_backdrop_pos(&lv, 5000, 5000, &bx, &by);
+    CHECK_EQ(bx, 30 * 16 - 320); CHECK_EQ(by, 14 * 16 - 200 > 0 ? 14 * 16 - 200 : 0);
+    sk_sky sky;
+    scene_sky(&lv, 20, &sky);
+    CHECK(sky.c17 == lv.sky && sky.c18 == lv.copp2);
+    CHECK_EQ(sky.c17_off, 10); CHECK_EQ(sky.c18_off, 20); CHECK_EQ(sky.c17_len, lv.sky_len); CHECK_EQ(sky.c18_len, lv.copp2_len);
+    scene_sky(&lv, 1000, &sky);
+    CHECK_EQ(sky.c17_off, 312);
+    level_free(&lv); free(d);
+}

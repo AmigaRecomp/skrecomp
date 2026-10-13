@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "app/args.h"
+#include "app/play.h"
 
 static const char *USAGE =
     "usage: soccerkid --roms <dir> [options]\n"
@@ -14,6 +15,9 @@ static const char *USAGE =
     "  --screenshot out.png    render one frame to a PNG and exit (no window)\n"
     "  --scale K               window scale factor (default 3)\n"
     "  --exit-after N          close the window after N frames\n"
+    "  --viewer                the level viewer (arrows scroll) instead of playing\n"
+    "  --frames N              headless: run N game frames (50 per second of play), then --screenshot\n"
+    "  --script S              scripted input: tokens <keys><frames> joined by commas, keys U D L R F or . (none), e.g. R150,RU20,.30\n"
     "  --help, --version\n";
 
 const char *args_usage(void) { return USAGE; }
@@ -39,9 +43,10 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
         if (strcmp(opt, "--version") == 0) { a->version = true; continue; }
         if (strcmp(opt, "--no-backdrop") == 0) { a->no_backdrop = true; continue; }
         if (strcmp(opt, "--no-frames") == 0) { a->no_frames = true; continue; }
+        if (strcmp(opt, "--viewer") == 0) { a->viewer = true; continue; }
         bool takes_value = strcmp(opt, "--roms") == 0 || strcmp(opt, "--level") == 0 || strcmp(opt, "--section") == 0 ||
                            strcmp(opt, "--cam") == 0 || strcmp(opt, "--screenshot") == 0 || strcmp(opt, "--scale") == 0 ||
-                           strcmp(opt, "--exit-after") == 0;
+                           strcmp(opt, "--exit-after") == 0 || strcmp(opt, "--frames") == 0 || strcmp(opt, "--script") == 0;
         if (!takes_value) return sk_fail(e, "unknown option %s", opt);
         if (!val) return sk_fail(e, "%s needs a value", opt);
         i++;
@@ -50,6 +55,12 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
         else if (strcmp(opt, "--level") == 0) { if (!parse_int(val, &a->level)) return sk_fail(e, "--level: not a number: %s", val); }
         else if (strcmp(opt, "--scale") == 0) { if (!parse_int(val, &a->scale) || a->scale < 1) return sk_fail(e, "--scale: bad value %s", val); }
         else if (strcmp(opt, "--exit-after") == 0) { if (!parse_int(val, &a->exit_after)) return sk_fail(e, "--exit-after: not a number: %s", val); }
+        else if (strcmp(opt, "--frames") == 0) { if (!parse_int(val, &a->frames) || a->frames < 0) return sk_fail(e, "--frames: bad value %s", val); }
+        else if (strcmp(opt, "--script") == 0) {
+            const char *cur = val; uint8_t in; int n;
+            while (*cur) if (!script_parse_step(&cur, &in, &n, e)) return false;
+            a->script = val;
+        }
         else if (strcmp(opt, "--cam") == 0) {
             char buf[64];
             snprintf(buf, sizeof buf, "%s", val);

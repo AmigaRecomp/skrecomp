@@ -96,6 +96,13 @@ void test_timer_counts_down_in_bcd_and_times_out(void);
 void test_curtain_opens_and_closes(void);
 void test_play_level_next_skips_non_tile_levels(void);
 void test_level_setup_and_outcome(void);
+void test_present_curtain_blacks_rows(void);
+void test_scene_backdrop_pos_and_sky(void);
+void test_window_input_bits_map_keys(void);
+void test_args_script_and_frames(void);
+void test_play_script_runs_headless_on_the_fixture(void);
+void test_play_script_survives_game_over(void);
+void test_play_real_level0_screenshot(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -189,6 +196,13 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "curtain_opens_and_closes", test_curtain_opens_and_closes },
     { "play_level_next_skips_non_tile_levels", test_play_level_next_skips_non_tile_levels },
     { "level_setup_and_outcome", test_level_setup_and_outcome },
+    { "present_curtain_blacks_rows", test_present_curtain_blacks_rows },
+    { "scene_backdrop_pos_and_sky", test_scene_backdrop_pos_and_sky },
+    { "window_input_bits_map_keys", test_window_input_bits_map_keys },
+    { "args_script_and_frames", test_args_script_and_frames },
+    { "play_script_runs_headless_on_the_fixture", test_play_script_runs_headless_on_the_fixture },
+    { "play_script_survives_game_over", test_play_script_survives_game_over },
+    { "play_real_level0_screenshot", test_play_real_level0_screenshot },
 };
 
 int main(int argc, char **argv) {

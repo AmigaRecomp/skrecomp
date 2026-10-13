@@ -38,8 +38,8 @@ void test_present_rows_resolves_dual_playfield_and_sky(void) {
     b.colours[3] = 0x00F;
     sk_palette p;
     palette_from_tilesets(&p, &a, &b);
-    uint16_t words[4] = { 0x0BF, 0x0CF, 0x0DF, 0x0EF };        /* two lines of (COLOR17, COLOR18) */
-    sk_line_colours sky = { words, 4 };
+    uint16_t c17w[4] = { 0x0AF, 0x0BF, 0x0DF, 0x0EF }, c18w[3] = { 0x0CF, 0x0DF, 0x0FF };
+    sk_sky sky = { c17w, 4, 1, c18w, 3, 2 };                    /* COLOR17 from word 1 on, COLOR18 from word 2 on */
     sk_fb fb;
     CHECK(fb_init(&fb, 32, 8));
     fb_clear(&fb, 0x00);
@@ -52,13 +52,13 @@ void test_present_rows_resolves_dual_playfield_and_sky(void) {
     uint32_t out[16 * 3];
     present_rows(&fb, &p, &sky, 8, 1, 16, 3, out);
     CHECK_EQ(out[0], 0);                           /* value 0: colour 0 */
-    CHECK_EQ(out[1], rgb12_to_xrgb(0x0BF));        /* window line 0 -> words 0, 1 */
-    CHECK_EQ(out[2], rgb12_to_xrgb(0x0CF));
+    CHECK_EQ(out[1], rgb12_to_xrgb(0x0BF));        /* window line 0 -> COLOR17 word 1 */
+    CHECK_EQ(out[2], rgb12_to_xrgb(0x0FF));        /* COLOR18 word 2 (the table's last word) */
     CHECK_EQ(out[3], 0xFF0000);
     CHECK_EQ(out[4], 0x0000FF);
-    CHECK_EQ(out[16 + 0], rgb12_to_xrgb(0x0DF));   /* window line 1 -> words 2, 3 */
-    CHECK_EQ(out[32 + 0], rgb12_to_xrgb(0x0DF));   /* beyond the table: the last pair holds */
-    sk_line_colours none = { NULL, 0 };
+    CHECK_EQ(out[16 + 0], rgb12_to_xrgb(0x0DF));   /* window line 1 -> COLOR17 word 2 */
+    CHECK_EQ(out[32 + 0], rgb12_to_xrgb(0x0EF));   /* line 2 -> word 3; beyond the table the last word holds */
+    sk_sky none = { NULL, 0, 0, NULL, 0, 0 };
     present_rows(&fb, &p, &none, 8, 1, 16, 1, out);
     CHECK_EQ(out[1], 0x00FF00);                    /* no sky table: colour 17 stays set B colour 1 */
     fb_free(&fb);
@@ -69,13 +69,13 @@ void test_present_screen_places_the_play_window(void) {
     a.colours[1] = 0xF00;
     sk_palette p;
     palette_from_tilesets(&p, &a, &b);
-    sk_line_colours none = { NULL, 0 };
+    sk_sky none = { NULL, 0, 0, NULL, 0, 0 };
     sk_fb fb;
     CHECK(fb_init(&fb, SK_FB_W, SK_FB_H));
     fb_clear(&fb, 0x01);                           /* everything playfield-1 colour 1 */
     uint32_t *out = calloc(SK_SCREEN_W * SK_SCREEN_H, sizeof *out);
     memset(out, 0x55, SK_SCREEN_W * SK_SCREEN_H * sizeof *out);
-    present_screen(&fb, &p, &none, NULL, out);
+    present_screen(&fb, &p, &none, NULL, 0, out);
     CHECK_EQ(out[0], 0);                                                   /* left border */
     CHECK_EQ(out[SK_PLAY_X - 1], 0);
     CHECK_EQ(out[SK_PLAY_X], 0xFF0000);                                    /* first play pixel */
@@ -100,15 +100,30 @@ void test_present_sprite_priority(void) {
     L.spr[0].visible = true; L.spr[0].x = SK_VIEW_X + 10; L.spr[0].y = 0;
     L.spr[0].px[0] = 5; L.spr[0].px[1] = 5;                     /* covers window x 10 and 11 */
     static uint32_t out[SK_SCREEN_W * SK_SCREEN_H];
-    sk_line_colours none = { NULL, 0 };
-    present_screen(&fb, &pal, &none, &L, out);
+    sk_sky none = { NULL, 0, 0, NULL, 0, 0 };
+    present_screen(&fb, &pal, &none, &L, 0, out);
     CHECK_EQ(out[SK_PLAY_X + 10], pal.xrgb[3]);                  /* behind playfield 1 */
     CHECK_EQ(out[SK_PLAY_X + 11], pal.xrgb[48 + 5]);             /* over playfield 2 */
     L.spr[0].in_front = true;
-    present_screen(&fb, &pal, &none, &L, out);
+    present_screen(&fb, &pal, &none, &L, 0, out);
     CHECK_EQ(out[SK_PLAY_X + 10], pal.xrgb[48 + 5]);
     L.spr[0].x = SK_VIEW_X - 63; L.spr[0].y = SK_VIEW_H - 1;     /* clipped at the edges: no crash */
-    present_screen(&fb, &pal, &none, &L, out);
+    present_screen(&fb, &pal, &none, &L, 0, out);
     CHECK_EQ(out[SK_PLAY_X + 0 + (SK_PLAY_Y + SK_VIEW_H - 1) * SK_SCREEN_W], pal.xrgb[SK_PF2_COLOUR_BASE]);   /* only transparent pixels reach the window */
+    fb_free(&fb);
+}
+
+void test_present_curtain_blacks_rows(void) {
+    sk_fb fb; CHECK(fb_init(&fb, SK_FB_W, SK_FB_H));
+    fb_clear(&fb, 0x01);                                        /* playfield 1 colour 1 everywhere */
+    sk_palette pal = {0};
+    pal.xrgb[1] = 0xABCDEF;
+    static uint32_t out[SK_SCREEN_W * SK_SCREEN_H];
+    sk_sky none = { NULL, 0, 0, NULL, 0, 0 };
+    present_screen(&fb, &pal, &none, NULL, 10, out);
+    CHECK_EQ(out[(SK_PLAY_Y + 9) * SK_SCREEN_W + SK_PLAY_X + 5], 0);                   /* hidden top row */
+    CHECK_EQ(out[(SK_PLAY_Y + 10) * SK_SCREEN_W + SK_PLAY_X + 5], 0xABCDEF);          /* first visible row */
+    CHECK_EQ(out[(SK_PLAY_Y + SK_VIEW_H - 10) * SK_SCREEN_W + SK_PLAY_X + 5], 0);      /* hidden bottom row */
+    CHECK_EQ(out[(SK_PLAY_Y + SK_VIEW_H - 11) * SK_SCREEN_W + SK_PLAY_X + 5], 0xABCDEF);
     fb_free(&fb);
 }

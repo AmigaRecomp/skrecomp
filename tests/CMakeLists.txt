@@ -26,7 +26,8 @@ add_executable(sk_tests
   test_objects.c
   test_camera.c
   test_attrs.c
-  test_level_flow.c)
+  test_level_flow.c
+  test_play.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -123,7 +124,14 @@ set(SK_TEST_NAMES
   timer_counts_down_in_bcd_and_times_out
   curtain_opens_and_closes
   play_level_next_skips_non_tile_levels
-  level_setup_and_outcome)
+  level_setup_and_outcome
+  present_curtain_blacks_rows
+  scene_backdrop_pos_and_sky
+  window_input_bits_map_keys
+  args_script_and_frames
+  play_script_runs_headless_on_the_fixture
+  play_script_survives_game_over
+  play_real_level0_screenshot)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

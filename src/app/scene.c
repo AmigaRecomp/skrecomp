@@ -35,9 +35,11 @@ static void draw_grid(sk_fb *fb, const sk_tileset *ts, int cols, int rows, int s
     }
 }
 
+typedef struct { const uint16_t *indices; int w; } index_grid;
+
 static int fg_index(const void *ctx, int x, int y) {
-    const sk_level *lv = ctx;
-    return level_cell(lv, x, y) & SK_INDEX_MASK;
+    const index_grid *gr = ctx;
+    return gr->indices[y * gr->w + x] & SK_INDEX_MASK;
 }
 
 static int bg_index(const void *ctx, int x, int y) {
@@ -45,20 +47,36 @@ static int bg_index(const void *ctx, int x, int y) {
     return lv->backdrop.grid[y * lv->backdrop.width + x];
 }
 
+void scene_backdrop_pos(const sk_level *lv, int cam_x, int cam_y, int *bg_x, int *bg_y) {
+    int divisor = lv->backdrop.values[0] ? lv->backdrop.values[0] : 1;            /* the parallax divisor (VERIFIED) */
+    int bx = ((cam_x * 4) / divisor + 3) >> 2, by = cam_y / divisor;
+    int mx = clamp_max(lv->backdrop.width * 16, SK_BG_MARGIN_W), my = clamp_max(lv->backdrop.height * 16, SK_CAM_MARGIN_H);
+    *bg_x = bx > mx ? mx : bx;
+    *bg_y = by > my ? my : by;
+}
+
+void scene_sky(const sk_level *lv, int bg_y, sk_sky *sky) {
+    sky->c17 = lv->sky; sky->c17_len = lv->sky_len; sky->c17_off = bg_y / 2 < 312 ? bg_y / 2 : 312;
+    sky->c18 = lv->copp2; sky->c18_len = lv->copp2_len; sky->c18_off = bg_y;
+}
+
+void scene_draw_backdrop(const sk_level *lv, sk_fb *fb, int bg_x, int bg_y) {
+    if (lv->backdrop.grid) draw_grid(fb, &lv->tiles_b, lv->backdrop.width, lv->backdrop.height, bg_x, bg_y, SK_GROUP_TILES_B, bg_index, lv);
+}
+
+void scene_draw_tiles(const sk_level *lv, sk_fb *fb, const uint16_t *indices, int cam_x, int cam_y) {
+    index_grid gr = { indices, lv->map.width };
+    draw_grid(fb, &lv->tiles_a, lv->map.width, lv->map.height, cam_x, cam_y, SK_GROUP_TILES_A, fg_index, &gr);
+}
+
 void scene_draw_level(const sk_level *lv, sk_fb *fb, int cam_x, int cam_y, bool backdrop, const sk_frames *frames) {
     fb_clear(fb, 0);
-    if (backdrop && lv->backdrop.grid) {
-        int divisor = lv->backdrop.values[0] ? lv->backdrop.values[0] : 1;        /* READING: parallax divisor */
-        int bg_x = cam_x / divisor;
-        int bg_max_x = clamp_max(lv->backdrop.width * 16, SK_BG_MARGIN_W);
-        int fg_max_y = clamp_max(lv->map.height * 16, SK_CAM_MARGIN_H);
-        int bg_max_y = clamp_max(lv->backdrop.height * 16, SK_CAM_MARGIN_H);
-        int bg_y = fg_max_y > 0 ? (int)((long)cam_y * bg_max_y / fg_max_y) : 0;
-        if (bg_x > bg_max_x) bg_x = bg_max_x;
-        if (bg_y > bg_max_y) bg_y = bg_max_y;
-        draw_grid(fb, &lv->tiles_b, lv->backdrop.width, lv->backdrop.height, bg_x, bg_y, SK_GROUP_TILES_B, bg_index, lv);
+    if (backdrop) {
+        int bg_x, bg_y;
+        scene_backdrop_pos(lv, cam_x, cam_y, &bg_x, &bg_y);
+        scene_draw_backdrop(lv, fb, bg_x, bg_y);
     }
-    draw_grid(fb, &lv->tiles_a, lv->map.width, lv->map.height, cam_x, cam_y, SK_GROUP_TILES_A, fg_index, lv);
+    scene_draw_tiles(lv, fb, lv->map.cells, cam_x, cam_y);
     if (frames && frames->count) {
         int x = 8, y = 32;
         for (int i = 0; i < frames->count; i++) {
@@ -184,8 +202,11 @@ void scene_draw(sk_scene *s) {
 }
 
 void scene_present(const sk_scene *s, uint32_t *out) {
-    sk_line_colours sky = { s->level.sky, s->level.sky_len };
-    present_screen(&s->fb, &s->palette, &sky, NULL, out);
+    int bg_x, bg_y;
+    scene_backdrop_pos(&s->level, s->cam_x, s->cam_y, &bg_x, &bg_y);
+    sk_sky sky;
+    scene_sky(&s->level, bg_y, &sky);
+    present_screen(&s->fb, &s->palette, &sky, NULL, 0, out);
 }
 
 void scene_close(sk_scene *s) {

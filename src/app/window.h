@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <SDL3/SDL.h>
+#include "app/play.h"
 #include "app/scene.h"
 #include "core/err.h"
 
@@ -17,8 +18,12 @@ typedef struct {
 } sk_window;
 
 bool window_open(sk_window *w, int scale, sk_err *e);
-/* Runs until Escape or the window closes; exit_after > 0 stops after that many presented frames. Returns 0. */
-int window_run(sk_window *w, sk_scene *s, int exit_after);
+/* Plays until Escape or the window closes; exit_after > 0 stops after that many presented frames. Returns 0. */
+int window_run(sk_window *w, sk_play *p, int exit_after);
+/* The level viewer (arrows scroll, PageUp/PageDown change level, [ ] change the section). */
+int window_run_viewer(sk_window *w, sk_scene *s, int exit_after);
+/* The joystick bits held on the keyboard: arrows or WASD, Space / Left Ctrl / X = fire (pure, for tests). */
+uint8_t window_input_bits(const bool *keys);
 void window_close(sk_window *w);
 
 /* Moves the camera by (dx, dy) * step pixels, clamped to the scene's limits (pure, for tests). */
