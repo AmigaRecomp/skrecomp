@@ -228,6 +228,10 @@ void test_backdrop_cells_paint_save_and_restore(void);
 void test_fill_cells_writes_a_column(void);
 void test_halfstep_velocity_adds_the_whole_step_on_odd_frames(void);
 void test_the_backdrop_draws_from_the_writable_cells(void);
+void test_riviera_boss_waits_for_the_arena_wipe(void);
+void test_riviera_boss_rises_on_its_lift_and_shoots(void);
+void test_riviera_boss_suction_and_the_end(void);
+void test_find_slot_by_type_sees_a_slot_spawned_this_frame(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -453,6 +457,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "fill_cells_writes_a_column", test_fill_cells_writes_a_column },
     { "halfstep_velocity_adds_the_whole_step_on_odd_frames", test_halfstep_velocity_adds_the_whole_step_on_odd_frames },
     { "the_backdrop_draws_from_the_writable_cells", test_the_backdrop_draws_from_the_writable_cells },
+    { "riviera_boss_waits_for_the_arena_wipe", test_riviera_boss_waits_for_the_arena_wipe },
+    { "riviera_boss_rises_on_its_lift_and_shoots", test_riviera_boss_rises_on_its_lift_and_shoots },
+    { "riviera_boss_suction_and_the_end", test_riviera_boss_suction_and_the_end },
+    { "find_slot_by_type_sees_a_slot_spawned_this_frame", test_find_slot_by_type_sees_a_slot_spawned_this_frame },
 };
 
 int main(int argc, char **argv) {

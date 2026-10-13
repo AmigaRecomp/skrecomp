@@ -269,7 +269,11 @@ set(SK_TEST_NAMES
   backdrop_cells_paint_save_and_restore
   fill_cells_writes_a_column
   halfstep_velocity_adds_the_whole_step_on_odd_frames
-  the_backdrop_draws_from_the_writable_cells)
+  the_backdrop_draws_from_the_writable_cells
+  riviera_boss_waits_for_the_arena_wipe
+  riviera_boss_rises_on_its_lift_and_shoots
+  riviera_boss_suction_and_the_end
+  find_slot_by_type_sees_a_slot_spawned_this_frame)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

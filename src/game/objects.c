@@ -45,8 +45,8 @@ void objects_flush_deferred(sk_game *g) {
     g->objs.n_deferred = 0;
 }
 
-sk_slot *find_slot_by_type(sk_game *g, int type) {             /* sub_10DF8A: type4 compared as a word */
-    for (int i = 0; i < 16; i++) if (g->objs.slot[i].x >= 0 && g->objs.slot[i].type4 == type * 4) return &g->objs.slot[i];
+sk_slot *find_slot_by_type(sk_game *g, int type) {             /* sub_10DF8A: type4 without the skip bit */
+    for (int i = 0; i < 16; i++) if (g->objs.slot[i].x >= 0 && (g->objs.slot[i].type4 & 0x7FFF) == type * 4) return &g->objs.slot[i];
     return NULL;
 }
 

@@ -377,3 +377,75 @@ void test_the_backdrop_draws_from_the_writable_cells(void) {
     fb_free(&a); fb_free(&b);
     drop_game();
 }
+
+static sk_slot *find_type(int type) { for (int i = 0; i < 16; i++) if (g_g.objs.slot[i].x >= 0 && (g_g.objs.slot[i].type4 & 0x1FF) == type * 4) return &g_g.objs.slot[i]; return NULL; }
+
+void test_riviera_boss_waits_for_the_arena_wipe(void) {        /* types 51, 95, 96, 93 */
+    CHECK(make_game());
+    g_g.camera_x = 300; g_g.player.x = 400;
+    sk_slot *s = spawn(500, 9 * 16, 51, 0);
+    CHECK_EQ(s->hits, 15); CHECK_EQ(s->x, 452); CHECK_EQ(s->y, 9 * 16 + 16);
+    CHECK_EQ(g_g.push_x, 452 - 0x80);
+    CHECK(s->draw->dflags & 4);                                      /* below its floor: hidden */
+    sk_slot *wipe = find_type(96), *lift = find_type(95);
+    CHECK(wipe != NULL); CHECK(lift != NULL);
+    CHECK_EQ(wipe->draw->dflags & 0x10, 0x10); CHECK_EQ(wipe->draw->x, g_g.world.bg_max_x + 16);
+    CHECK_EQ(lift->t0, lift->draw->y);
+    tick(50);
+    CHECK_EQ(wipe->draw->y, 0);                                      /* the camera not at the wall yet */
+    g_g.camera_x = g_g.push_x;
+    int i = 0;
+    while (find_type(96) && i++ < 400) tick(1);
+    CHECK(find_type(96) == NULL); CHECK(i >= 0xD0 - 1);
+    CHECK(find_type(93) != NULL);                                    /* the spirit, after 128 rows */
+    CHECK(aux_c(s) & 2);                                             /* the boss woken */
+    drop_game();
+}
+
+void test_riviera_boss_rises_on_its_lift_and_shoots(void) {
+    CHECK(make_game());
+    g_g.camera_x = 300; g_g.player.x = 400;
+    sk_slot *s = spawn(500, 9 * 16, 51, 0);
+    sk_slot *lift = find_type(95);
+    set_aux_c(s, 2);
+    int y0 = s->draw->y;
+    tick(1);
+    CHECK_EQ(s->x0, s->y - 0x6F); CHECK_EQ(lift->t0, s->y - 0x6F + 0x40);   /* phase 0: the targets */
+    int i = 0;
+    while (s->draw->y != s->x0 && i++ < 300) tick(1);
+    CHECK_EQ(s->draw->y, s->x0); CHECK(s->draw->y < y0);            /* risen */
+    CHECK(!(s->draw->dflags & 4)); CHECK_EQ(s->draw->h, 64);
+    i = 0;
+    while (!find_type(94) && i++ < 300) tick(1);
+    sk_slot *shot = find_type(94);
+    CHECK(shot != NULL);
+    CHECK_EQ(g_g.sfx_last, 25);
+    CHECK_EQ(shot->flags & 1, 0);                                    /* aimed left, at the kid */
+    drop_game();
+}
+
+void test_riviera_boss_suction_and_the_end(void) {             /* phase 13 and the death */
+    CHECK(make_game());
+    g_g.camera_x = 300; g_g.player.x = 400;
+    sk_slot *s = spawn(500, 9 * 16, 51, 0);
+    set_aux_c(s, 2);
+    s->t1 = 12 * 4; s->t0 = 49;                                      /* the last frame of phase 12 (50 frames): 13 next */
+    tick(1);
+    CHECK_EQ(g_g.player.carry_dx, 3); CHECK_EQ(g_g.bw.carry_dx, 3);   /* facing left: pulled right, toward it */
+    CHECK(find_type(92) != NULL);
+    s->hits = 0;
+    tick(1);
+    CHECK_EQ((uint16_t)s->t1 >> 2, 19);                              /* killed: the death phases */
+    int i = 0;
+    while (g_g.level_outcome != 0x81 && i++ < 400) tick(1);
+    CHECK_EQ(g_g.level_outcome, 0x81); CHECK(g_g.curtain_flags & 0x10);
+    drop_game();
+}
+
+void test_find_slot_by_type_sees_a_slot_spawned_this_frame(void) {   /* sub_10DF8A: andi.w #$7fff */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 6 * 16, 44, 0);
+    s->type4 |= (int16_t)0x8000;                                     /* the skip bit of a new slot */
+    CHECK(find_slot_by_type(&g_g, 44) == s);
+    drop_game();
+}
