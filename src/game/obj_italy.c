@@ -14,6 +14,7 @@ static const uint8_t pendulum_frame_neg[71] = {                                 
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6,
     6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 };
 static const uint8_t jumper_fly_script[] = { 0, 4, 0, 2, 7, 8, 9, 10, 0, 1, 2, 3 };              /* 0x11222E */
+static const uint8_t strider_walk_script[] = { 0, 4, 0, 4, 0, 1, 2, 3, 5, 6, 7, 8 };          /* 0x112768 */
 static const uint8_t jumper_land_script[] = { 0, 4, 0, 4, 4, 5, 6, 6, 4, 5, 6, 6 };             /* 0x11223A */
 
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
@@ -215,8 +216,111 @@ static void obj_swing_platform_update(sk_game *g, sk_slot *s, int index) {     /
     }
 }
 
+/* ---- type 43: the strider (slots 53, 55; 54 when its rider is knocked off) ---- */
+static void obj_strider_init(sk_game *g, sk_slot *s, int x, int y) {          /* 0x1124B4 */
+    init_object_slot(g, s, x, y - 36, s->type4);
+    s->vx = 8; s->vy = 0; s->hits = 2;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 53);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 48, 52, f, 1);                                  /* sub_107E56 */
+}
+static void obj_strider_update(sk_game *g, sk_slot *s, int index) {           /* 0x1124EA */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    switch (aux_c(s)) {
+    case 1:                                                         /* slowing to turn */
+        set_frame2(s, 4, 9, s->flags);
+        if ((g->frame_ticks & 3) == 0) s->vx--;
+        if (s->vx == 0) { s->flags ^= 1; set_aux_c(s, 0); }
+        break;
+    case 2:                                                         /* the rider knocked off: bounces */
+        if (s->vy == -4) set_frame2(s, 0, 3, s->flags);
+        if (probe_rows_below(g, s, 0, 0)) {
+            set_frame2(s, 1, 4, s->flags);
+            s->vy = -12;
+            if (--s->t0 == 0) { set_aux_c(s, 3); s->flags |= 2; }
+        }
+        despawn_if_far(g, s);
+        return;
+    case 3:
+        if (s->vy == -4) set_frame2(s, 0, 3, s->flags);
+        despawn_if_far(g, s);
+        return;
+    case 4:                                                         /* leaping: lands near its start height */
+        if (s->vy >= 0) {
+            int dy = (int16_t)(s->y - d->y);
+            if (dy < 0) dy = -dy;
+            int rows;
+            if (dy < 16 && (rows = probe_rows_below2(g, s, 0, 0)) != 0) {
+                d->y = (int16_t)(d->y + rows + 6);
+                reset_animation(s);
+                size_frames(g, d, 48, 52, res(g, 53));
+                s->flags &= ~4;
+                set_aux_c(s, 0);
+            }
+        }
+        break;
+    default: {
+        if (s->vx != 8) s->vx++;
+        int wrapped = 0;
+        step_animation(s, strider_walk_script, s->flags, &wrapped);
+        int ahead = (int16_t)(d->x - s->x);
+        if (!(s->flags & 1)) ahead = -ahead;
+        if (ahead >= 160) { set_aux_c(s, 1); break; }
+        if (ahead >= 100 || s->vx != 8) break;
+        int k = (int16_t)(d->x + 24 - g->player.x);
+        if (s->flags & 1) k = -k;
+        if (k < 80 || k > 112) break;
+        set_aux_c(s, 4);                                            /* leap at the kid */
+        reset_animation(s);
+        size_frames(g, d, 48, 58, res(g, 55));
+        set_frame2(s, 0, 1, s->flags);
+        d->y = (int16_t)(d->y - 6);
+        s->vy = -16;
+        s->flags |= 4;
+        break;
+    }
+    }
+    touch_player(g, d->x, d->y, 48, 40);
+    if (ball_hits_object_quiet(g, s, 0, 0, 48, 48, 0, 0x500) < 0) { despawn_if_far(g, s); return; }
+    size_frames(g, d, 32, 41, res(g, 54));                          /* killed: the rider flies off, the mount bounces */
+    s->flags |= 4;
+    s->vx = 4; s->vy = -4;
+    d->dflags &= (uint8_t)~2;
+    s->t0 = 3;
+    set_aux_c(s, 2);
+    g->objs.marker_param = s->flags & 0xFF;
+    spawn_object(g, d->x, s->y + 27, 100);
+    set_frame2(s, 0, 3, s->flags);
+    add_score(g, 0x500);
+    spawn_object(g, d->x + ((uint16_t)d->w >> 1), d->y + ((uint16_t)d->h >> 1), 113);
+    despawn_if_far(g, s);
+}
+
+/* ---- type 100: the strider's rider, thrown off (slot 54) ---- */
+static void obj_rider_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x112774 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->flags = (int16_t)(g->objs.marker_param & 1);
+    s->vx = 6; s->vy = 0; s->t0 = 50;
+    const uint8_t *f = res(g, 54);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 41, f, 1);                                  /* sub_107C58 */
+    set_frame2(s, 2, 5, s->flags);
+}
+static void obj_rider_update(sk_game *g, sk_slot *s, int index) {             /* 0x1127BA */
+    (void)g; (void)index;
+    apply_velocity(s);
+    if (s->t0 && --s->t0 == 0) s->flags |= 4;
+    /* object_offscreen's result is dropped: the original never frees it */
+}
+
 void obj_italy_install(void) {
     object_init_table[36] = obj_pendulum_init;         object_update_table[36] = obj_pendulum_update;
     object_init_table[37] = obj_jumper_init;           object_update_table[37] = obj_jumper_update;
     object_init_table[38] = obj_swing_platform_init;   object_update_table[38] = obj_swing_platform_update;
+    object_init_table[43] = obj_strider_init;          object_update_table[43] = obj_strider_update;
+    object_init_table[100] = obj_rider_init;           object_update_table[100] = obj_rider_update;
 }

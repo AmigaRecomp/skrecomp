@@ -115,3 +115,38 @@ void test_swing_platform_hangs_on_its_chain(void) {           /* type 38 */
     CHECK(s->x < 0); CHECK(!g_g.objs.chain_b);
     drop_game();
 }
+
+void test_strider_walks_turns_and_leaps(void) {               /* type 43 */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 11 * 16, 43, 0);
+    CHECK_EQ(s->vx, 8); CHECK_EQ(s->hits, 2); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 52); CHECK_EQ(s->y, 11 * 16 - 36);
+    int i = 0;
+    while (aux_c(s) == 0 && i++ < 200) tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK(s->x - s->draw->x >= 160);         /* walked 160 px left */
+    i = 0;
+    while (aux_c(s) == 1 && i++ < 200) tick(1);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->flags & 1, 1); CHECK_EQ(s->vx, 0);   /* stopped and turned */
+    drop_game();
+    CHECK(make_game());
+    s = spawn(400, 11 * 16, 43, 0);
+    g_g.player.x = (int16_t)(s->draw->x + 24 - 96);
+    tick(1);
+    CHECK_EQ(aux_c(s), 4); CHECK_EQ(s->draw->h, 58); CHECK(s->flags & 4);   /* leaps at the kid */
+    i = 0;
+    while (aux_c(s) == 4 && i++ < 200) tick(1);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->draw->h, 52); CHECK(!(s->flags & 4));
+    drop_game();
+}
+
+void test_thrown_rider_falls_after_50(void) {                 /* type 100 */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 5 * 16, 100, 1);
+    CHECK_EQ(s->flags & 1, 1); CHECK_EQ(s->vx, 6); CHECK_EQ(s->t0, 50); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->frame, 5);
+    tick(49);
+    CHECK(!(s->flags & 4));
+    tick(1);
+    CHECK(s->flags & 4);
+    tick(200);
+    CHECK(s->x >= 0);                                                /* the original never frees it (the offscreen result is dropped) */
+    drop_game();
+}

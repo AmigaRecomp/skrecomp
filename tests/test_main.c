@@ -209,6 +209,8 @@ void test_home1_cards_and_signs_animate(void);
 void test_pendulum_swings_and_reverses(void);
 void test_jumper_lands_waits_and_jumps_again(void);
 void test_swing_platform_hangs_on_its_chain(void);
+void test_strider_walks_turns_and_leaps(void);
+void test_thrown_rider_falls_after_50(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -415,6 +417,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "pendulum_swings_and_reverses", test_pendulum_swings_and_reverses },
     { "jumper_lands_waits_and_jumps_again", test_jumper_lands_waits_and_jumps_again },
     { "swing_platform_hangs_on_its_chain", test_swing_platform_hangs_on_its_chain },
+    { "strider_walks_turns_and_leaps", test_strider_walks_turns_and_leaps },
+    { "thrown_rider_falls_after_50", test_thrown_rider_falls_after_50 },
 };
 
 int main(int argc, char **argv) {
