@@ -435,8 +435,12 @@ void ball_sprites(sk_game *g, sk_sprite *spr) {     /* 0x10A2EA */
         b->inactive = 0;
         entry = SPIN_TABLE + (uint32_t)((5 - (b->kick_anim >> 1)) * 8);
     } else if (b->vanishing) {
-        if (++g->bw.roll_phase >= 12) { b->vanishing = 0; b->inactive = 1; g->player.ball_hold = 0; }
-        entry = VANISH_TABLE + (uint32_t)((g->bw.roll_phase >> 2) * 8);
+        if (++g->bw.roll_phase < 12) entry = VANISH_TABLE + (uint32_t)((g->bw.roll_phase >> 2) * 8);
+        else {                                     /* 0x10A340: vanished, then the roll path below */
+            b->vanishing = 0; b->inactive = 1; g->player.ball_hold = 0;
+            g->bw.roll_phase = (g->bw.roll_phase + ((int16_t)(b->x >> 16) - b->prev_x)) & 15;
+            entry = ROLL_TABLE + (uint32_t)((g->bw.roll_phase >> 2) * 8);
+        }
     } else {
         g->bw.roll_phase = (g->bw.roll_phase + ((int16_t)(b->x >> 16) - b->prev_x)) & 15;
         entry = ROLL_TABLE + (uint32_t)((g->bw.roll_phase >> 2) * 8);

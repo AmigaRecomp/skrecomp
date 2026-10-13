@@ -166,6 +166,10 @@ void test_a_reused_record_gets_fresh_draw_flags(void);
 void test_score_popup_blinks_out(void);
 void test_missing_or_short_frames_draw_nothing(void);
 void test_a_marker_spawns_once_while_its_object_lives(void);
+void test_flash_draws_the_flash_colours(void);
+void test_flash_does_not_leak(void);
+void test_ball_vanish_ends_on_the_roll_table(void);
+void test_message_box_rejects_a_tiny_box(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -329,6 +333,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "score_popup_blinks_out", test_score_popup_blinks_out },
     { "missing_or_short_frames_draw_nothing", test_missing_or_short_frames_draw_nothing },
     { "a_marker_spawns_once_while_its_object_lives", test_a_marker_spawns_once_while_its_object_lives },
+    { "flash_draws_the_flash_colours", test_flash_draws_the_flash_colours },
+    { "flash_does_not_leak", test_flash_does_not_leak },
+    { "ball_vanish_ends_on_the_roll_table", test_ball_vanish_ends_on_the_roll_table },
+    { "message_box_rejects_a_tiny_box", test_message_box_rejects_a_tiny_box },
 };
 
 int main(int argc, char **argv) {

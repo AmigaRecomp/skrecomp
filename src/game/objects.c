@@ -250,7 +250,9 @@ static void draw_record(sk_fb *fb, const sk_draw *d, int cam_x, int cam_y) {   /
     if ((d->dflags & 9) == 9) { sx += 32; }                        /* clipped path, bit 3: x + cam_x + 16 on the window (0x108946) */
     else if (!(d->dflags & 0x10)) { sx -= cam_x; sy -= cam_y; }
     sk_frame fr = { d->w, d->h, d->w / 8, { d->frame, d->frame + d->plane_bytes, d->frame + 2 * d->plane_bytes, d->frame + 3 * d->plane_bytes }, d->frame + 4 * d->plane_bytes };
-    fb_blit_bob(fb, &fr, sx, sy, (d->dflags & 0x40) ? SK_GROUP_TILES_B : SK_GROUP_TILES_A);
+    int group = (d->dflags & 0x40) ? SK_GROUP_TILES_B : SK_GROUP_TILES_A;
+    if (d->dflags & 2) fb_blit_bob_flash(fb, &fr, sx, sy, group);   /* 0x108D96 */
+    else fb_blit_bob(fb, &fr, sx, sy, group);
 }
 
 void draw_all_objects(sk_game *g, sk_fb *fb, int cam_x, int cam_y) {   /* 0x1082A8: objects_a first, then the dynamic list */

@@ -201,7 +201,11 @@ set(SK_TEST_NAMES
   a_reused_record_gets_fresh_draw_flags
   score_popup_blinks_out
   missing_or_short_frames_draw_nothing
-  a_marker_spawns_once_while_its_object_lives)
+  a_marker_spawns_once_while_its_object_lives
+  flash_draws_the_flash_colours
+  flash_does_not_leak
+  ball_vanish_ends_on_the_roll_table
+  message_box_rejects_a_tiny_box)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

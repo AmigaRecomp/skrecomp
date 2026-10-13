@@ -22,5 +22,6 @@ void fb_blit_tile(sk_fb *fb, const sk_tileset *ts, int index, int x, int y, int 
 
 /* Where the frame's mask is set, replaces the group's nibble with the frame's colour; clipped. */
 void fb_blit_bob(sk_fb *fb, const sk_frame *fr, int x, int y, int group);
+void fb_blit_bob_flash(sk_fb *fb, const sk_frame *fr, int x, int y, int group);   /* draw flags bit 1 (display.md Flash) */
 
 #endif

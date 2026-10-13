@@ -6,6 +6,7 @@
 #include "game/objects.h"
 #include "game/player.h"
 #include "gfx/display_model.h"
+#include "gfx/framebuffer.h"
 
 static uint8_t *g_d; static sk_level g_lv; static sk_game g_g;
 static bool make_game(void) {
@@ -173,5 +174,24 @@ void test_a_marker_spawns_once_while_its_object_lives(void) {   /* bset #6 on th
     scan_cell_for_marker(&g_g, 10, 11);
     CHECK_EQ(g_spawns, 3);
     object_init_table[7] = obj_stub_init;
+    drop_game();
+}
+
+void test_flash_draws_the_flash_colours(void) {                 /* draw flags bit 1: the silhouette in colour 1 (0x108D96) */
+    CHECK(make_game());
+    static uint8_t frame[5 * 2 * 16];                              /* 16 x 16: plane 0..3 = colour 6, mask full */
+    for (int r = 0; r < 16; r++) { frame[1 * 32 + r * 2] = 0xFF; frame[1 * 32 + r * 2 + 1] = 0xFF; frame[2 * 32 + r * 2] = 0xFF; frame[2 * 32 + r * 2 + 1] = 0xFF; frame[4 * 32 + r * 2] = 0xFF; frame[4 * 32 + r * 2 + 1] = 0xFF; }
+    sk_slot *s = find_free_slot(&g_g);
+    init_object_slot(&g_g, s, 40, 40, 4);
+    set_draw_size(s->draw, 16, 16, frame); s->draw->x = 40; s->draw->y = 40; s->draw->dflags = 0;
+    sk_fb fb; CHECK(fb_init(&fb, SK_FB_W, SK_FB_H));
+    fb_clear(&fb, 0);
+    draw_all_objects(&g_g, &fb, 0, 0);
+    CHECK_EQ(fb.px[45 * fb.w + 45] & 15, 6);
+    s->draw->dflags |= 2;
+    fb_clear(&fb, 0);
+    draw_all_objects(&g_g, &fb, 0, 0);
+    CHECK_EQ(fb.px[45 * fb.w + 45] & 15, 1);
+    fb_free(&fb);
     drop_game();
 }

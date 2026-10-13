@@ -257,3 +257,14 @@ void test_missing_or_short_frames_draw_nothing(void) {         /* final review I
     set_object_frame(s, 2); CHECK(s->draw->frame == NULL);      /* past the section */
     drop_game();
 }
+
+void test_flash_does_not_leak(void) {                           /* 5c Review Focus 5 */
+    CHECK(make_game(true));
+    sk_slot *a = spawn(200, 60, 12, 0x55);
+    sk_draw *d = a->draw;
+    d->dflags |= 2;                                                /* hit: flashing */
+    free_object(&g_g, a);
+    sk_slot *b = spawn(200, 60, 12, 0x55);
+    CHECK(b->draw == d); CHECK_EQ(b->draw->dflags & 2, 0);
+    drop_game();
+}

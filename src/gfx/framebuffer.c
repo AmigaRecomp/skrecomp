@@ -35,6 +35,17 @@ void fb_blit_tile(sk_fb *fb, const sk_tileset *ts, int index, int x, int y, int 
     }
 }
 
+void fb_blit_bob_flash(sk_fb *fb, const sk_frame *fr, int x, int y, int group) {   /* the silhouette in colour 1 */
+    int x0 = x < 0 ? -x : 0, y0 = y < 0 ? -y : 0;
+    int x1 = x + fr->width > fb->w ? fb->w - x : fr->width;
+    int y1 = y + fr->height > fb->h ? fb->h - y : fr->height;
+    for (int fy = y0; fy < y1; fy++) {
+        uint8_t *row = fb->px + (size_t)(y + fy) * (size_t)fb->w + x;
+        for (int fx = x0; fx < x1; fx++)
+            if (bobs_pixel(fr, fx, fy) >= 0) put_nibble(row + fx, group, 1);
+    }
+}
+
 void fb_blit_bob(sk_fb *fb, const sk_frame *fr, int x, int y, int group) {
     int x0 = x < 0 ? -x : 0, y0 = y < 0 ? -y : 0;
     int x1 = x + fr->width > fb->w ? fb->w - x : fr->width;

@@ -166,8 +166,8 @@ void message_box_build(sk_game *g, int index) {                 /* show_message_
     if (!g->sk) return;
     uint32_t rec = BOX_TABLES + image_u16(g->sk, BOX_TABLES + (uint32_t)g->level_data_index * 16 + 2u * (uint32_t)index);
     int w = image_u16(g->sk, rec), h = image_u16(g->sk, rec + 2);
-    int bpr = (w + 7) >> 3;
-    if (w <= 0 || h <= 0 || (size_t)bpr * (size_t)h * 5 > sizeof g->msg_bits) return;
+    int bpr = w >> 3;                                             /* lsr.w #3 (0x11C8E4) */
+    if (bpr < 3 || h < 16 || (size_t)bpr * (size_t)h * 5 > sizeof g->msg_bits) return;   /* port guard: two character rows and columns at least */
     g->msg_w = bpr * 8; g->msg_h = h;
     int plane = bpr * h;
     memset(g->msg_bits, 0, (size_t)plane * 5);

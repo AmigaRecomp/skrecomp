@@ -91,3 +91,15 @@ void test_ball_sprite_frame_follows_the_roll_phase(void) {
     g_g.ball.inactive = 1; ball_sprites(&g_g, &s); CHECK(!s.visible);
     drop_game();
 }
+
+void test_ball_vanish_ends_on_the_roll_table(void) {            /* 0x10A340: falls through to the roll path */
+    CHECK(make_game());
+    place_ball(100, 100, 0, 0);
+    g_g.ball.prev_x = 97;                                          /* moved 3 px right */
+    g_g.ball.vanishing = 0xFF; g_g.bw.roll_phase = 11;
+    static sk_sprite s;
+    ball_sprites(&g_g, &s);
+    CHECK_EQ(g_g.ball.vanishing, 0); CHECK_EQ(g_g.ball.inactive, 1);
+    CHECK_EQ(g_g.bw.roll_phase, (12 + 3) & 15);
+    drop_game();
+}

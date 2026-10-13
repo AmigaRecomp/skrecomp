@@ -124,3 +124,21 @@ void test_hud_palette_is_the_game_palette(void) {               /* ROM-backed */
     CHECK(g.hud.digits != NULL && g.hud.icons != NULL);
     image_free(&img); disks_close(&d);
 }
+
+void test_message_box_rejects_a_tiny_box(void) {                /* a box under two character rows is refused */
+    CHECK(make_game());
+    static sk_image img;
+    static uint8_t mem[0x3000];
+    memset(&img, 0, sizeof img);
+    img.seg[0].base = 0x202000; img.seg[0].size = sizeof mem; img.seg[0].mem = mem; img.count = 1;
+    memset(mem, 0, sizeof mem);
+    mem[0x484 + 1] = 0x10;                                          /* level 0, message 0 at 0x202494 */
+    mem[0x494 + 1] = 32; mem[0x494 + 3] = 4;                        /* 32 x 4 */
+    mem[0x494 + 4] = 'A';
+    for (int i = 0x2148; i < 0x2148 + 0x600; i++) mem[i] = 0xFF;      /* the font */
+    g_g.sk = &img; g_g.level_data_index = 0;
+    message_box_build(&g_g, 0);
+    CHECK_EQ(g_g.msg_w, 0);
+    g_g.sk = NULL;
+    drop_game();
+}
