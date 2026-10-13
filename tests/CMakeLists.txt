@@ -29,7 +29,8 @@ add_executable(sk_tests
   test_level_flow.c
   test_play.c
   test_resources.c
-  test_ball.c)
+  test_ball.c
+  test_tricks.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -143,7 +144,13 @@ set(SK_TEST_NAMES
   ball_falls_and_comes_to_rest
   ball_bounces_off_the_wall_with_reversed_vx
   ball_falls_out_and_goes_inactive
-  ball_sprite_frame_follows_the_roll_phase)
+  ball_sprite_frame_follows_the_roll_phase
+  ground_kick_sends_the_ball
+  kick_ignores_an_inactive_ball
+  tricks_set_the_table_velocities
+  volley_right_and_left
+  spring_off_the_ball
+  kick_charge_table)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

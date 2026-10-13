@@ -54,7 +54,6 @@ struct sk_game {
     uint16_t bplcon2_value;             /* 0x30028A */
     uint8_t layer_zone;                 /* 0x30038E */
     int kit;                            /* 0x300264: level record byte 4 (the respawn kit) */
-    int kit_current;                    /* 0x300262: the kit the sprite colours show */
     uint32_t level_timer;               /* 0x3002BA, BCD */
     int timer_tick, timer_rate;         /* 0x3002C2, 0x3002C4 */
     uint8_t timer_flags;                /* 0x300354: bit 7 running, bit 0 changed */
@@ -71,6 +70,15 @@ struct sk_game {
     int sfx_last, sfx_count;            /* play_sfx hook */
     bool jingle_requested; int jingle;  /* spawn_jingle hook */
     bool music_requested; int music_request;   /* music_request hook (tune number) */
+    uint8_t kill_kind;                  /* 0x30037F: 1 pick-up kick, 2 volley, 3 overhead (kill statistics) */
+    int8_t kick_result;                 /* 0x300338 */
+    int32_t trick8_bias;                /* 0x30029C */
+    int throw_x, throw_y;               /* 0x3002E4/E6: where the recalled ball appears */
+    uint8_t throw_ready;                /* 0x300381 */
+    uint8_t trick_block;                /* 0x30037A: blocks the tricks entry (set by a non-England object) */
+    int kick_cooldown;                  /* 0x3001EA = 200 at a kick */
+    int recalls;                        /* 0x300378 */
+    int kit_current, kit_extra;         /* 0x300262 / 0x300266: the kid's and the ball's kit shades */
     uint8_t death_flags;                /* 0x300349: bit 0 = the death's life already taken */
     bool music_stopped;
     void (*step_probe)(sk_game *, int step);

@@ -90,7 +90,7 @@ void test_exit_walk_sets_the_outcome(void) {
 void test_ball_states_are_stubs_that_return_to_normal(void) {
     CHECK(make_game());
     frames(20, 0);
-    int stubs[] = { 8, 12, 16, 36, 40, 44, 48 };
+    int stubs[] = { 12 };                                        /* the rope: 5c */
     for (size_t i = 0; i < sizeof stubs / sizeof *stubs; i++) { g_g.player.state = (int16_t)stubs[i]; frames(1, 0); CHECK_EQ(g_g.player.state, 0); }
     g_g.player.state = 56; g_g.player.carry_dx = 3; int x0 = g_g.player.x; frames(1, 0);
     CHECK_EQ(g_g.player.state, 56); CHECK_EQ(g_g.player.x, x0 + 3);         /* carried: x += carry_dx only */

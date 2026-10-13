@@ -4,7 +4,7 @@
 static int left(const sk_player *p) { return p->facing < 0; }
 
 static void player_state_none(sk_game *g) { (void)g; }
-static void player_state_stub(sk_game *g) { g->player.state = 0; g->player.timer = 0; }   /* ball and rope states: 5b */
+static void player_state_stub(sk_game *g) { g->player.state = 0; g->player.timer = 0; }   /* state 12, the rope: 5c */
 
 static void select_death_layers(sk_game *g) { g->layer_flags = 3; select_layers(g); }
 
@@ -163,9 +163,9 @@ static void player_state_game_over(sk_game *g) { g->player.controllable = 0; }  
 static void player_state_timeout(sk_game *g) { g->player.input = 0; g->player.run_chain = 1; }   /* 0x10C10C */
 
 static void (*const player_state_table[19])(sk_game *) = {
-    player_state_none, player_state_none, player_state_stub, player_state_stub, player_state_stub,
-    player_state_death, player_state_ladder_a, player_state_ladder_b, player_state_fell_out, player_state_stub,
-    player_state_stub, player_state_stub, player_state_stub, player_state_knockback, player_state_carried,
+    player_state_none, player_state_none, player_state_kick, player_state_stub, player_state_tricks,
+    player_state_death, player_state_ladder_a, player_state_ladder_b, player_state_fell_out, player_state_ball_spring,
+    player_state_trick_hold, player_state_volley_right, player_state_volley_left, player_state_knockback, player_state_carried,
     player_state_exit_walk, player_state_game_over, player_state_timeout, player_state_bounce,
 };
 

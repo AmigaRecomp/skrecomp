@@ -113,6 +113,12 @@ void test_ball_falls_and_comes_to_rest(void);
 void test_ball_bounces_off_the_wall_with_reversed_vx(void);
 void test_ball_falls_out_and_goes_inactive(void);
 void test_ball_sprite_frame_follows_the_roll_phase(void);
+void test_ground_kick_sends_the_ball(void);
+void test_kick_ignores_an_inactive_ball(void);
+void test_tricks_set_the_table_velocities(void);
+void test_volley_right_and_left(void);
+void test_spring_off_the_ball(void);
+void test_kick_charge_table(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -223,6 +229,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "ball_bounces_off_the_wall_with_reversed_vx", test_ball_bounces_off_the_wall_with_reversed_vx },
     { "ball_falls_out_and_goes_inactive", test_ball_falls_out_and_goes_inactive },
     { "ball_sprite_frame_follows_the_roll_phase", test_ball_sprite_frame_follows_the_roll_phase },
+    { "ground_kick_sends_the_ball", test_ground_kick_sends_the_ball },
+    { "kick_ignores_an_inactive_ball", test_kick_ignores_an_inactive_ball },
+    { "tricks_set_the_table_velocities", test_tricks_set_the_table_velocities },
+    { "volley_right_and_left", test_volley_right_and_left },
+    { "spring_off_the_ball", test_spring_off_the_ball },
+    { "kick_charge_table", test_kick_charge_table },
 };
 
 int main(int argc, char **argv) {

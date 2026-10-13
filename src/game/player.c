@@ -56,36 +56,6 @@ void floor_probe_step(sk_game *g) {                             /* floor_probe 0
     p->push_up = (int16_t)push;
 }
 
-void player_physics(sk_game *g) {                               /* 0x10A80A, the parts without the ball */
-    sk_player *p = &g->player;
-    int in = p->input;
-    bool cleanup = true;
-    if ((in & SK_IN_FIRE) && p->state == 0 && !p->sliding) {
-        if (in & SK_IN_DOWN) {
-            rebuild_player_mask(g);
-            int rows = probe_ground(&g->mask, p->x, p->y);
-            if (rows >= 1 && rows <= 10) {
-                p->falling = 1;                                 /* drop through a thin floor */
-                p->y = (int16_t)(p->y + rows + 1);
-                /* ball_hold < 0 (the ball at the feet): the tricks entry, sub-project 5b */
-            }
-        } else if (in & (SK_IN_LEFT | SK_IN_RIGHT)) {
-            p->jump_input = (uint8_t)(in & (SK_IN_LEFT | SK_IN_RIGHT));
-            p->timer = 0;
-            p->state = 8;                                       /* ground kick (5b) */
-            cleanup = false;
-        } else if (p->ball_hold == 0) {
-            if (!airborne(p) && p->carry_dx == 0) {
-                p->fire_held++;
-                if (p->fire_held < 16) cleanup = false;         /* kick_charge (5b) */
-                /* fire_held >= 16 with a ball to throw: 5b */
-            }
-        }
-        /* ball_hold > 0: nothing; ball_hold < 0: the tricks entry (5b) */
-    }
-    if (cleanup) { p->down_held = 0; p->fire_held = 0; }
-}
-
 void crouch_slide(sk_game *g) {                                 /* 0x10AB88 */
     sk_player *p = &g->player;
     p->crouching = 0;
@@ -326,7 +296,7 @@ void player_input_state(sk_game *g) {                           /* 0x10A576 */
         jump_control(g);
         ceiling_check(g);
         edge_probe_step(g);
-        /* ball_handling: 5b */
+        ball_handling(g);
     }
     if (p->invulnerable) p->invulnerable--;
     g->ball.touched = 0;

@@ -45,7 +45,8 @@ add_library(skcore STATIC
   src/game/attrs.c
   src/game/level_flow.c
   src/game/resources.c
-  src/game/ball.c)
+  src/game/ball.c
+  src/game/player_tricks.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB SDL3::SDL3)
 

@@ -48,7 +48,7 @@ typedef struct sk_player {
     uint8_t no_push_up;     /* +0x49 */
     uint8_t dying;          /* +0x4A */
     uint8_t trick;          /* +0x4B */
-    uint8_t trick_flag;     /* +0x4C */
+    int8_t trick_flag;      /* +0x4C: the next trick chosen while juggling, -1 none */
     uint8_t probe_flags;    /* +0x4D */
     uint8_t tricking;       /* +0x4E */
     uint8_t fire_lock;      /* +0x4F */
@@ -85,7 +85,12 @@ int  hurt_player(sk_game *g);               /* -1 hit, -2 killed, -3 ignored */
 void bounce_player(sk_game *g);
 void kill_player(sk_game *g);               /* sub_10A780: instant death (deadly tiles) */
 void freeze_death_target(sk_game *g);       /* sub_106C22: camera_target -> death_target_x/y */
-void player_physics(sk_game *g);            /* the non-ball part of 0x10A80A */
+void player_physics(sk_game *g);            /* 0x10A80A (player_tricks.c) */
+void kick_charge(sk_game *g);               /* 0x10AA4C: the recall spot */
+void ball_handling(sk_game *g);             /* 0x10C31E */
+int  kick_ball(sk_game *g);                 /* 0x10CD3A */
+void player_state_kick(sk_game *g); void player_state_tricks(sk_game *g); void player_state_ball_spring(sk_game *g);
+void player_state_trick_hold(sk_game *g); void player_state_volley_right(sk_game *g); void player_state_volley_left(sk_game *g);
 void player_logic(sk_game *g);              /* 0x10B586: chooses player.anim */
 void update_player(sk_game *g, sk_sprite *kid);   /* 0x10A4DC: player_logic + the kid's sprite placement */
 
