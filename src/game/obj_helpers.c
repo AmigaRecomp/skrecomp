@@ -162,6 +162,16 @@ int ground_ahead(const sk_game *g, const sk_slot *s, int facing) {   /* 0x10DCFC
     return res;
 }
 
+bool cells_have_gap(const sk_game *g, int x, int y, int n) {     /* sub_10DBC2: Z set when a cell is empty */
+    int cx = (x & 0xFFF0) >> 4, cy = (y & 0xFFFF) >> 4;
+    for (int k = 0; k < n; k++) {
+        bool empty = true;
+        for (int r = 0; r < 16 && empty; r++) { uint16_t w; row_word(g, cx + k, cy, r, &w); if (w) empty = false; }
+        if (empty) return true;
+    }
+    return false;
+}
+
 int probe_rows_below(const sk_game *g, const sk_slot *s, int dx, int dy) {   /* 0x10D9A2 */
     const sk_draw *d = s->draw;
     int x = d->x + dx, y = d->y + d->h - 1 + dy;

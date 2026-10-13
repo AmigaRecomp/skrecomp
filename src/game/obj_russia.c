@@ -12,8 +12,16 @@ static const uint8_t sled_scripts[3][8] = {                                     
     { 0, 2, 0, 4, 0, 1, 6, 7 }, { 0, 2, 0, 4, 2, 3, 8, 9 }, { 0, 2, 0, 4, 4, 5, 10, 11 } };
 static const uint8_t icicle_script[] = { 0, 8, 0, 3, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7 };   /* 0x1189D8 */
 
+static const uint8_t burrow_wait_script[] = { 0, 4, 0, 20, 1, 0, 1, 2, 1, 0, 1, 2 };             /* 0x1196D4 */
+static const uint8_t burrow_climb_script[] = { 0, 4, 0, 6, 0, 1, 2, 3, 12, 13, 14, 15 };         /* 0x1196E0 */
+static const uint8_t burrow_walk_script[] = { 0, 4, 0, 6, 4, 5, 6, 7, 0, 1, 2, 3 };              /* 0x1196EC */
+static const uint8_t burrow_hop_script[] = { 0, 2, 0, 6, 3, 4, 5, 6 };                           /* 0x1196F8 */
+static const uint8_t burrow_dig_script[] = { 0, 4, 0, 4, 4, 5, 6, 7, 4, 5, 6, 7 };               /* 0x119700 */
+static const uint8_t burrow_up_script[] = { 0, 4, 0, 4, 8, 9, 10, 11, 8, 9, 10, 11 };            /* 0x11970C */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
+static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
 static int iabs(int v) { return v < 0 ? -v : v; }
 
 /* ---- type 35: the mine (slot 43): set off, it bursts into four pieces (type 111, slot 44) and leaves tiles 0x150/0x151 ---- */
@@ -170,8 +178,127 @@ static void obj_icicle_update(sk_game *g, sk_slot *s, int index) {            /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 72: the burrower (slots 104 hole, 105 climbing, 106 hopping, 107 walking) ---- */
+static void burrow_size(sk_game *g, sk_draw *d, int w, int h, int slot) { size_frames(g, d, w, h, res(g, slot)); }
+static void obj_burrower_init(sk_game *g, sk_slot *s, int x, int y) {         /* 0x11932A */
+    init_object_slot(g, s, x - 16, y - 16, s->type4);
+    s->vx = 0; s->vy = 0; s->t0 = 50; s->hits = 2;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 106);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
+}
+static void obj_burrower_update(sk_game *g, sk_slot *s, int index) {          /* 0x11936C */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (s->flags & 2) { despawn_if_far(g, s); return; }
+    int wrapped = 0;
+    switch (aux_c(s)) {
+    case 0:                                                         /* in its hole */
+        step_animation(s, burrow_wait_script, 0, &wrapped);
+        if (--s->t0) break;
+        burrow_size(g, d, 32, 45, 105);
+        reset_animation(s);
+        s->t0 = 24;
+        set_aux_c(s, 1);
+        /* fall through */
+    case 1: {                                                       /* climbing: bit 5 of the flags = down */
+        step_animation(s, burrow_climb_script, (s->flags >> 5) & 1, &wrapped);
+        d->y = (int16_t)(d->y - ((s->flags & 0x20) ? -2 : 2));
+        if (!((int16_t)d->y < s->y)) {                              /* back in the hole */
+            reset_animation(s);
+            burrow_size(g, d, 32, 32, 106);
+            s->flags &= ~0x20;
+            s->t0 = 50;
+            set_aux_c(s, 0);
+            break;
+        }
+        g->attrs.probe_slot = s;
+        probe_tile_attr(g, d->x + 16, d->y + 26);                   /* probe_tile_attr_saved: an attribute may set state 5 */
+        if (aux_c(s) == 5) { reset_animation(s); goto dig; }
+        if (s->t0) { s->t0--; break; }
+        s->flags &= ~1;
+        int gy = d->y + ((s->flags & 0x20) ? 16 : 32);
+        if (cells_have_gap(g, d->x - 64, gy, 4)) {
+            s->flags |= 1;
+            if (cells_have_gap(g, d->x + 32, gy, 4)) break;
+        }
+        burrow_size(g, d, 32, 32, 106);                             /* out: a hop */
+        reset_animation(s);
+        s->vx = 4; s->vy = -6;
+        s->flags |= 4;
+        set_aux_c(s, 2);
+    }   /* fall through */
+    case 2:
+        step_animation(s, burrow_hop_script, s->flags, &wrapped);
+        if (!wrapped) break;
+        burrow_size(g, d, 48, 16, 107);
+        reset_animation(s);
+        s->vy = 0; s->flags &= ~4;
+        d->y = (int16_t)(d->y + 10);
+        set_aux_d(s, 0);
+        set_aux_c(s, 3);
+        /* fall through */
+    case 3: {                                                       /* walking: turns 64 px out, hops back in at 22 */
+        step_animation(s, burrow_walk_script, s->flags, &wrapped);
+        bool first = !(aux_d(s) & 1);
+        set_aux_d(s, aux_d(s) | 1);
+        if (first) break;
+        int dx = iabs((int16_t)(s->x - d->x));
+        if ((uint16_t)dx >= 64) s->flags ^= 1;
+        if (dx != 0x16) break;
+        burrow_size(g, d, 32, 32, 106);
+        reset_animation(s);
+        s->vy = -6; s->flags |= 4;
+        d->y = (int16_t)(d->y - 10);
+        set_aux_c(s, 4);
+    }   /* fall through */
+    case 4:
+        step_animation(s, burrow_hop_script, s->flags, &wrapped);
+        if (!wrapped) break;
+        burrow_size(g, d, 32, 45, 105);
+        reset_animation(s);
+        s->vx = 0; s->t0 = 12; s->vy = 0; s->flags &= ~4;
+        set_aux_c(s, 1);
+        break;
+    case 5:
+    dig:                                                            /* an attribute sent it digging: hidden, then up again */
+        step_animation(s, burrow_dig_script, 0, &wrapped);
+        if (!wrapped) break;
+        reset_animation(s);
+        d->dflags |= 4;
+        set_aux_c(s, 6);
+        s->t0 = 50;
+        /* fall through */
+    case 6:
+        if (--s->t0) goto far;
+        set_aux_c(s, 7);
+        d->dflags &= (uint8_t)~4;
+        /* fall through */
+    case 7:
+        step_animation(s, burrow_up_script, 0, &wrapped);
+        if (!wrapped) break;
+        reset_animation(s);
+        set_frame2(s, 0, 12, s->flags);
+        s->flags |= 0x20;
+        set_aux_c(s, 1);
+        break;
+    default: break;
+    }
+    touch_player(g, d->x, d->y, 32, 16);
+    if (ball_hits_object(g, s, 0, 0, 32, 32, 16, 0x300) >= 0) {
+        burrow_size(g, d, 32, 45, 105);
+        set_frame2(s, 16, 16, 0);
+    }
+far:
+    if (point_offscreen(g, d->x, d->y, 160, 640) < 0) free_object(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;
+    object_init_table[72] = obj_burrower_init;         object_update_table[72] = obj_burrower_update;
 }

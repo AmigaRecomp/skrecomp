@@ -16,6 +16,7 @@ int  point_offscreen(const sk_game *g, int x, int y, int mx, int my);   /* 0x10D
 bool ball_kill_check(sk_game *g, sk_slot *s, int dead_frame, uint32_t score);   /* 0x10E108: true when killed */
 int  revive_offscreen(sk_game *g, sk_slot *s, int frames, int frame);  /* 0x10E20C: -1 revived this frame */
 int  ground_ahead(const sk_game *g, const sk_slot *s, int facing);     /* 0x10DCFC: -1 at an edge */
+bool cells_have_gap(const sk_game *g, int x, int y, int n);   /* 0x10DBC2: one of n cells right of pixel x, y has no solid row */
 int  probe_rows_below(const sk_game *g, const sk_slot *s, int dx, int dy);   /* 0x10D9A2: 0, or -rows (up to 5) */
 int  probe_rows_below2(const sk_game *g, const sk_slot *s, int dx, int dy);   /* 0x10DA3A: < 0 rows to climb out, else free rows below (up to 5) */
 int  ledge_distance(const sk_game *g, const sk_slot *s, int dx, int dy, int *signed_out);   /* 0x10DD80 */

@@ -89,3 +89,21 @@ void test_icicle_66_drops_waits_and_resets(void) {                  /* type 66 *
     CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->draw->dflags & 4, 0);
     drop_game();
 }
+
+void test_burrower_72_rises_hops_out_and_walks(void) {              /* type 72 */
+    CHECK(make_game());
+    sk_slot *s = spawn(176, 14 * 16 + 8, 72, 0);                   /* 50 px under the ground line: it rises 48 */
+    CHECK_EQ(s->y, 14 * 16 - 8); CHECK_EQ(s->t0, 50); CHECK_EQ(s->hits, 2);
+    tick(50);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->draw->h, 45); CHECK_EQ(s->t0, 23);   /* rising (the first climb step runs in the same frame) */
+    int y = s->draw->y;
+    tick(4);
+    CHECK_EQ(s->draw->y, y - 8);
+    int i = 0;
+    while (aux_c(s) == 1 && i++ < 60) tick(1);
+    CHECK_EQ(aux_c(s), 2); CHECK(s->flags & 4); CHECK_EQ(s->vx, 4);   /* ground on a side: it hops out */
+    i = 0;
+    while (aux_c(s) == 2 && i++ < 60) tick(1);
+    CHECK_EQ(aux_c(s), 3); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 16);   /* walking */
+    drop_game();
+}

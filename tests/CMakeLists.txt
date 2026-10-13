@@ -312,7 +312,8 @@ set(SK_TEST_NAMES
   game_over_fades_the_music
   mine_35_explodes_once_set_off
   sled_65_speeds_downhill_and_is_kicked_off
-  icicle_66_drops_waits_and_resets)
+  icicle_66_drops_waits_and_resets
+  burrower_72_rises_hops_out_and_walks)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
