@@ -17,8 +17,9 @@ bool sections_parse(const uint8_t *data, size_t len, sk_sections *s, sk_err *e) 
     bounds[count] = len;
     for (int i = 0; i < count; i++) {
         if (bounds[i + 1] < bounds[i] || bounds[i + 1] > len) {
+            size_t bad = bounds[i + 1];
             free(bounds);
-            return sk_fail(e, "section offset %zu is not increasing or runs past the end", bounds[i + 1]);
+            return sk_fail(e, "section offset %zu is not increasing or runs past the end", bad);
         }
     }
     s->sec = calloc((size_t)count, sizeof *s->sec);
