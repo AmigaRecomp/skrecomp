@@ -264,48 +264,6 @@ static void obj_stomper_update(sk_game *g, sk_slot *s, int index) {           /*
     despawn_if_far(g, s);
 }
 
-/* ---- the script engine (sub_10E69C / sub_10E730 / sub_10E772): phases of (frames, motion offset, next offset),
-   motion records of (vx, vy, animation script, code); t0 counts frames, t1 is the phase's byte offset ---- */
-typedef struct { uint16_t frames; uint8_t motion, next; } sk_phase;
-typedef struct { int16_t vx, vy; const uint8_t *script; int code; } sk_motion;
-
-static void motion_apply(sk_slot *s, const sk_motion *m) {
-    s->vx = m->vx;
-    s->flags &= ~4;
-    s->vy = m->vy;
-    if (m->vy) s->flags |= 4;
-}
-
-static int script_step(sk_game *g, sk_slot *s, const sk_phase *ph, const sk_motion *mo, int *changed) {   /* sub_10E69C */
-    sk_draw *d = slot_draw_record(g, s);
-    const sk_phase *cur = &ph[(uint16_t)s->t1 >> 2];
-    const sk_motion *m;
-    if ((uint16_t)++s->t0 == cur->frames) {
-        if (d) d->x = (int16_t)(d->x - (int8_t)s->anim);
-        s->anim = 0;
-        set_aux_c(s, aux_c(s) & ~1);
-        s->anim_tick = 0; s->anim_index = 0; s->t0 = 0;
-        s->t1 = cur->next;
-        m = &mo[ph[(uint16_t)s->t1 >> 2].motion / 10];
-        motion_apply(s, m);
-    } else m = &mo[cur->motion / 10];
-    apply_velocity(s);
-    *changed = 0;
-    if (m->script) { int wrapped = 0; *changed = step_animation(s, m->script, s->flags, &wrapped); }
-    return m->code;
-}
-
-static void script_start(sk_slot *s, int idx, const sk_phase *ph, const sk_motion *mo) {   /* sub_10E730 */
-    set_aux_c(s, aux_c(s) & ~1);
-    s->anim_tick = 0; s->anim_index = 0; s->t0 = 0;
-    s->t1 = (int16_t)(idx * 4);
-    motion_apply(s, &mo[ph[idx].motion / 10]);
-}
-
-static void script_end_next(sk_slot *s, const sk_phase *ph) {   /* sub_10E772 */
-    s->t0 = (int16_t)(ph[(uint16_t)s->t1 >> 2].frames - 1);
-}
-
 /* ---- type 75: LONDON2's boss (slot 129) with its disc (87), dust puff (118) and burst (117) ---- */
 static const uint8_t boss_s74[] = { 0, 1, 0, 1, 12, 12 }, boss_s7a[] = { 0, 1, 0, 1, 16, 17 }, boss_s80[] = { 0, 1, 0, 1, 14, 15 };
 static const uint8_t boss_s86[] = { 0, 1, 0, 1, 18, 19 }, boss_s8c[] = { 0, 3, 0, 4, 20, 20, 20, 21, 21, 21 };

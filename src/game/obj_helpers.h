@@ -41,4 +41,14 @@ static inline void set_aux_d(sk_slot *s, int v) { s->aux = (int16_t)(((uint16_t)
 sk_slot *spawn_child(sk_game *g, const sk_slot *parent, int x, int y, int type, int off, const uint8_t *frames,
                      const uint8_t *script, int w, int h, int vx, int vy);
 
+
+/* ---- the script engine (sub_10E69C / sub_10E730 / sub_10E772): phases of (frames, motion offset, next offset),
+   motion records of (vx, vy, animation script, code); t0 counts frames, t1 is the phase's byte offset ---- */
+typedef struct { uint16_t frames; uint8_t motion, next; } sk_phase;
+typedef struct { int16_t vx, vy; const uint8_t *script; int code; } sk_motion;
+
+int  script_step(sk_game *g, sk_slot *s, const sk_phase *ph, const sk_motion *mo, int *changed);   /* sub_10E69C: the motion's code */
+void script_start(sk_slot *s, int idx, const sk_phase *ph, const sk_motion *mo);                   /* sub_10E730 */
+void script_end_next(sk_slot *s, const sk_phase *ph);                                              /* sub_10E772: end the phase next frame */
+
 #endif
