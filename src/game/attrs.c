@@ -50,9 +50,13 @@ void player_tile_attrs(sk_game *g) {                            /* 0x11A5E2 */
         for (int c = 0; c < 3; c++) run_cell(g, cx0 + c, 0);
         return;
     }
-    int cy0 = p->y >> 4;
-    for (int r = 0; r < 4; r++)
-        for (int c = 0; c < 3; c++) run_cell(g, cx0 + c, cy0 + r);
+    attrs_run_cells(g, 0, cx0 * 16, p->y & ~15, 3, 4);
+}
+
+void attrs_run_cells(sk_game *g, int kind, int x0, int y0, int cols, int rows) {
+    g->attrs.probe_kind = kind;
+    for (int r = 0; r < rows; r++)
+        for (int c = 0; c < cols; c++) run_cell(g, (x0 >> 4) + c, (y0 >> 4) + r);
 }
 
 static int cell_index(const sk_game *g, int cx, int cy) { return cy * g->world.w + cx; }

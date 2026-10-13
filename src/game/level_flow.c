@@ -32,6 +32,7 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     g->level_outcome = 0;
     /* reset_level_state (0x1047F8) */
     memset(&g->ball, 0, sizeof g->ball);
+    ball_world_init(&g->bw);
     g->frame_ticks = 0;
     g->push_x = 0; g->shake_amplitude = 0; g->powerup_timer = 0; g->scroll_mode = 0; g->cam_ease = 4;
     g->death_flags = 0;                                          /* free_level_data clears it (0x10374C) */

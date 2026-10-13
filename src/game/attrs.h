@@ -21,6 +21,7 @@ extern sk_attr_fn attr_table[95];                          /* NULL = no-op */
 void attrs_reset(sk_game *g);                     /* empties the queue; installs attributes 2, 13, 53, 54 where NULL */
 int  probe_tile_attr(sk_game *g, int x, int y);   /* the object probe (probe_kind 2): -1 no attribute, 0 ran */
 void player_tile_attrs(sk_game *g);               /* 3 x 4 cells around the kid, probe_kind 0 */
+void attrs_run_cells(sk_game *g, int kind, int x0, int y0, int cols, int rows);   /* the probe loop (0x11A652) */
 void queue_tile_change(sk_game *g, int cx, int cy, int kind);
 void process_tile_queue(sk_game *g);
 void clear_cell(sk_game *g, int cx, int cy);

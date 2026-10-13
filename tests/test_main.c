@@ -108,6 +108,11 @@ void test_wall_probe_scans_from_above_the_hit_to_row_39(void);
 void test_ceiling_probe_narrows_the_window_to_the_first_row(void);
 void test_resources_real_home1(void);
 void test_ball_frame_decodes(void);
+void test_sin_and_atan_tables(void);
+void test_ball_falls_and_comes_to_rest(void);
+void test_ball_bounces_off_the_wall_with_reversed_vx(void);
+void test_ball_falls_out_and_goes_inactive(void);
+void test_ball_sprite_frame_follows_the_roll_phase(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -213,6 +218,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "ceiling_probe_narrows_the_window_to_the_first_row", test_ceiling_probe_narrows_the_window_to_the_first_row },
     { "resources_real_home1", test_resources_real_home1 },
     { "ball_frame_decodes", test_ball_frame_decodes },
+    { "sin_and_atan_tables", test_sin_and_atan_tables },
+    { "ball_falls_and_comes_to_rest", test_ball_falls_and_comes_to_rest },
+    { "ball_bounces_off_the_wall_with_reversed_vx", test_ball_bounces_off_the_wall_with_reversed_vx },
+    { "ball_falls_out_and_goes_inactive", test_ball_falls_out_and_goes_inactive },
+    { "ball_sprite_frame_follows_the_roll_phase", test_ball_sprite_frame_follows_the_roll_phase },
 };
 
 int main(int argc, char **argv) {

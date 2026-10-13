@@ -23,8 +23,8 @@ void init_player(sk_game *g) {
     p->x = (int16_t)g->world.start_x;
     p->y = (int16_t)g->world.start_y;
     p->jump_y = p->y;
-    g->ball.x = (int32_t)g->world.start_x << 16;
-    g->ball.y = (int32_t)g->world.start_y << 16;
+    g->ball.x = (int32_t)((uint32_t)(uint16_t)g->world.start_x << 16 | ((uint32_t)g->ball.x & 0xFFFF));   /* move.w: high word only */
+    g->ball.y = (int32_t)((uint32_t)(uint16_t)g->world.start_y << 16 | ((uint32_t)g->ball.y & 0xFFFF));
     p->facing = 1;
     g->look_x = 0x40;
     if (g->scroll_mode == 1) { p->facing = -1; g->look_x = -0x40; }

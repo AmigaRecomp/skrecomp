@@ -10,16 +10,13 @@
 #include "game/collision.h"
 #include "game/input.h"
 #include "game/attrs.h"
+#include "game/ball.h"
 #include "game/objects.h"
 #include "game/player.h"
 #include "game/world.h"
 
 typedef struct sk_game sk_game;
 
-typedef struct sk_ball {                /* placeholder for 5b: the fields the player code touches */
-    int32_t x, y, vx, vy;               /* 16.16 */
-    uint8_t at_rest, inactive, touched;
-} sk_ball;
 
 typedef struct sk_view {
     int cam_x, cam_y;                   /* view block +0x14/+0x16: the camera the strips were built for */
@@ -36,6 +33,7 @@ struct sk_game {
     sk_view view;
     sk_player player;
     sk_ball ball;
+    sk_ball_world bw;
     sk_objects objs;
     sk_attrs attrs;
     int object_count;                   /* 0x300228 */
