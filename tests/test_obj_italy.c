@@ -2,10 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include "check.h"
+#include "app/scene.h"
 #include "fixture.h"
 #include "core/disks.h"
 #include "core/hunk.h"
 #include "core/tables.h"
+#include "game/attrs.h"
+#include "game/world.h"
+#include "gfx/framebuffer.h"
+#include "gfx/display_model.h"
 #include "game/game.h"
 #include "game/level_flow.h"
 #include "game/obj_helpers.h"
@@ -296,5 +301,79 @@ void test_pendulum_knocks_the_kid_along_its_swing(void) {     /* type 36: player
     tick(1);
     CHECK_EQ(s->flags & 0xFF, 0);
     CHECK_EQ(g_g.player.knock_dir, -1);                              /* not.w of ext.w of the swing direction 0 */
+    drop_game();
+}
+
+void test_backdrop_relative_records_draw_at_the_backdrop_scroll(void) {   /* draw_object: bit 4 skips view +0x1C */
+    CHECK(make_game());
+    static sk_fb fb; CHECK(fb_init(&fb, SK_FB_W, SK_FB_H));
+    sk_draw *d = &g_g.objs.chain[0];
+    static uint8_t img[16 * 16 / 8 * 5]; memset(img, 0xFF, sizeof img);
+    set_draw_size(d, 16, 16, img); d->used = true; d->dflags = 0x10;
+    d->x = 200 + 40; d->y = 30 + 20;
+    g_g.objs.chain_a = true;
+    g_g.view.bg_x = 200; g_g.view.bg_y = 30;
+    fb_clear(&fb, 0);
+    draw_all_objects(&g_g, &fb, 1000, 500);
+    CHECK(fb.px[(20 + 4) * fb.w + 40 + 4] != 0);                     /* backdrop coordinates, whatever the camera */
+    fb_free(&fb);
+    drop_game();
+}
+
+void test_backdrop_cells_paint_save_and_restore(void) {        /* 0x11A49A, 0x1154C2, 0x1154FA */
+    CHECK(make_game());
+    sk_world *w = &g_g.world;
+    CHECK(w->bg != NULL); CHECK(w->bg_w >= 20); CHECK(w->bg_h >= 14);
+    paint_bg_cells(&g_g, 3 * 16 + 5, 2 * 16 + 9, 8, 4);
+    for (int k = 0; k < 4; k++) CHECK_EQ(w->bg[2 * w->bg_w + 3 + k], 8);
+    int col = (w->bg_max_x & 0xFFF0) >> 4;
+    w->bg[1 * w->bg_w + col + 2] = 77;
+    save_backdrop(&g_g);
+    CHECK_EQ(w->bg[1 * w->bg_w + 2], 77);                            /* the last screen copied over columns 0..19 */
+    w->bg[1 * w->bg_w + 2] = 55;
+    restore_backdrop(&g_g);
+    CHECK_EQ(w->bg[1 * w->bg_w + col + 2], 55);
+    drop_game();
+}
+
+void test_fill_cells_writes_a_column(void) {                   /* 0x11A41E */
+    CHECK(make_game());
+    sk_world *w = &g_g.world;
+    fill_cells(&g_g, 6 * 16 + 3, 4 * 16, 0x1BB, 0, 2);
+    for (int k = 0; k < 3; k++) {
+        CHECK_EQ(w->tile[(4 + k) * w->w + 6] & SK_INDEX_MASK, 0x1BB);
+        CHECK_EQ(w->state[(4 + k) * w->w + 6], 0x20);
+    }
+    CHECK((w->tile[7 * w->w + 6] & SK_INDEX_MASK) != 0x1BB);
+    drop_game();
+}
+
+void test_halfstep_velocity_adds_the_whole_step_on_odd_frames(void) {   /* 0x10E0B6 */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 6 * 16, 44, 0);
+    s->flags = 1 | 4; s->vx = 5; s->vy = -3;
+    int x = s->draw->x, y = s->draw->y;
+    g_g.frame_ticks = 2;
+    apply_velocity_halfstep(&g_g, s);
+    CHECK_EQ(s->draw->x, x + 2 + 1); CHECK_EQ(s->draw->y, y - (1 + 1));   /* even: the odd bit */
+    x = s->draw->x; y = s->draw->y;
+    g_g.frame_ticks = 3;
+    apply_velocity_halfstep(&g_g, s);
+    CHECK_EQ(s->draw->x, x + 2 + 5); CHECK_EQ(s->draw->y, y - (1 - 3));   /* odd: the whole word, as the original */
+    drop_game();
+}
+
+void test_the_backdrop_draws_from_the_writable_cells(void) {
+    CHECK(make_game());
+    static sk_fb a, b; CHECK(fb_init(&a, SK_FB_W, SK_FB_H)); CHECK(fb_init(&b, SK_FB_W, SK_FB_H));
+    sk_world *w = &g_g.world;
+    fb_clear(&a, 0); scene_draw_backdrop_cells(&g_lv, w->bg, &a, 0, 0);
+    int differ = 0;
+    uint8_t keep = w->bg[1 * w->bg_w + 2];
+    w->bg[1 * w->bg_w + 2] = (uint8_t)(keep + 1);
+    fb_clear(&b, 0); scene_draw_backdrop_cells(&g_lv, w->bg, &b, 0, 0);
+    for (int i = 0; i < SK_FB_W * SK_FB_H; i++) differ += a.px[i] != b.px[i];
+    CHECK(differ > 0);
+    fb_free(&a); fb_free(&b);
     drop_game();
 }

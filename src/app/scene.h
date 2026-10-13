@@ -52,6 +52,7 @@ void scene_backdrop_pos(const sk_level *lv, int cam_x, int cam_y, int *bg_x, int
 void scene_sky(const sk_level *lv, int bg_y, sk_sky *sky);
 void scene_draw_backdrop(const sk_level *lv, sk_fb *fb, int bg_x, int bg_y);
 /* Foreground tiles from an index grid (the map's words or the live cell table), low 9 bits used. */
+void scene_draw_backdrop_cells(const sk_level *lv, const uint8_t *cells, sk_fb *fb, int bg_x, int bg_y);   /* the world's writable copy */
 void scene_draw_tiles(const sk_level *lv, sk_fb *fb, const uint16_t *indices, int cam_x, int cam_y);
 /* With the animated cells: a cell draws tile index + anim[state] / 0x80 (blit_fg_strips 0x109092). */
 void scene_draw_tiles_anim(const sk_level *lv, sk_fb *fb, const uint16_t *indices, const uint8_t *states, const uint16_t *anim, int cam_x, int cam_y);

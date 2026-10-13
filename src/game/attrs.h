@@ -27,6 +27,8 @@ void queue_tile_change(sk_game *g, int cx, int cy, int kind, int fallback);   /*
 void process_tile_queue(sk_game *g);
 void clear_cell(sk_game *g, int cx, int cy);
 void set_cell_tile(sk_game *g, int cx, int cy, int index, int state);
+void set_tile_at(sk_game *g, int x, int y, int index, int state);              /* 0x11A3E2: at pixel x, y */
+void fill_cells(sk_game *g, int x, int y, int index, int state, int n);       /* 0x11A41E: n + 1 cells down from pixel x, y */
 void select_layers(sk_game *g);                   /* 0x10BDAA: bplcon2_value from layer_flags */
 void attr_checkpoint(sk_game *g, int cx, int cy);
 void attr_exit(sk_game *g, int cx, int cy);

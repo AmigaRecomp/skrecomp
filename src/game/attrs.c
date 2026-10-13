@@ -121,6 +121,16 @@ void set_cell_tile(sk_game *g, int cx, int cy, int index, int state) {   /* 0x11
     write_cell(g, cell, word, index, state ? state : 0x20);
 }
 
+void set_tile_at(sk_game *g, int x, int y, int index, int state) {       /* 0x11A3E2 */
+    set_cell_tile(g, (x & 0xFFF0) >> 4, (y & 0xFFF0) >> 4, index, state);
+}
+
+void fill_cells(sk_game *g, int x, int y, int index, int state, int n) { /* sub_11A41E */
+    int cx = (x & 0xFFF0) >> 4, cy = (y & 0xFFF0) >> 4;
+    for (int k = 0; k <= n; k++)
+        if (cx < g->world.w && cy + k < g->world.h) set_cell_tile(g, cx, cy + k, index, state);   /* port guard */
+}
+
 void attr_checkpoint(sk_game *g, int cx, int cy) {              /* 0x11B250 */
     if (g->attrs.probe_kind != 0) return;
     sk_player *p = &g->player;

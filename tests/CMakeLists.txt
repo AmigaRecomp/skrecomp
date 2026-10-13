@@ -264,7 +264,12 @@ set(SK_TEST_NAMES
   hazard_63_takes_a_rising_ball_and_hurts_from_below
   hazard_64_takes_a_falling_ball_and_hurts_from_above
   ball_targets_69_71_74_count_apart
-  pendulum_knocks_the_kid_along_its_swing)
+  pendulum_knocks_the_kid_along_its_swing
+  backdrop_relative_records_draw_at_the_backdrop_scroll
+  backdrop_cells_paint_save_and_restore
+  fill_cells_writes_a_column
+  halfstep_velocity_adds_the_whole_step_on_odd_frames
+  the_backdrop_draws_from_the_writable_cells)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

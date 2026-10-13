@@ -261,11 +261,12 @@ void apply_velocity(sk_slot *s) {                               /* 0x10E01C */
     if (d) d->x = (int16_t)(d->x + dx);
 }
 
-static void draw_record(sk_fb *fb, const sk_draw *d, int cam_x, int cam_y) {   /* draw_object 0x1083FA */
+static void draw_record(sk_fb *fb, const sk_draw *d, int cam_x, int cam_y, int bg_x, int bg_y) {   /* draw_object 0x1083FA */
     if (!d->used || (d->dflags & 4) || d->y == (int16_t)0x8000 || !d->frame || d->w <= 0 || d->h <= 0) return;
     int sx = d->x, sy = d->y;
     if ((d->dflags & 9) == 9) { sx += 32; }                        /* clipped path, bit 3: x + cam_x + 16 on the window (0x108946) */
     else if (!(d->dflags & 0x10)) { sx -= cam_x; sy -= cam_y; }
+    else { sx -= bg_x; sy -= bg_y; }                               /* bit 4: buffer coordinates, whose origin is the backdrop scroll (view +0x18 = 0x30019E) */
     sk_frame fr = { d->w, d->h, d->w / 8, { d->frame, d->frame + d->plane_bytes, d->frame + 2 * d->plane_bytes, d->frame + 3 * d->plane_bytes }, d->frame + 4 * d->plane_bytes };
     int group = (d->dflags & 0x40) ? SK_GROUP_TILES_B : SK_GROUP_TILES_A;
     if (d->dflags & 2) fb_blit_bob_flash(fb, &fr, sx, sy, group);   /* 0x108D96 */
@@ -273,13 +274,14 @@ static void draw_record(sk_fb *fb, const sk_draw *d, int cam_x, int cam_y) {   /
 }
 
 void draw_all_objects(sk_game *g, sk_fb *fb, int cam_x, int cam_y) {   /* 0x1082A8: objects_a first, then the dynamic list */
+    int bx = g->view.bg_x, by = g->view.bg_y;
     for (int i = 0; i < 8; i++)
-        if (!(g->objs.fixed[i].x == -1 && g->objs.fixed[i].y == -1)) draw_record(fb, &g->objs.fixed[i], cam_x, cam_y);
+        if (!(g->objs.fixed[i].x == -1 && g->objs.fixed[i].y == -1)) draw_record(fb, &g->objs.fixed[i], cam_x, cam_y, bx, by);
     const sk_objects *o = &g->objs;
-    if (o->chain_a) for (int i = 0; i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y);   /* 0x10832E */
-    if (o->chain_b) for (int i = 0; i <= o->chain_count && i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y);
-    for (int i = 0; i < g->objs.draw_count; i++) draw_record(fb, g->objs.ptrs[i], cam_x, cam_y);
-    if (o->chain_c) for (int i = 0; i <= o->chain_count && i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y);   /* 0x1083D4 */
+    if (o->chain_a) for (int i = 0; i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y, bx, by);   /* 0x10832E */
+    if (o->chain_b) for (int i = 0; i <= o->chain_count && i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y, bx, by);
+    for (int i = 0; i < g->objs.draw_count; i++) draw_record(fb, g->objs.ptrs[i], cam_x, cam_y, bx, by);
+    if (o->chain_c) for (int i = 0; i <= o->chain_count && i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y, bx, by);   /* 0x1083D4 */
 }
 
 int touch_player(sk_game *g, int x, int y, int half_w, int half_h) {   /* 0x10E354 */

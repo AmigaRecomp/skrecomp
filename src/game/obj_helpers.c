@@ -236,6 +236,22 @@ void step_animation_simple(sk_slot *s, const uint8_t *script, int facing) {   /*
     set_object_frame(s, frames[s->anim_index]);
 }
 
+void apply_velocity_halfstep(const sk_game *g, sk_slot *s) {   /* sub_10E0B6 */
+    sk_draw *d = s->draw;
+    if (!d) return;
+    int ex = s->vx, ey = s->vy;
+    if (!(g->frame_ticks & 1)) { ex &= 1; ey &= 1; }
+    if (s->flags & 4) {
+        int dy;
+        if (s->vy < 0) dy = -((int)((uint16_t)-s->vy >> 1) + ey);
+        else dy = ((uint16_t)s->vy >> 1) + ey;
+        d->y = (int16_t)(d->y + dy);
+    }
+    int dx = ((uint16_t)s->vx >> 1) + ex;
+    if (!(s->flags & 1)) dx = -dx;
+    d->x = (int16_t)(d->x + dx);
+}
+
 void apply_velocity_sym(sk_slot *s) {                          /* sub_10E046 */
     sk_draw *d = s->draw;
     if (s->flags & 4) {

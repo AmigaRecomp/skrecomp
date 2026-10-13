@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "game/world.h"
+#include "game/game.h"
 
 static int clamp0(int v) { return v > 0 ? v : 0; }
 
@@ -38,6 +39,13 @@ bool world_build(sk_world *w, const sk_level *lv) {
     w->state = calloc(n ? n : 1, 1);
     if (!w->live || !w->tile || !w->state) { world_free(w); return false; }
     if (lv->map.states) memcpy(w->state, lv->map.states, n);       /* the level's animated cells */
+    w->bg_w = lv->backdrop.grid ? lv->backdrop.width : 0;
+    w->bg_h = lv->backdrop.grid ? lv->backdrop.height : 0;
+    if (w->bg_w && w->bg_h) {
+        w->bg = malloc((size_t)w->bg_w * (size_t)w->bg_h);
+        if (!w->bg) { world_free(w); return false; }
+        memcpy(w->bg, lv->backdrop.grid, (size_t)w->bg_w * (size_t)w->bg_h);
+    }
     w->start_x = 16;                                        /* find_start_position: 16, 16 - 24 when no tile 0x1FF */
     w->start_y = 16 - 24;
     bool found = false;
@@ -74,6 +82,7 @@ void world_free(sk_world *w) {
     free(w->live);
     free(w->tile);
     free(w->state);
+    free(w->bg);
     memset(w, 0, sizeof *w);
 }
 
@@ -97,3 +106,23 @@ const uint8_t *world_tail(const sk_world *w, int cx, int cy) {
     if (!w->lv->tiles_a.tails || t >= w->lv->tiles_a.count) return NULL;
     return w->lv->tiles_a.tails + (size_t)t * SK_TILE_TAIL;
 }
+
+void paint_bg_cells(sk_game *g, int x, int y, int tile, int n) {         /* sub_11A49A */
+    sk_world *w = &g->world;
+    int cx = (x & 0xFFF0) >> 4, cy = (y & 0xFFF0) >> 4;
+    if (!w->bg || cy < 0 || cy >= w->bg_h) return;                       /* port guard */
+    for (int k = 0; k < n && cx + k < w->bg_w; k++) w->bg[cy * w->bg_w + cx + k] = (uint8_t)tile;
+}
+
+static void copy_backdrop(sk_game *g, bool save) {
+    sk_world *w = &g->world;
+    int col = (w->bg_max_x & 0xFFF0) >> 4;
+    if (!w->bg) return;
+    for (int r = 0; r < 14 && r < w->bg_h; r++)
+        for (int c = 0; c < 20 && col + c < w->bg_w; c++) {
+            uint8_t *far = &w->bg[r * w->bg_w + col + c], *near = &w->bg[r * w->bg_w + c];
+            if (save) *near = *far; else *far = *near;
+        }
+}
+void save_backdrop(sk_game *g) { copy_backdrop(g, true); }               /* sub_1154C2 */
+void restore_backdrop(sk_game *g) { copy_backdrop(g, false); }           /* sub_1154FA */

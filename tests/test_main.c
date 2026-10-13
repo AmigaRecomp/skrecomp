@@ -223,6 +223,11 @@ void test_hazard_63_takes_a_rising_ball_and_hurts_from_below(void);
 void test_hazard_64_takes_a_falling_ball_and_hurts_from_above(void);
 void test_ball_targets_69_71_74_count_apart(void);
 void test_pendulum_knocks_the_kid_along_its_swing(void);
+void test_backdrop_relative_records_draw_at_the_backdrop_scroll(void);
+void test_backdrop_cells_paint_save_and_restore(void);
+void test_fill_cells_writes_a_column(void);
+void test_halfstep_velocity_adds_the_whole_step_on_odd_frames(void);
+void test_the_backdrop_draws_from_the_writable_cells(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -443,6 +448,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "hazard_64_takes_a_falling_ball_and_hurts_from_above", test_hazard_64_takes_a_falling_ball_and_hurts_from_above },
     { "ball_targets_69_71_74_count_apart", test_ball_targets_69_71_74_count_apart },
     { "pendulum_knocks_the_kid_along_its_swing", test_pendulum_knocks_the_kid_along_its_swing },
+    { "backdrop_relative_records_draw_at_the_backdrop_scroll", test_backdrop_relative_records_draw_at_the_backdrop_scroll },
+    { "backdrop_cells_paint_save_and_restore", test_backdrop_cells_paint_save_and_restore },
+    { "fill_cells_writes_a_column", test_fill_cells_writes_a_column },
+    { "halfstep_velocity_adds_the_whole_step_on_odd_frames", test_halfstep_velocity_adds_the_whole_step_on_odd_frames },
+    { "the_backdrop_draws_from_the_writable_cells", test_the_backdrop_draws_from_the_writable_cells },
 };
 
 int main(int argc, char **argv) {

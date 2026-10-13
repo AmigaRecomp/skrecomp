@@ -60,6 +60,14 @@ void scene_sky(const sk_level *lv, int bg_y, sk_sky *sky) {
     sky->c18 = lv->copp2; sky->c18_len = lv->copp2_len; sky->c18_off = bg_y;
 }
 
+typedef struct { const uint8_t *cells; int w; } bg_grid;
+static int bg_cell_index(const void *ctx, int x, int y) { const bg_grid *gr = ctx; return gr->cells[y * gr->w + x]; }
+
+void scene_draw_backdrop_cells(const sk_level *lv, const uint8_t *cells, sk_fb *fb, int bg_x, int bg_y) {
+    bg_grid gr = { cells, lv->backdrop.width };
+    if (cells) draw_grid(fb, &lv->tiles_b, lv->backdrop.width, lv->backdrop.height, bg_x + SK_BUFFER_WORLD_X, bg_y, SK_GROUP_TILES_B, bg_cell_index, &gr);
+}
+
 void scene_draw_backdrop(const sk_level *lv, sk_fb *fb, int bg_x, int bg_y) {
     if (lv->backdrop.grid) draw_grid(fb, &lv->tiles_b, lv->backdrop.width, lv->backdrop.height, bg_x + SK_BUFFER_WORLD_X, bg_y, SK_GROUP_TILES_B, bg_index, lv);
 }
