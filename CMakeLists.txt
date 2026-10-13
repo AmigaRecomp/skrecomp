@@ -32,7 +32,8 @@ add_library(skcore STATIC
   src/gfx/png.c
   src/app/args.c
   src/app/scene.c
-  src/app/window.c)
+  src/app/window.c
+  src/game/world.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB SDL3::SDL3)
 

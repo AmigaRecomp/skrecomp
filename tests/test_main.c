@@ -53,6 +53,8 @@ void test_window_runs_headless_frames(void);
 void test_window_camera_step_clamps(void);
 void test_window_fixed_step_accumulator(void);
 void test_adf_rejects_out_of_range_pointers(void);
+void test_world_builds_cells_and_start(void);
+void test_world_without_start_tile_defaults(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -103,6 +105,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "window_camera_step_clamps", test_window_camera_step_clamps },
     { "window_fixed_step_accumulator", test_window_fixed_step_accumulator },
     { "adf_rejects_out_of_range_pointers", test_adf_rejects_out_of_range_pointers },
+    { "world_builds_cells_and_start", test_world_builds_cells_and_start },
+    { "world_without_start_tile_defaults", test_world_without_start_tile_defaults },
 };
 
 int main(int argc, char **argv) {
