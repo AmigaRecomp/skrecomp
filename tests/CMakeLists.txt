@@ -16,7 +16,8 @@ add_executable(sk_tests
   test_present.c
   test_png.c
   test_args.c
-  test_scene.c)
+  test_scene.c
+  test_window.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -66,7 +67,9 @@ set(SK_TEST_NAMES
   scene_draw_level_on_fixture
   scene_camera_clamps
   scene_real_level0_screenshot
-  bobs_estimate_real_sheets)
+  bobs_estimate_real_sheets
+  window_runs_headless_frames
+  window_camera_step_clamps)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

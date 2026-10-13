@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "app/args.h"
 #include "app/scene.h"
+#include "app/window.h"
 #include "gfx/display_model.h"
 #include "gfx/png.h"
 
@@ -31,8 +32,14 @@ int main(int argc, char **argv) {
         }
         free(out);
     } else {
-        fprintf(stderr, "soccerkid: the window viewer is not built yet; use --screenshot out.png\n");
-        rc = 2;
+        sk_window w = {0};
+        if (!window_open(&w, a.scale, &e)) {
+            fprintf(stderr, "soccerkid: %s\n", e.msg);
+            rc = 1;
+        } else {
+            rc = window_run(&w, &s, a.exit_after);
+        }
+        window_close(&w);
     }
     scene_close(&s);
     return rc;

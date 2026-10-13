@@ -49,6 +49,8 @@ void test_scene_draw_level_on_fixture(void);
 void test_scene_camera_clamps(void);
 void test_scene_real_level0_screenshot(void);
 void test_bobs_estimate_real_sheets(void);
+void test_window_runs_headless_frames(void);
+void test_window_camera_step_clamps(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -95,6 +97,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "scene_camera_clamps", test_scene_camera_clamps },
     { "scene_real_level0_screenshot", test_scene_real_level0_screenshot },
     { "bobs_estimate_real_sheets", test_bobs_estimate_real_sheets },
+    { "window_runs_headless_frames", test_window_runs_headless_frames },
+    { "window_camera_step_clamps", test_window_camera_step_clamps },
 };
 
 int main(int argc, char **argv) {
