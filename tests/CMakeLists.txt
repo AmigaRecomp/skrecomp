@@ -31,7 +31,8 @@ add_executable(sk_tests
   test_resources.c
   test_ball.c
   test_tricks.c
-  test_obj_helpers.c)
+  test_obj_helpers.c
+  test_obj_england.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -157,7 +158,20 @@ set(SK_TEST_NAMES
   child_spawn_with_full_slots_is_skipped
   spawn_child_mirrors_for_a_right_facing_parent
   ground_ahead_at_the_pit_edge
-  frames_32x30_sizes)
+  frames_32x30_sizes
+  type_without_its_slot_spawns_nothing
+  bird_init_and_flight
+  dropping_falls_and_splashes
+  bulldog_turns_at_the_pit
+  crate_breaks_into_debris_and_a_bonus
+  bonus_gives_its_kind
+  workman_winds_up_and_punches
+  rat_waits_then_runs
+  walker_pauses_away_from_home
+  cyclist_crashes_when_hit_twice
+  score_popup_picks_its_number
+  kick_off_banner_holds_the_kid
+  every_home_marker_spawns_a_real_type)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

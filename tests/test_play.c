@@ -27,8 +27,8 @@ static void drop_play(void) { game_close(&g_p.game); fb_free(&g_p.scene.fb); lev
 
 void test_play_script_runs_headless_on_the_fixture(void) {
     CHECK(make_play());
-    g_p.script = g_p.script_cursor = "R60,RU20,.60";
-    for (int i = 0; i < 141; i++) play_step(&g_p, 0);        /* 140 scripted frames, then the script is spent */
+    g_p.script = g_p.script_cursor = ".170,R60,RU20,.60";           /* KICK OFF holds the kid for about 165 frames */
+    for (int i = 0; i < 311; i++) play_step(&g_p, 0);        /* 310 scripted frames, then the script is spent */
     CHECK(g_p.game.player.x > 3 * 16 + 100); CHECK_EQ(g_p.game.player.state, 0); CHECK_EQ(g_p.game.player.jumping, 0);
     CHECK(g_p.script_done);
     play_draw(&g_p);
@@ -50,6 +50,7 @@ void test_play_script_survives_game_over(void) {                   /* Review Foc
     kill_player(&g_p.game);                                        /* a deadly tile (5b) would do this */
     for (int i = 0; i < 2000 && g_p.game.player.lives != 3; i++) play_step(&g_p, 0);
     CHECK_EQ(g_p.game.player.lives, 3);                             /* game over -> the run restarted the level */
+    for (int i = 0; i < 400 && g_p.game.player.state == 68; i++) play_step(&g_p, 0);   /* KICK OFF again */
     CHECK_EQ(g_p.game.player.x, 3 * 16); CHECK_EQ(g_p.game.player.state, 0);
     drop_play();
 }
@@ -57,13 +58,14 @@ void test_play_script_survives_game_over(void) {                   /* Review Foc
 void test_play_real_level0_screenshot(void) {                      /* ROM-backed */
     const char *roms = getenv("SOCCERKID_ROMS");
     if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
-    sk_args a = { .roms = roms, .level = 0, .scale = 3, .section = -1, .frames = 300, .script = "R150,RU20,R130" };
+    sk_args a = { .roms = roms, .level = 0, .scale = 3, .section = -1, .frames = 470, .script = ".170,R150,RU20,R130" };
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     if (!SK_OK(&e)) printf("play_open: %s\n", e.msg);
     CHECK_EQ(p.level_pos, 1); CHECK_EQ(p.game.level_timer, 0x45);
     for (int i = 0; i < a.frames; i++) play_step(&p, 0);
-    CHECK(p.game.player.x > p.game.world.start_x + 200); CHECK_EQ(p.game.player.state, 0);
+    CHECK(p.game.player.x > p.game.world.start_x + 100);         /* the enemies are live: a knock-back is possible */
+    CHECK(p.game.player.state == 0 || p.game.player.state == 52);
     play_draw(&p);
     static uint32_t out[SK_SCREEN_W * SK_SCREEN_H]; play_present(&p, out);
     CHECK(p.sprites.spr[0].visible);

@@ -3,6 +3,7 @@
 #include "game/game.h"
 #include "game/objects.h"
 #include "formats/bobs.h"
+#include "game/obj_england.h"
 
 sk_obj_init_fn object_init_table[128];
 sk_obj_update_fn object_update_table[128];
@@ -16,6 +17,7 @@ void objects_reset(sk_game *g) {                                /* clear_object_
     for (int i = 0; i < 16; i++) { o->slot[i].x = -1; o->slot[i].y = -1; o->ptrs[i] = &o->dyn[i]; }
     for (int i = 0; i < 8; i++) { o->fixed[i].x = -1; o->fixed[i].y = -1; }
     g->object_count = 0;
+    obj_england_install();
     for (int i = 0; i < 128; i++) {
         if (!object_init_table[i]) object_init_table[i] = obj_stub_init;
         if (!object_update_table[i]) object_update_table[i] = obj_stub_update;
@@ -67,7 +69,7 @@ sk_draw *slot_draw_record(sk_game *g, const sk_slot *s) {
 static void init_common(sk_game *g, sk_slot *s, int x, int y, int type4) {
     s->type4 = (int16_t)type4;
     s->flags = 0; s->aux = 0; s->t0 = 0; s->t1 = 0;
-    s->anim = 0; s->frame = 0; s->anim_tick = 0; s->anim_index = 0; s->timer = 0;
+    s->anim = 0; s->frame = 0; s->anim_tick = 0; s->anim_index = 0; s->timer = 0; s->script = NULL;
     s->x = s->x0 = (int16_t)x;
     s->y = s->y0 = (int16_t)y;
     g->object_count++;
@@ -77,7 +79,7 @@ void init_object_slot(sk_game *g, sk_slot *s, int x, int y, int type4) {        
     s->draw = alloc_draw_record(g, s); s->draw->used = true; init_common(g, s, x, y, type4);
 }
 void init_object_slot_nodraw(sk_game *g, sk_slot *s, int x, int y, int type4) {     /* 0x10D620 */
-    alloc_draw_record(g, s); s->draw = NULL; init_common(g, s, x, y, type4);
+    s->draw = alloc_draw_record(g, s); s->draw->used = true; init_common(g, s, x, y, type4);   /* the original draws the whole dynamic list */
 }
 void init_object_slot_fixed(sk_game *g, sk_slot *s, int x, int y, int type4) {      /* 0x10D666 */
     s->draw = alloc_fixed_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4);
@@ -241,7 +243,7 @@ int touch_player(sk_game *g, int x, int y, int half_w, int half_h) {   /* 0x10E3
     return hurt_player(g);
 }
 
-static uint32_t bcd_add(uint32_t a, uint32_t b) {
+uint32_t bcd_add32(uint32_t a, uint32_t b) {
     uint32_t r = 0, carry = 0;
     for (int i = 0; i < 8; i++) {
         uint32_t d = (a >> (4 * i) & 15) + (b >> (4 * i) & 15) + carry;
@@ -254,7 +256,7 @@ static uint32_t bcd_add(uint32_t a, uint32_t b) {
 
 void add_score(sk_game *g, uint32_t bcd) {                      /* 0x102732 */
     uint32_t before = g->player.score & 0xF00000;
-    g->player.score = bcd_add(g->player.score, bcd);
+    g->player.score = bcd_add32(g->player.score, bcd);
     uint32_t after = g->player.score & 0xF00000;
     if (after != before && (after == 0 || after == 0x200000 || after == 0x400000 || after == 0x600000 || after == 0x800000)) {
         g->player.lives++;

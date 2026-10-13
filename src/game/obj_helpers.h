@@ -23,6 +23,16 @@ void frames_wh(sk_game *g, sk_slot *s, int w, int h, const uint8_t *frames, int 
 SK_FRAMES(16, 10) SK_FRAMES(16, 16) SK_FRAMES(16, 32) SK_FRAMES(32, 20) SK_FRAMES(32, 24) SK_FRAMES(32, 27) SK_FRAMES(32, 30)
 SK_FRAMES(48, 28) SK_FRAMES(48, 32) SK_FRAMES(48, 49) SK_FRAMES(48, 64) SK_FRAMES(64, 32) SK_FRAMES(64, 56) SK_FRAMES(64, 64)
 #undef SK_FRAMES
+void step_animation_simple(sk_slot *s, const uint8_t *script, int facing);   /* 0x10DEA0: no hidden frames */
+void apply_velocity_nograv(sk_slot *s);                         /* 0x10E090 */
+void free_if_far(sk_game *g, sk_slot *s);                       /* 0x10E290: the draw position 160 px out */
+void set_frame2(sk_slot *s, int left, int right, int facing);   /* set_object_frame with d2 = facing */
+void set_draw_size_at(sk_game *g, sk_slot *s, int w, int h, const uint8_t *frames);   /* 0x10816E: prio 1 */
+int  player_overlap(const sk_game *g, int x, int y, int w, int h);   /* 0x10E3A8: -1 overlapping, no hurt */
+static inline int aux_c(const sk_slot *s) { return (uint16_t)s->aux >> 8; }        /* byte +0xC */
+static inline int aux_d(const sk_slot *s) { return s->aux & 0xFF; }                /* byte +0xD */
+static inline void set_aux_c(sk_slot *s, int v) { s->aux = (int16_t)((v & 0xFF) << 8 | (s->aux & 0xFF)); }
+static inline void set_aux_d(sk_slot *s, int v) { s->aux = (int16_t)(((uint16_t)s->aux & 0xFF00) | (v & 0xFF)); }
 /* sub_10CE92: x - off (x + off and vx bit 15 when the parent faces right), the child block, spawn_object */
 sk_slot *spawn_child(sk_game *g, const sk_slot *parent, int x, int y, int type, int off, const uint8_t *frames,
                      const uint8_t *script, int w, int h, int vx, int vy);

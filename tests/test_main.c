@@ -125,6 +125,19 @@ void test_child_spawn_with_full_slots_is_skipped(void);
 void test_spawn_child_mirrors_for_a_right_facing_parent(void);
 void test_ground_ahead_at_the_pit_edge(void);
 void test_frames_32x30_sizes(void);
+void test_type_without_its_slot_spawns_nothing(void);
+void test_bird_init_and_flight(void);
+void test_dropping_falls_and_splashes(void);
+void test_bulldog_turns_at_the_pit(void);
+void test_crate_breaks_into_debris_and_a_bonus(void);
+void test_bonus_gives_its_kind(void);
+void test_workman_winds_up_and_punches(void);
+void test_rat_waits_then_runs(void);
+void test_walker_pauses_away_from_home(void);
+void test_cyclist_crashes_when_hit_twice(void);
+void test_score_popup_picks_its_number(void);
+void test_kick_off_banner_holds_the_kid(void);
+void test_every_home_marker_spawns_a_real_type(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -247,6 +260,19 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "spawn_child_mirrors_for_a_right_facing_parent", test_spawn_child_mirrors_for_a_right_facing_parent },
     { "ground_ahead_at_the_pit_edge", test_ground_ahead_at_the_pit_edge },
     { "frames_32x30_sizes", test_frames_32x30_sizes },
+    { "type_without_its_slot_spawns_nothing", test_type_without_its_slot_spawns_nothing },
+    { "bird_init_and_flight", test_bird_init_and_flight },
+    { "dropping_falls_and_splashes", test_dropping_falls_and_splashes },
+    { "bulldog_turns_at_the_pit", test_bulldog_turns_at_the_pit },
+    { "crate_breaks_into_debris_and_a_bonus", test_crate_breaks_into_debris_and_a_bonus },
+    { "bonus_gives_its_kind", test_bonus_gives_its_kind },
+    { "workman_winds_up_and_punches", test_workman_winds_up_and_punches },
+    { "rat_waits_then_runs", test_rat_waits_then_runs },
+    { "walker_pauses_away_from_home", test_walker_pauses_away_from_home },
+    { "cyclist_crashes_when_hit_twice", test_cyclist_crashes_when_hit_twice },
+    { "score_popup_picks_its_number", test_score_popup_picks_its_number },
+    { "kick_off_banner_holds_the_kid", test_kick_off_banner_holds_the_kid },
+    { "every_home_marker_spawns_a_real_type", test_every_home_marker_spawns_a_real_type },
 };
 
 int main(int argc, char **argv) {

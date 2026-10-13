@@ -1,5 +1,6 @@
 /* dispatch_player_state (0x10A672) and the 19 entries of player_state_table (0x10A676); player.md "States". */
 #include "game/game.h"
+#include "game/obj_england.h"
 
 static int left(const sk_player *p) { return p->facing < 0; }
 
@@ -22,7 +23,7 @@ static void player_state_death(sk_game *g) {                     /* 0x10BB28 */
         g->hud_redraw |= 2;
         p->lives--;
         g->music_requested = true;
-        if (p->lives < 0) { g->music_request = 3; g->jingle_requested = true; g->jingle = 1; }
+        if (p->lives < 0) { g->music_request = 3; spawn_jingle(g, 1); }
         else g->music_request = 0;
     }
     p->anim = 0x1B;

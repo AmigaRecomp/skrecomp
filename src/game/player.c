@@ -4,6 +4,7 @@
 #include <string.h>
 #include "game/camera.h"
 #include "game/game.h"
+#include "game/obj_england.h"
 
 void play_sfx(sk_game *g, int n) { g->sfx_last = n; g->sfx_count++; }
 
@@ -36,7 +37,7 @@ void init_player(sk_game *g) {
     p->health = 2;                                              /* 3 when byte 0x300366 is set: not in 5a */
     g->hud_redraw |= 1;
     g->timer_flags = 1;
-    if (g->level_data_index != 12 && !(g->game_flags & 1)) { g->jingle_requested = true; g->jingle = 0; }
+    if (g->level_data_index != 12 && !(g->game_flags & 1)) spawn_jingle(g, 0);
 }
 
 void slope_probe_step(sk_game *g) {                             /* slope_probe 0x10B198 */

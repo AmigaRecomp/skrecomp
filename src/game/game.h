@@ -74,6 +74,12 @@ struct sk_game {
     uint8_t kills[4];                   /* 0x300373 / 0x300375 / 0x300374 by kill_kind 1..3 */
     uint32_t score_value;               /* 0x300050: the score the type-113 popup shows */
     bool player_hidden;                 /* 0x300382: set by the attribute handler at 0x11BE3E (not in England 1/2); ball_overlap and touch_player skip */
+    uint8_t ball_kicked_flag;           /* 0x30037E: only ever cleared in the original (the ball_kill_check paths are dead) */
+    uint32_t timer_start;               /* 0x3002BE: the level record's timer, bonus kind 2 adds 0x15 */
+    uint8_t extra_heart;                /* 0x300366 */
+    int flutter_count;                  /* 0x3002F8: live butterflies */
+    int fulltime_level;                 /* 0x30029A: FULL TIME's next level (scoreboard) */
+    uint8_t banner[0x514];              /* 0x300054: the jingle banner, 160 x 13, four planes and the mask */
     int8_t kick_result;                 /* 0x300338 */
     int32_t trick8_bias;                /* 0x30029C */
     int throw_x, throw_y;               /* 0x3002E4/E6: where the recalled ball appears */

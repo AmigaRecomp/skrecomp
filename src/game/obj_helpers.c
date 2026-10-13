@@ -213,3 +213,49 @@ sk_slot *spawn_child(sk_game *g, const sk_slot *parent, int x, int y, int type, 
     g->objs.child_vy = (int16_t)vy;
     return spawn_object(g, x, y, type);
 }
+
+void step_animation_simple(sk_slot *s, const uint8_t *script, int facing) {   /* 0x10DEA0 */
+    int count = script[0] << 8 | script[1], ticks = script[2] << 8 | script[3];
+    if (++s->anim_tick == (uint8_t)ticks) {
+        s->anim_tick = 0;
+        if (++s->anim_index == (uint8_t)count) s->anim_index = 0;
+    }
+    const uint8_t *frames = script + 4 + ((facing & 1) ? count : 0);
+    set_object_frame(s, frames[s->anim_index]);
+}
+
+void apply_velocity_nograv(sk_slot *s) {           /* 0x10E090 */
+    sk_draw *d = s->draw;
+    if (!d) return;
+    if (s->flags & 4) d->y = (int16_t)(d->y + (s->vy >> 1));
+    int dx = (uint16_t)s->vx >> 1;
+    if (!(s->flags & 1)) dx = -dx;
+    d->x = (int16_t)(d->x + dx);
+}
+
+void free_if_far(sk_game *g, sk_slot *s) {         /* 0x10E290 */
+    const sk_draw *d = s->draw;
+    if (object_offscreen(g, d ? d->x : s->x, d ? d->y : s->y, 160) < 0) free_object(g, s);
+}
+
+void set_frame2(sk_slot *s, int left, int right, int facing) { set_object_frame(s, (facing & 1) ? right : left); }
+
+void set_draw_size_at(sk_game *g, sk_slot *s, int w, int h, const uint8_t *frames) {   /* 0x10816E */
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    set_draw_size(d, w, h, frames);
+    d->x = s->x;
+    d->y = s->y;
+    d->prio = 1;
+}
+
+int player_overlap(const sk_game *g, int x, int y, int w, int h) {   /* 0x10E3A8 */
+    const sk_player *p = &g->player;
+    int dx = (int16_t)(p->x - 8 - x);
+    if (dx < 0) { dx = -dx; w = 16; }
+    int py = p->y, reach = 0x22;
+    if (p->crouching || p->sliding) { py += 10; reach -= 10; }
+    int dy = (int16_t)(py - y);
+    if (dy < 0) { dy = -dy; h = reach; }
+    return ((uint16_t)w >= (uint16_t)dx && (uint16_t)h >= (uint16_t)dy) ? -1 : 0;
+}

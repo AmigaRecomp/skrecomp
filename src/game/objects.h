@@ -20,6 +20,7 @@ typedef struct sk_slot {
     int16_t x, y, x0, y0, type4, flags, aux, draw_index, vy, vx, t0, t1;
     sk_draw *draw;
     uint8_t anim, hits, frame, anim_tick, anim_index, timer;
+    const uint8_t *script;         /* the long at +0x14 for the child types that keep a script there */
 } sk_slot;                         /* x < 0 = free; draw_index: 0..15 dynamic, 100 + n fixed, -1 none */
 
 #define SK_FIXED_INDEX_BASE 100
@@ -66,6 +67,7 @@ void apply_velocity(sk_slot *s);
 void draw_all_objects(sk_game *g, sk_fb *fb, int cam_x, int cam_y);
 int  touch_player(sk_game *g, int x, int y, int half_w, int half_h);   /* hurt_player's result, 0 = no touch */
 void add_score(sk_game *g, uint32_t bcd);
+uint32_t bcd_add32(uint32_t a, uint32_t b);
 void obj_stub_init(sk_game *g, sk_slot *s, int x, int y);
 void obj_stub_update(sk_game *g, sk_slot *s, int index);
 
