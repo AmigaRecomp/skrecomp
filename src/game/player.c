@@ -2,6 +2,7 @@
    Each function is the routine of the same name in re/symbols/sk.sym; see re/docs/notes/player.md. */
 #include <stddef.h>
 #include <string.h>
+#include "game/camera.h"
 #include "game/game.h"
 
 void play_sfx(sk_game *g, int n) { g->sfx_last = n; g->sfx_count++; }

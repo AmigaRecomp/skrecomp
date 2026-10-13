@@ -41,6 +41,10 @@ struct sk_game {
     int frame_ticks, frame_counter;     /* 0x30020E, 0x300064 */
     int camera_x, camera_y, camera_y_raw;   /* 0x3001A2, 0x3001A4, 0x3001BA */
     int shake_amplitude, push_x, look_x;    /* 0x30026A, 0x300268, 0x300242 */
+    int cam_ease;                       /* 0x300284: vertical follow step (READING: 4) */
+    int scan_col_left, scan_col_cx, scan_col_cy0;   /* 0x300020/0x300022: pending edge columns */
+    int scan_row_left, scan_row_cy, scan_row_cx0;   /* 0x300026/0x300028: pending edge rows */
+    bool scrolled_right, scrolled_down;             /* 0x30034E / 0x30034F */
     int death_target_x, death_target_y; /* 0x30024A/0x30024C: the camera target frozen by freeze_death_target (sub_106C22) */
     int edge_cache;                     /* 0x3001F4: x the edge probe last ran for */
     int scroll_mode;                    /* 0x30035C; only 0 in 5a */

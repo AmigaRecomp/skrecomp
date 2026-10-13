@@ -23,7 +23,8 @@ add_executable(sk_tests
   test_player.c
   test_sprites.c
   test_player_states.c
-  test_objects.c)
+  test_objects.c
+  test_camera.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -107,7 +108,11 @@ set(SK_TEST_NAMES
   despawn_if_far_uses_the_160_margin
   step_animation_follows_the_script
   touch_player_box_and_add_score
-  draw_all_objects_blits_fixture_frames)
+  draw_all_objects_blits_fixture_frames
+  camera_clamps_and_follows
+  push_x_forces_the_camera
+  crossing_a_column_scans_the_new_column_and_three_beyond
+  camera_scans_stay_inside_a_tiny_level)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

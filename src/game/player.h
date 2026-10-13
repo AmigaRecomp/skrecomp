@@ -93,6 +93,5 @@ void update_player(sk_game *g, sk_sprite *kid);   /* 0x10A4DC: player_logic + th
 void dispatch_player_state(sk_game *g);     /* player_states.c */
 void player_tile_attrs(sk_game *g);         /* attrs.c */
 void select_layers(sk_game *g);             /* attrs.c */
-void camera_target(sk_game *g, int *tx, int *ty);   /* camera.c */
 
 #endif

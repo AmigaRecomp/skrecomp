@@ -83,6 +83,10 @@ void test_despawn_if_far_uses_the_160_margin(void);
 void test_step_animation_follows_the_script(void);
 void test_touch_player_box_and_add_score(void);
 void test_draw_all_objects_blits_fixture_frames(void);
+void test_camera_clamps_and_follows(void);
+void test_push_x_forces_the_camera(void);
+void test_crossing_a_column_scans_the_new_column_and_three_beyond(void);
+void test_camera_scans_stay_inside_a_tiny_level(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -163,6 +167,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "step_animation_follows_the_script", test_step_animation_follows_the_script },
     { "touch_player_box_and_add_score", test_touch_player_box_and_add_score },
     { "draw_all_objects_blits_fixture_frames", test_draw_all_objects_blits_fixture_frames },
+    { "camera_clamps_and_follows", test_camera_clamps_and_follows },
+    { "push_x_forces_the_camera", test_push_x_forces_the_camera },
+    { "crossing_a_column_scans_the_new_column_and_three_beyond", test_crossing_a_column_scans_the_new_column_and_three_beyond },
+    { "camera_scans_stay_inside_a_tiny_level", test_camera_scans_stay_inside_a_tiny_level },
 };
 
 int main(int argc, char **argv) {
