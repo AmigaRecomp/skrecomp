@@ -10,6 +10,9 @@ static const char *USAGE =
     "  --level N               level data index 0..41 (default 0 = England 1)\n"
     "  --section fileNNN:S[:WxH]  show the frames of graphics-set file NNN section S (size estimated unless given)\n"
     "  --cam X,Y               camera position in pixels (default 0,0)\n"
+    "  --start X,Y             start the kid at world pixel X,Y (respawns come back there too)\n"
+    "  --near TYPE[,N]         start the kid 128 px left of the N-th (default 1st) object marker of TYPE\n"
+    "  --markers               list the level's object markers (type, param, cell, pixel) and exit\n"
     "  --no-backdrop           draw the foreground only\n"
     "  --no-frames             draw no graphics-set frames\n"
     "  --screenshot out.png    render one frame to a PNG and exit (no window)\n"
@@ -36,6 +39,7 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
     memset(a, 0, sizeof *a);
     a->section = -1;
     a->scale = 3;
+    a->near_type = -1;
     for (int i = 1; i < argc; i++) {
         const char *opt = argv[i];
         const char *val = i + 1 < argc ? argv[i + 1] : NULL;
@@ -44,9 +48,11 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
         if (strcmp(opt, "--no-backdrop") == 0) { a->no_backdrop = true; continue; }
         if (strcmp(opt, "--no-frames") == 0) { a->no_frames = true; continue; }
         if (strcmp(opt, "--viewer") == 0) { a->viewer = true; continue; }
+        if (strcmp(opt, "--markers") == 0) { a->markers = true; continue; }
         bool takes_value = strcmp(opt, "--roms") == 0 || strcmp(opt, "--level") == 0 || strcmp(opt, "--section") == 0 ||
                            strcmp(opt, "--cam") == 0 || strcmp(opt, "--screenshot") == 0 || strcmp(opt, "--scale") == 0 ||
-                           strcmp(opt, "--exit-after") == 0 || strcmp(opt, "--frames") == 0 || strcmp(opt, "--script") == 0;
+                           strcmp(opt, "--exit-after") == 0 || strcmp(opt, "--frames") == 0 || strcmp(opt, "--script") == 0 ||
+                           strcmp(opt, "--start") == 0 || strcmp(opt, "--near") == 0;
         if (!takes_value) return sk_fail(e, "unknown option %s", opt);
         if (!val) return sk_fail(e, "%s needs a value", opt);
         i++;
@@ -60,6 +66,23 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
             const char *cur = val; uint8_t in; int n;
             while (*cur) if (!script_parse_step(&cur, &in, &n, e)) return false;
             a->script = val;
+        }
+        else if (strcmp(opt, "--start") == 0) {
+            char buf[64];
+            snprintf(buf, sizeof buf, "%s", val);
+            char *comma = strchr(buf, ',');
+            if (!comma) return sk_fail(e, "--start: expected X,Y, got %s", val);
+            *comma = 0;
+            if (!parse_int(buf, &a->start_x) || !parse_int(comma + 1, &a->start_y)) return sk_fail(e, "--start: expected X,Y, got %s", val);
+            a->has_start = true;
+        }
+        else if (strcmp(opt, "--near") == 0) {
+            char buf[64];
+            snprintf(buf, sizeof buf, "%s", val);
+            char *comma = strchr(buf, ',');
+            a->near_n = 1;
+            if (comma) { *comma = 0; if (!parse_int(comma + 1, &a->near_n) || a->near_n < 1) return sk_fail(e, "--near: bad count in %s", val); }
+            if (!parse_int(buf, &a->near_type) || a->near_type < 1 || a->near_type > 127) return sk_fail(e, "--near: expected a type 1..127, got %s", val);
         }
         else if (strcmp(opt, "--cam") == 0) {
             char buf[64];

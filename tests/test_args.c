@@ -85,3 +85,23 @@ void test_args_script_and_frames(void) {
     const char *defaults[] = { "soccerkid", "--roms", "d" };
     CHECK(args_parse(3, (char **)defaults, &a, &e)); CHECK(!a.viewer); CHECK_EQ(a.frames, 0); CHECK(a.script == NULL);
 }
+
+void test_args_start_near_and_markers(void) {
+    sk_args a; sk_err e;
+    const char *none[] = { "soccerkid", "--roms", "d" };
+    CHECK(parse(&a, &e, 3, none));
+    CHECK(!a.has_start); CHECK_EQ(a.near_type, -1); CHECK(!a.markers);
+    const char *start[] = { "soccerkid", "--roms", "d", "--start", "1200,96" };
+    CHECK(parse(&a, &e, 5, start));
+    CHECK(a.has_start); CHECK_EQ(a.start_x, 1200); CHECK_EQ(a.start_y, 96);
+    const char *near[] = { "soccerkid", "--roms", "d", "--near", "51", "--markers" };
+    CHECK(parse(&a, &e, 6, near));
+    CHECK_EQ(a.near_type, 51); CHECK_EQ(a.near_n, 1); CHECK(a.markers);
+    const char *near2[] = { "soccerkid", "--roms", "d", "--near", "36,2" };
+    CHECK(parse(&a, &e, 5, near2));
+    CHECK_EQ(a.near_type, 36); CHECK_EQ(a.near_n, 2);
+    const char *bad[] = { "soccerkid", "--roms", "d", "--near", "200" };
+    CHECK(!parse(&a, &e, 5, bad));
+    const char *bad2[] = { "soccerkid", "--roms", "d", "--start", "12" };
+    CHECK(!parse(&a, &e, 5, bad2));
+}

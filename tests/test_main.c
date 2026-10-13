@@ -237,6 +237,8 @@ void test_italy_slots_cover_the_frames(void);
 void test_italy_run_without_a_crash(void);
 void test_strider_kill_popup_shows_its_500(void);
 void test_set_tile_at_ignores_cells_off_the_map(void);
+void test_args_start_near_and_markers(void);
+void test_play_starts_near_a_type(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -471,6 +473,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "italy_run_without_a_crash", test_italy_run_without_a_crash },
     { "strider_kill_popup_shows_its_500", test_strider_kill_popup_shows_its_500 },
     { "set_tile_at_ignores_cells_off_the_map", test_set_tile_at_ignores_cells_off_the_map },
+    { "args_start_near_and_markers", test_args_start_near_and_markers },
+    { "play_starts_near_a_type", test_play_starts_near_a_type },
 };
 
 int main(int argc, char **argv) {

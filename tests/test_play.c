@@ -193,3 +193,25 @@ void test_italy_run_without_a_crash(void) {                        /* ROM-backed
         play_close(&p);
     }
 }
+
+void test_play_starts_near_a_type(void) {                           /* ROM-backed: --near 51 on RIVIERA2, --start */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 11, .scale = 1, .section = -1, .near_type = 51, .near_n = 1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    int mx = -1, my = -1;
+    for (int cy = 0; cy < p.game.world.h && mx < 0; cy++)
+        for (int cx = 0; cx < p.game.world.w; cx++) { int param = 0; if (world_marker_type(&p.game.world, cx, cy, &param) == 51) { mx = cx; my = cy; break; } }
+    CHECK(mx >= 0);
+    CHECK_EQ(p.game.player.x, mx * 16 - 128); CHECK_EQ(p.game.world.start_x, mx * 16 - 128);   /* a respawn comes back here too */
+    (void)my;
+    play_close(&p);
+    sk_args b = { .roms = roms, .level = 6, .scale = 1, .section = -1, .near_type = -1, .has_start = true, .start_x = 1200, .start_y = 96 };
+    CHECK(play_open(&p, &b, &e));
+    CHECK_EQ(p.game.player.x, 1200); CHECK_EQ(p.game.player.y, 96);
+    play_close(&p);
+    sk_args c = { .roms = roms, .level = 6, .scale = 1, .section = -1, .near_type = 51, .near_n = 1 };
+    CHECK(!play_open(&p, &c, &e));                                   /* no boss on RUINS1: a clear error */
+    CHECK(strstr(e.msg, "51") != NULL);
+}

@@ -20,6 +20,9 @@ typedef struct {
     bool viewer;                /* the sub-project 3 level viewer instead of playing */
     int frames;                 /* headless: run N game frames, then the screenshot */
     const char *script;         /* scripted input: "R150,RU20,.30" */
+    bool has_start; int start_x, start_y;   /* --start X,Y: the kid's start in world pixels */
+    int near_type, near_n;      /* --near TYPE[,N]: start beside the N-th marker of TYPE (<= 0: off) */
+    bool markers;               /* --markers: list the level's object markers and exit */
     bool help, version;
 } sk_args;
 

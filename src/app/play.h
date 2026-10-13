@@ -16,6 +16,7 @@ typedef struct sk_play {
     sk_sprite_layer sprites;
     sk_resources res;
     int level_pos;                  /* position in level_sequence, -1 when the level was given by data index */
+    bool has_start; int start_level, start_x, start_y;   /* --start / --near: the kid's start on that level */
     const char *script;             /* --script, NULL = keyboard */
     const char *script_cursor;
     uint8_t script_input;

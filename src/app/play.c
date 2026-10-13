@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
+#include "game/player.h"
+#include "game/world.h"
 #include "app/play.h"
 #include "game/camera.h"
 #include "game/level_flow.h"
@@ -44,6 +46,11 @@ bool play_start_level(sk_play *p, int pos, int data_index, sk_err *e) {
         p->game.res = &p->res;
     }
     if (!game_setup_level(&p->game, &p->scene.level, data_index)) return sk_fail(e, "out of memory");
+    if (p->has_start && p->start_level == data_index) {                             /* a test start: kept for every restart of this level */
+        p->game.world.start_x = p->start_x;
+        p->game.world.start_y = p->start_y;
+        init_player(&p->game);
+    }
     if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit, p->game.kit);
     p->level_pos = pos;
     p->game_over_frames = 0;
@@ -61,7 +68,22 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     for (int i = 0; i < SK_LEVEL_SEQUENCE_LEN; i++) if (p->scene.tables.sequence[i] == a->level) { pos = i; break; }
     game_new_game(&p->game);
     if (pos >= 0) p->game.level_number = pos;
+    if (a->has_start) { p->has_start = true; p->start_level = a->level; p->start_x = a->start_x; p->start_y = a->start_y; }
     if (!play_start_level(p, pos, a->level, e)) { play_close(p); return false; }
+    if (a->near_type > 0 && !a->has_start) {                        /* --near: find the marker, then restart there */
+        int seen = 0, mx = -1, my = -1;
+        for (int cx = 0; cx < p->game.world.w && mx < 0; cx++)       /* left to right, as the level is played */
+            for (int cy = 0; cy < p->game.world.h; cy++) {
+                int param = 0;
+                if (world_marker_type(&p->game.world, cx, cy, &param) == a->near_type && ++seen == a->near_n) { mx = cx; my = cy; break; }
+            }
+        if (mx < 0) { sk_fail(e, "--near: level %d has %d marker(s) of type %d", a->level, seen, a->near_type); play_close(p); return false; }
+        p->has_start = true;
+        p->start_level = a->level;
+        p->start_x = mx * 16 - 128 < 16 ? 16 : mx * 16 - 128;
+        p->start_y = my * 16 - 24;
+        if (!play_start_level(p, pos, a->level, e)) { play_close(p); return false; }
+    }
     return true;
 }
 

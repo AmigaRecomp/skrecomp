@@ -1,6 +1,8 @@
 /* soccerkid: plays a level (default) or runs the level viewer (--viewer). */
 #include <stdio.h>
 #include <stdlib.h>
+#include "game/player.h"
+#include "game/world.h"
 #include "app/args.h"
 #include "app/play.h"
 #include "app/scene.h"
@@ -38,6 +40,17 @@ static int run_play(const sk_args *a, sk_err *e) {
     static sk_play p;
     if (!play_open(&p, a, e)) { fprintf(stderr, "soccerkid: %s\n", e->msg); return 1; }
     int rc = 0;
+    if (a->markers) {                                               /* --markers: the level's objects, left to right */
+        const sk_world *w = &p.game.world;
+        printf("level %d: %d x %d cells; type param  cell (x, y)  pixel (x, y)\n", a->level, w->w, w->h);
+        for (int cx = 0; cx < w->w; cx++)
+            for (int cy = 0; cy < w->h; cy++) {
+                int param = 0, type = world_marker_type(w, cx, cy, &param);
+                if (type > 0) printf("  %3d  0x%02X  (%d, %d)  (%d, %d)\n", type, param & 0xFF, cx, cy, cx * 16, cy * 16);
+            }
+        play_close(&p);
+        return 0;
+    }
     if (a->screenshot || a->frames) {
         for (int i = 0; i < a->frames; i++) play_step(&p, 0);
         if (a->screenshot) {

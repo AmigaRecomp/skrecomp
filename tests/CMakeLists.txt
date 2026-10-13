@@ -278,7 +278,9 @@ set(SK_TEST_NAMES
   italy_slots_cover_the_frames
   italy_run_without_a_crash
   strider_kill_popup_shows_its_500
-  set_tile_at_ignores_cells_off_the_map)
+  set_tile_at_ignores_cells_off_the_map
+  args_start_near_and_markers
+  play_starts_near_a_type)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
