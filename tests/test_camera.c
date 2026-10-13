@@ -59,9 +59,10 @@ void test_crossing_a_column_scans_the_new_column_and_three_beyond(void) {
     g_g.player.x = 110; update_camera(&g_g); CHECK_EQ(g_g.camera_x, 16);   /* the new buffer column is 21 */
     CHECK_EQ(g_scanned_cells, 1);
     edge_scan_columns(&g_g); CHECK_EQ(g_scanned_cells, 1);       /* column 22 */
-    edge_scan_columns(&g_g); CHECK_EQ(g_scanned_cells, 17); CHECK_EQ(g_last_cx, 23);   /* column 23, all 16 rows */
-    edge_scan_columns(&g_g); CHECK_EQ(g_scanned_cells, 17);      /* column 24 */
-    edge_scan_columns(&g_g); CHECK_EQ(g_scanned_cells, 17);      /* the three passes are spent */
+    edge_scan_columns(&g_g); CHECK_EQ(g_scanned_cells, 16); CHECK_EQ(g_last_cx, 23);   /* column 23: 15 more until the 16 slots are full */
+    CHECK_EQ(g_g.object_count, 16);
+    edge_scan_columns(&g_g); CHECK_EQ(g_scanned_cells, 16);      /* column 24 */
+    edge_scan_columns(&g_g); CHECK_EQ(g_scanned_cells, 16);      /* the three passes are spent */
     drop_game();
 }
 
