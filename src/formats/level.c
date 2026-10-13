@@ -10,10 +10,10 @@ static const char *TAGS[CHUNKS] = { "MAPS", "MAPS", "GRAF", "GRAF", "COPP", "COP
 static bool parse_map(const uint8_t *c, size_t n, sk_tilemap *m, sk_err *e) {
     if (n < 8) return sk_fail(e, "map chunk too short");
     unsigned w = be16(c + 4), h = be16(c + 6);
-    if (w == 0 || h == 0 || 8 + (size_t)w * h * 2 > n) return sk_fail(e, "map %ux%u does not fit in %zu bytes", w, h, n);
+    if (w == 0 || h == 0 || 8 + SK_MAP_GAP + (size_t)w * h * 2 > n) return sk_fail(e, "map %ux%u does not fit in %zu bytes", w, h, n);
     m->cells = malloc((size_t)w * h * sizeof *m->cells);
     if (!m->cells) return sk_fail(e, "out of memory");
-    for (size_t i = 0; i < (size_t)w * h; i++) m->cells[i] = be16(c + 8 + i * 2);
+    for (size_t i = 0; i < (size_t)w * h; i++) m->cells[i] = be16(c + 8 + SK_MAP_GAP + i * 2);
     m->width = (uint16_t)w;
     m->height = (uint16_t)h;
     return true;

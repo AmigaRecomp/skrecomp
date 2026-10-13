@@ -13,6 +13,8 @@
 #define SK_TILE_TAIL 32
 #define SK_INDEX_MASK 0x1FF         /* foreground cell: bits 0..8 tile index, bits 9..15 flags */
 #define SK_FLAG_SHIFT 9
+#define SK_MAP_GAP 0x4000          /* bytes between the map header and its words: the game reads the grid in place at
+                                     live_map (0x306B9E) = level_map (0x302B96) + 8 + 0x4000 */
 
 typedef struct { uint16_t width, height; uint16_t *cells; } sk_tilemap;
 typedef struct { uint16_t values[5]; uint16_t width, height; uint8_t *grid; } sk_backdrop;

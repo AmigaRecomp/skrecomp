@@ -51,7 +51,7 @@ void test_level_parses_tiny_fixture(void) {
     const sk_tileset *s = NULL;
     CHECK(level_tile(&lv, 1, &s) == lv.tiles_a.tiles + 128 && s == &lv.tiles_a);
     CHECK(level_tile(&lv, 2, &s) == NULL);
-    CHECK_EQ(lv.chunk_sizes[0], 12);
+    CHECK_EQ(lv.chunk_sizes[0], 12 + SK_MAP_GAP);              /* header, the 0x4000-byte gap, two words */
     level_free(&lv);
     CHECK(lv.map.cells == NULL && lv.tiles_a.tiles == NULL);
     free(d);
@@ -130,6 +130,10 @@ void test_level_real_level0(void) {                    /* ROM-backed */
     CHECK(level_parse(f, n, &lv, &e));
     CHECK_EQ(lv.map.width, 546);
     CHECK_EQ(lv.map.height, 30);
+    CHECK_EQ(level_cell(&lv, 16, 9) & 0x1FF, 0x1BC);           /* live_map (16, 9) = chunk word 8192 + 9 * 546 + 16 */
+    int ground = 0, sky = 0;
+    for (int x = 0; x < 546; x++) { ground += (level_cell(&lv, x, 29) & 0x1FF) != 0; sky += (level_cell(&lv, x, 0) & 0x1FF) != 0; }
+    CHECK(ground > 500); CHECK(sky < 40);                     /* the bottom row is kerb and asphalt, the top row sky */
     CHECK_EQ(lv.backdrop.width, 194);
     CHECK_EQ(lv.backdrop.height, 19);
     CHECK_EQ(lv.tiles_a.count, 512);
