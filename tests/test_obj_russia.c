@@ -248,3 +248,32 @@ void test_leaper_71_leaps_from_the_sea(void) {                      /* type 71 *
     CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->draw->dflags & 4, 0);
     drop_game();
 }
+
+void test_occluders_40_41_hide_the_sprites(void) {                  /* types 40, 41: the occluder list 0x3007BA */
+    CHECK(make_game());
+    static sk_sprite spr;
+    sk_slot *a = spawn(200, 6 * 16, 41, 3);                          /* a blank column 3 * 16 - 4 = 44 rows */
+    CHECK_EQ(g_g.occl_count, 1); CHECK(g_g.occl[0].used); CHECK_EQ(g_g.occl[0].h, 44); CHECK(g_g.occl[0].mask == NULL);
+    CHECK_EQ(g_g.occl[0].y, 6 * 16 + 4);
+    memset(spr.px, 7, sizeof spr.px);
+    occlude_sprite(&g_g, &spr, 200 - 10, 6 * 16 + 4 + 40, 48);       /* overlaps rows 0..3 of the sprite */
+    CHECK_EQ(spr.px[0], 0); CHECK_EQ(spr.px[3 * SK_SPR_W + 63], 0); CHECK_EQ(spr.px[4 * SK_SPR_W], 7);
+    memset(spr.px, 7, sizeof spr.px);
+    occlude_sprite(&g_g, &spr, 200 - 100, 6 * 16 + 4, 48);          /* 100 px left: outside -32..+64 */
+    CHECK_EQ(spr.px[0], 7);
+    g_g.camera_x = 3000;
+    tick(1);
+    CHECK(a->x < 0); CHECK_EQ(g_g.occl_count, 0); CHECK(!g_g.occl[0].used);   /* off the view: freed */
+    g_g.camera_x = 0;
+    static uint8_t mask[13 * 4];
+    memset(mask, 0, sizeof mask); mask[0] = 0x80; mask[4 * 12 + 3] = 0x01;   /* row 0 col 0, row 12 col 31 */
+    sk_section sec = { false, mask, sizeof mask };
+    g_res.slot[50] = &sec;
+    spawn(300, 6 * 16, 40, 0);
+    CHECK(g_g.occl[0].mask != NULL); CHECK_EQ(g_g.occl[0].h, 13);
+    memset(spr.px, 7, sizeof spr.px);
+    occlude_sprite(&g_g, &spr, 300 - 20, 6 * 16 + 4, 48);           /* the mask's column 0 at the sprite's column 20 */
+    CHECK_EQ(spr.px[20], 0); CHECK_EQ(spr.px[21], 7); CHECK_EQ(spr.px[12 * SK_SPR_W + 51], 0); CHECK_EQ(spr.px[12 * SK_SPR_W + 50], 7);
+    g_res.slot[50] = &g_sec;
+    drop_game();
+}

@@ -459,5 +459,6 @@ void ball_sprites(sk_game *g, sk_sprite *spr) {     /* 0x10A2EA */
         memset(spr->px, 0, sizeof spr->px);
         for (int r = 0; r < 16; r++) for (int c = 0; c < 16; c++) if (disc[r] >> (15 - c) & 1) spr->px[r * SK_SPR_W + c] = 1;
     }
+    occlude_sprite(g, spr, sx + g->camera_x, sy + g->camera_y, 16);   /* 0x10A3B6 */
     spr->visible = true;
 }

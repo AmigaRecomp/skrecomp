@@ -275,6 +275,7 @@ void test_gunner_46_fires_both_ways(void);
 void test_bullet_97_bursts_on_the_kid(void);
 void test_wall_cannon_52_fires_every_100(void);
 void test_leaper_71_leaps_from_the_sea(void);
+void test_occluders_40_41_hide_the_sprites(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -547,6 +548,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "bullet_97_bursts_on_the_kid", test_bullet_97_bursts_on_the_kid },
     { "wall_cannon_52_fires_every_100", test_wall_cannon_52_fires_every_100 },
     { "leaper_71_leaps_from_the_sea", test_leaper_71_leaps_from_the_sea },
+    { "occluders_40_41_hide_the_sprites", test_occluders_40_41_hide_the_sprites },
 };
 
 int main(int argc, char **argv) {

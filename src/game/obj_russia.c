@@ -722,6 +722,40 @@ static void obj_sea_leaper_update(sk_game *g, sk_slot *s, int index) {        /*
     despawn_if_far(g, s);
 }
 
+/* ---- types 40 and 41: the sprite occluders (no picture): a 32x13 mask from slot 50, or a blank column param * 16 - 4 rows high ---- */
+static int alloc_occluder(sk_game *g) {                             /* sub_107502: -1 full (the original goes on regardless) */
+    g->occl_count++;
+    for (int i = 0; i < 4; i++) if (!g->occl[i].used) return i;
+    return -1;
+}
+static void occluder_init(sk_game *g, sk_slot *s, int x, int y, bool shaped) {
+    init_object_slot_shared(g, s, x, y + 4, s->type4, &g->objs.chain[7]);
+    s->draw = NULL;
+    int i = alloc_occluder(g);
+    s->t0 = (int16_t)i;
+    if (i < 0) return;                                              /* port guard: a fifth occluder writes nowhere */
+    g->occl[i].used = true;
+    g->occl[i].x = s->x; g->occl[i].y = s->y;
+    if (shaped) {
+        size_t len = 0;
+        g->occl[i].mask = g->res ? resource_slot(g->res, 50, &len) : NULL;
+        g->occl[i].mask_len = g->occl[i].mask ? len : 0;
+        g->occl[i].h = 13;
+    } else {
+        g->occl[i].mask = NULL; g->occl[i].mask_len = 0;
+        g->occl[i].h = (int16_t)((g->objs.marker_param & 0xFF) * 16 - 4);
+    }
+}
+static void obj_occluder_mask_init(sk_game *g, sk_slot *s, int x, int y) { occluder_init(g, s, x, y, true); }    /* 0x1122E0 */
+static void obj_occluder_rect_init(sk_game *g, sk_slot *s, int x, int y) { occluder_init(g, s, x, y, false); }   /* 0x11232A */
+static void obj_occluder_update(sk_game *g, sk_slot *s, int index) {          /* 0x11230E / 0x112358 */
+    (void)index;
+    if (object_offscreen(g, s->x, s->y, 64) >= 0) return;
+    g->occl_count--;                                                /* sub_107528 */
+    if (s->t0 >= 0 && s->t0 < 4) g->occl[s->t0].used = false;
+    free_object(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
@@ -734,6 +768,8 @@ void obj_russia_install(void) {
     object_init_table[91] = obj_cannon_shot_init;      object_update_table[91] = obj_cannon_shot_update;
     object_init_table[90] = obj_cannon_flash_init;     object_update_table[90] = obj_cannon_flash_update;
     object_init_table[71] = obj_sea_leaper_init;       object_update_table[71] = obj_sea_leaper_update;
+    object_init_table[40] = obj_occluder_mask_init;    object_update_table[40] = obj_occluder_update;
+    object_init_table[41] = obj_occluder_rect_init;    object_update_table[41] = obj_occluder_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;

@@ -75,6 +75,10 @@ int  object_offscreen(const sk_game *g, int x, int y, int margin);   /* -1 when 
 void despawn_if_far(sk_game *g, sk_slot *s);
 void set_draw_size(sk_draw *d, int w, int h, const uint8_t *frames);
 void set_object_frame(sk_slot *s, int frame);
+struct sk_sprite;
+/* sub_107554 / sub_10756C: the occluders blank the pair's pixels; ref = the pair's column 0 and row 0 in world pixels, as the original
+   measures them (its d0/d1 plus the camera), height 48 (kid) or 16 (ball). */
+void occlude_sprite(const sk_game *g, struct sk_sprite *spr, int ref_x, int ref_y, int height);
 void set_draw_frame_ptr(sk_draw *d, const uint8_t *frame);   /* move.l a1,$16(a0); NULL outside the record's section */
 int  step_animation(sk_slot *s, const uint8_t *script, int facing_bit, int *wrapped);   /* -1 when the frame changed */
 void apply_velocity(sk_slot *s);

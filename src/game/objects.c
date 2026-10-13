@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "gfx/sprites.h"
 #include "game/game.h"
 #include "game/objects.h"
 #include "gfx/display_model.h"
@@ -23,6 +24,7 @@ void objects_reset(sk_game *g) {                                /* clear_object_
     for (int i = 0; i < 16; i++) { o->slot[i].x = -1; o->slot[i].y = -1; o->ptrs[i] = &o->dyn[i]; }
     for (int i = 0; i < 8; i++) { o->fixed[i].x = -1; o->fixed[i].y = -1; }
     g->object_count = 0;
+    memset(g->occl, 0, sizeof g->occl); g->occl_count = 0;   /* sub_107536 at level start */
     obj_england_install();
     obj_london_install();
     obj_country_install();
@@ -320,4 +322,34 @@ void add_score(sk_game *g, uint32_t bcd) {                      /* 0x102732 */
         g->hud_redraw |= 2;
     }
     g->hud_redraw |= 4;
+}
+
+void occlude_sprite(const sk_game *g, struct sk_sprite *spr, int ref_x, int ref_y, int height) {   /* sub_107584 */
+    if (height > SK_SPR_H) height = SK_SPR_H;
+    for (int i = 0; i < 4; i++) {
+        if (!g->occl[i].used) continue;
+        int ox = g->occl[i].x, oy = g->occl[i].y, h = g->occl[i].h;
+        int d3 = (int16_t)(ox - ref_x), d4 = (int16_t)(oy - ref_y);
+        int srow = d4 >= 0 ? d4 : 0, mrow = d4 >= 0 ? 0 : -d4;
+        if (d4 >= 0 ? d4 >= height : -d4 >= h) continue;
+        int rows = h - mrow;
+        if (srow + rows > height) rows = height - srow;                 /* port guard: the original runs past the pair */
+        if (!g->occl[i].mask) {                                         /* sub_107798: whole rows */
+            if ((uint16_t)(d3 + 32) >= 0x60) continue;
+            for (int r = 0; r < rows; r++) memset(&spr->px[(srow + r) * SK_SPR_W], 0, SK_SPR_W);
+            continue;
+        }
+        if (d3 <= -32 || d3 >= 64) continue;                            /* sub_1075C8: a 32-px mask at column d3 */
+        for (int r = 0; r < rows; r++) {
+            size_t m = (size_t)(mrow + r) * 4;
+            if (m + 4 > g->occl[i].mask_len) break;
+            const uint8_t *q = g->occl[i].mask + m;
+            uint32_t bits = (uint32_t)q[0] << 24 | (uint32_t)q[1] << 16 | (uint32_t)q[2] << 8 | q[3];
+            for (int k = 0; k < 32; k++) {
+                int c = d3 + k;
+                if (c < 0 || c >= 64 || !(bits >> (31 - k) & 1)) continue;
+                spr->px[(srow + r) * SK_SPR_W + c] = 0;
+            }
+        }
+    }
 }
