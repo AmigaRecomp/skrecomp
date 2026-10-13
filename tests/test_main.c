@@ -42,6 +42,13 @@ void test_rgb12_to_xrgb(void);
 void test_palette_from_tilesets_follows_the_register_layout(void);
 void test_present_rows_resolves_dual_playfield_and_sky(void);
 void test_present_screen_places_the_play_window(void);
+void test_png_writes_readable_file(void);
+void test_png_unwritable_path(void);
+void test_args_defaults_and_errors(void);
+void test_scene_draw_level_on_fixture(void);
+void test_scene_camera_clamps(void);
+void test_scene_real_level0_screenshot(void);
+void test_bobs_estimate_real_sheets(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -81,6 +88,13 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "palette_from_tilesets_follows_the_register_layout", test_palette_from_tilesets_follows_the_register_layout },
     { "present_rows_resolves_dual_playfield_and_sky", test_present_rows_resolves_dual_playfield_and_sky },
     { "present_screen_places_the_play_window", test_present_screen_places_the_play_window },
+    { "png_writes_readable_file", test_png_writes_readable_file },
+    { "png_unwritable_path", test_png_unwritable_path },
+    { "args_defaults_and_errors", test_args_defaults_and_errors },
+    { "scene_draw_level_on_fixture", test_scene_draw_level_on_fixture },
+    { "scene_camera_clamps", test_scene_camera_clamps },
+    { "scene_real_level0_screenshot", test_scene_real_level0_screenshot },
+    { "bobs_estimate_real_sheets", test_bobs_estimate_real_sheets },
 };
 
 int main(int argc, char **argv) {

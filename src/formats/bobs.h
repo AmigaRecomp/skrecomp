@@ -27,4 +27,8 @@ void bobs_free(sk_frames *f);
 /* -1 where the mask is clear, else the 0..15 colour index. */
 int bobs_pixel(const sk_frame *fr, int x, int y);
 
+/* Estimates (width, height, count) from the data: image bits inside the mask, row coherence, no
+   wrap-around, then squareness (port of skre.formats.bobs.estimate_geometry). False when nothing fits. */
+bool bobs_estimate(const sk_section *s, int *width_px, int *height, int *count);
+
 #endif

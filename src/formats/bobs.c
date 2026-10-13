@@ -42,3 +42,61 @@ int bobs_pixel(const sk_frame *fr, int x, int y) {
         if (fr->planes[p][o] >> shift & 1) v |= 1 << p;
     return v;
 }
+
+static int popcount8(uint8_t v) { return __builtin_popcount(v); }
+
+static long scaled(double v) { return (long)(v * 1000.0 + 0.5); }     /* Python rounds to 3 decimals before ranking */
+
+bool bobs_estimate(const sk_section *s, int *width_px, int *height, int *count) {
+    size_t size = s->len;
+    if (size == 0 || size % 5) return false;
+    size_t plane_total = size / 5;
+    bool found = false;
+    long best[5] = {0};
+    int bw = 0, bh = 0, bn = 0;
+    for (int w = 16; w <= 128; w += 16) {
+        size_t rb = (size_t)w / 8;
+        if (plane_total % rb) continue;
+        size_t rows_total = plane_total / rb;
+        long mismatch_bits = 0;
+        for (size_t i = 0; i + rb < size; i++) mismatch_bits += popcount8((uint8_t)(s->data[i] ^ s->data[i + rb]));
+        double row_mismatch = (double)mismatch_bits / (double)((size - rb) * 8);
+        for (int h = 4; h <= 128; h++) {
+            if (rows_total % (size_t)h) continue;
+            int n = (int)(rows_total / (size_t)h);
+            size_t plane = rb * (size_t)h, frame = plane * 5;
+            long violations = 0, set_bits = 0, wrap_rows = 0, mask_rows = 0;
+            for (int f = 0; f < n; f++) {
+                const uint8_t *base = s->data + (size_t)f * frame;
+                const uint8_t *mask = base + 4 * plane;
+                for (size_t i = 0; i < plane; i++) {
+                    uint8_t u = (uint8_t)(base[i] | base[plane + i] | base[2 * plane + i] | base[3 * plane + i]);
+                    set_bits += popcount8(u);
+                    violations += popcount8((uint8_t)(u & ~mask[i]));
+                }
+                for (int y = 0; y < h; y++) {
+                    const uint8_t *row = mask + (size_t)y * rb;
+                    bool any = false;
+                    for (size_t i = 0; i < rb; i++) if (row[i]) { any = true; break; }
+                    if (!any) continue;
+                    mask_rows++;
+                    if ((row[0] & 0x80) && (row[rb - 1] & 1)) wrap_rows++;
+                }
+            }
+            if (set_bits == 0 || mask_rows == 0) continue;
+            long score[5] = { scaled((double)violations / (double)set_bits), scaled(row_mismatch),
+                              scaled((double)wrap_rows / (double)mask_rows), labs((long)w - h), -(long)n };
+            bool better = !found;
+            for (int k = 0; k < 5 && !better && found; k++) {
+                if (score[k] < best[k]) better = true;
+                if (score[k] != best[k]) break;
+            }
+            if (better) { memcpy(best, score, sizeof best); bw = w; bh = h; bn = n; found = true; }
+        }
+    }
+    if (!found) return false;
+    *width_px = bw;
+    *height = bh;
+    *count = bn;
+    return true;
+}

@@ -13,7 +13,10 @@ add_executable(sk_tests
   test_sections.c
   test_screens.c
   test_framebuffer.c
-  test_present.c)
+  test_present.c
+  test_png.c
+  test_args.c
+  test_scene.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -56,7 +59,14 @@ set(SK_TEST_NAMES
   rgb12_to_xrgb
   palette_from_tilesets_follows_the_register_layout
   present_rows_resolves_dual_playfield_and_sky
-  present_screen_places_the_play_window)
+  present_screen_places_the_play_window
+  png_writes_readable_file
+  png_unwritable_path
+  args_defaults_and_errors
+  scene_draw_level_on_fixture
+  scene_camera_clamps
+  scene_real_level0_screenshot
+  bobs_estimate_real_sheets)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

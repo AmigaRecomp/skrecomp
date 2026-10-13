@@ -12,3 +12,6 @@ data/
 
 # large synthetic image; regenerated from tests/fixtures/SKDisk1.zip by the generator
 tests/fixtures/SKDisk1.adf
+
+# review renders
+screenshots/

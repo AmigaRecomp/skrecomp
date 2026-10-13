@@ -28,7 +28,10 @@ add_library(skcore STATIC
   src/formats/screens.c
   src/gfx/framebuffer.c
   src/gfx/palette.c
-  src/gfx/present.c)
+  src/gfx/present.c
+  src/gfx/png.c
+  src/app/args.c
+  src/app/scene.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB)
 
