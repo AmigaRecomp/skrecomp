@@ -236,6 +236,18 @@ void step_animation_simple(sk_slot *s, const uint8_t *script, int facing) {   /*
     set_object_frame(s, frames[s->anim_index]);
 }
 
+void apply_velocity_sym(sk_slot *s) {                          /* sub_10E046 */
+    sk_draw *d = s->draw;
+    if (s->flags & 4) {
+        s->vy++;
+        int v = (uint16_t)(s->vy < 0 ? -s->vy : s->vy) >> 1;
+        if (d) d->y = (int16_t)(d->y + (s->vy < 0 ? -v : v));
+    }
+    int dx = (uint16_t)s->vx >> 1;
+    if (!(s->flags & 1)) dx = -dx;
+    if (d) d->x = (int16_t)(d->x + dx);
+}
+
 void apply_velocity_nograv(sk_slot *s) {           /* 0x10E090 */
     sk_draw *d = s->draw;
     if (!d) return;

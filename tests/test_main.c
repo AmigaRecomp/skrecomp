@@ -206,6 +206,8 @@ void test_dark_kit_keeps_colour_49(void);
 void test_tile_animation_groups_step(void);
 void test_animated_cells_draw_the_next_tile(void);
 void test_home1_cards_and_signs_animate(void);
+void test_pendulum_swings_and_reverses(void);
+void test_jumper_lands_waits_and_jumps_again(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -409,6 +411,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "tile_animation_groups_step", test_tile_animation_groups_step },
     { "animated_cells_draw_the_next_tile", test_animated_cells_draw_the_next_tile },
     { "home1_cards_and_signs_animate", test_home1_cards_and_signs_animate },
+    { "pendulum_swings_and_reverses", test_pendulum_swings_and_reverses },
+    { "jumper_lands_waits_and_jumps_again", test_jumper_lands_waits_and_jumps_again },
 };
 
 int main(int argc, char **argv) {

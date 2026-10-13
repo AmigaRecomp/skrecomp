@@ -33,6 +33,9 @@ typedef struct sk_objects {
     sk_slot slot[16];
     sk_draw dyn[16], fixed[8];     /* draw_records, objects_a */
     sk_draw *ptrs[16];             /* draw_record_ptrs: allocation order */
+    sk_draw chain[8];              /* objects_c 0x302306: the records of types 36 and 38 */
+    bool chain_a, chain_b, chain_c;   /* 0x300345 (all 8, before the list), 0x300346 (before), 0x300347 (after) */
+    int chain_count;               /* 0x3002FC: records - 1 drawn for chain_b / chain_c */
     int draw_count;                /* draw_record_count */
     int deferred[64]; int n_deferred;   /* 0x300C1E: marker cells of objects freed by free_object_deferred */
     int spawn_cell;                /* a4 during spawn_marker: the cell index, -1 otherwise */
@@ -71,6 +74,7 @@ int  object_offscreen(const sk_game *g, int x, int y, int margin);   /* -1 when 
 void despawn_if_far(sk_game *g, sk_slot *s);
 void set_draw_size(sk_draw *d, int w, int h, const uint8_t *frames);
 void set_object_frame(sk_slot *s, int frame);
+void set_draw_frame_ptr(sk_draw *d, const uint8_t *frame);   /* move.l a1,$16(a0); NULL outside the record's section */
 int  step_animation(sk_slot *s, const uint8_t *script, int facing_bit, int *wrapped);   /* -1 when the frame changed */
 void apply_velocity(sk_slot *s);
 void draw_all_objects(sk_game *g, sk_fb *fb, int cam_x, int cam_y);

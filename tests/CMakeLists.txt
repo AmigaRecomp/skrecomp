@@ -38,6 +38,7 @@ add_executable(sk_tests
   test_platforms.c
   test_obj_london.c
   test_obj_country.c
+  test_obj_italy.c
   test_attr_country_london.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
@@ -245,7 +246,9 @@ set(SK_TEST_NAMES
   dark_kit_keeps_colour_49
   tile_animation_groups_step
   animated_cells_draw_the_next_tile
-  home1_cards_and_signs_animate)
+  home1_cards_and_signs_animate
+  pendulum_swings_and_reverses
+  jumper_lands_waits_and_jumps_again)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

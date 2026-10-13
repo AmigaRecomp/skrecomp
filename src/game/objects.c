@@ -5,6 +5,7 @@
 #include "formats/bobs.h"
 #include "game/obj_england.h"
 #include "game/obj_country.h"
+#include "game/obj_italy.h"
 #include "game/obj_london.h"
 
 sk_obj_init_fn object_init_table[128];
@@ -23,6 +24,7 @@ void objects_reset(sk_game *g) {                                /* clear_object_
     obj_england_install();
     obj_london_install();
     obj_country_install();
+    obj_italy_install();
     for (int i = 0; i < 128; i++) {
         if (!object_init_table[i]) object_init_table[i] = obj_stub_init;
         if (!object_update_table[i]) object_update_table[i] = obj_stub_update;
@@ -217,6 +219,12 @@ void set_draw_size(sk_draw *d, int w, int h, const uint8_t *frames) {   /* 0x108
     d->frames_len = 0;
 }
 
+void set_draw_frame_ptr(sk_draw *d, const uint8_t *frame) {
+    size_t off = (size_t)(frame - d->frames);
+    if (!d->frames || frame < d->frames || (d->frames_len && off + (size_t)(uint16_t)d->frame_bytes > d->frames_len)) { d->frame = NULL; return; }   /* port guard */
+    d->frame = frame;
+}
+
 void set_object_frame(sk_slot *s, int frame) {                  /* 0x10DF6C */
     s->frame = (uint8_t)frame;
     sk_draw *d = s->draw;
@@ -267,7 +275,11 @@ static void draw_record(sk_fb *fb, const sk_draw *d, int cam_x, int cam_y) {   /
 void draw_all_objects(sk_game *g, sk_fb *fb, int cam_x, int cam_y) {   /* 0x1082A8: objects_a first, then the dynamic list */
     for (int i = 0; i < 8; i++)
         if (!(g->objs.fixed[i].x == -1 && g->objs.fixed[i].y == -1)) draw_record(fb, &g->objs.fixed[i], cam_x, cam_y);
+    const sk_objects *o = &g->objs;
+    if (o->chain_a) for (int i = 0; i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y);   /* 0x10832E */
+    if (o->chain_b) for (int i = 0; i <= o->chain_count && i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y);
     for (int i = 0; i < g->objs.draw_count; i++) draw_record(fb, g->objs.ptrs[i], cam_x, cam_y);
+    if (o->chain_c) for (int i = 0; i <= o->chain_count && i < 8; i++) draw_record(fb, &o->chain[i], cam_x, cam_y);   /* 0x1083D4 */
 }
 
 int touch_player(sk_game *g, int x, int y, int half_w, int half_h) {   /* 0x10E354 */

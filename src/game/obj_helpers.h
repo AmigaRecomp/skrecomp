@@ -25,6 +25,7 @@ SK_FRAMES(16, 10) SK_FRAMES(16, 16) SK_FRAMES(16, 32) SK_FRAMES(32, 20) SK_FRAME
 SK_FRAMES(48, 28) SK_FRAMES(48, 32) SK_FRAMES(48, 49) SK_FRAMES(48, 64) SK_FRAMES(64, 32) SK_FRAMES(64, 56) SK_FRAMES(64, 64)
 #undef SK_FRAMES
 void step_animation_simple(sk_slot *s, const uint8_t *script, int facing);   /* 0x10DEA0: no hidden frames */
+void apply_velocity_sym(sk_slot *s);                            /* 0x10E046: halves rounded toward zero */
 void apply_velocity_nograv(sk_slot *s);                         /* 0x10E090 */
 void free_if_far(sk_game *g, sk_slot *s);                       /* 0x10E290: the draw position 160 px out */
 void set_frame2(sk_slot *s, int left, int right, int facing);   /* set_object_frame with d2 = facing */
