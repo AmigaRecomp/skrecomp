@@ -249,6 +249,12 @@ void test_replay_fade_and_channel_four(void);
 void test_replay_new_note_quirk_applies_the_offset(void);
 void test_replay_clamps_to_the_module(void);
 void test_all_modules_play(void);
+void test_sfx_starts_after_the_handshake(void);
+void test_sfx_priority_holds(void);
+void test_music_requests_start_on_the_next_frame(void);
+void test_music_slot_swaps_once(void);
+void test_fade_keeps_the_music_playing(void);
+void test_level_music_and_effects_load(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -495,6 +501,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "replay_new_note_quirk_applies_the_offset", test_replay_new_note_quirk_applies_the_offset },
     { "replay_clamps_to_the_module", test_replay_clamps_to_the_module },
     { "all_modules_play", test_all_modules_play },
+    { "sfx_starts_after_the_handshake", test_sfx_starts_after_the_handshake },
+    { "sfx_priority_holds", test_sfx_priority_holds },
+    { "music_requests_start_on_the_next_frame", test_music_requests_start_on_the_next_frame },
+    { "music_slot_swaps_once", test_music_slot_swaps_once },
+    { "fade_keeps_the_music_playing", test_fade_keeps_the_music_playing },
+    { "level_music_and_effects_load", test_level_music_and_effects_load },
 };
 
 int main(int argc, char **argv) {

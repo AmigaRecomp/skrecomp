@@ -40,6 +40,7 @@ add_executable(sk_tests
   test_obj_country.c
   test_paula.c
   test_ptreplay.c
+  test_sound.c
   test_obj_italy.c
   test_attr_italy.c
   test_attr_country_london.c)
@@ -292,7 +293,13 @@ set(SK_TEST_NAMES
   replay_fade_and_channel_four
   replay_new_note_quirk_applies_the_offset
   replay_clamps_to_the_module
-  all_modules_play)
+  all_modules_play
+  sfx_starts_after_the_handshake
+  sfx_priority_holds
+  music_requests_start_on_the_next_frame
+  music_slot_swaps_once
+  fade_keeps_the_music_playing
+  level_music_and_effects_load)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
