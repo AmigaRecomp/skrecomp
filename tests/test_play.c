@@ -215,3 +215,21 @@ void test_play_starts_near_a_type(void) {                           /* ROM-backe
     CHECK(!play_open(&p, &c, &e));                                   /* no boss on RUINS1: a clear error */
     CHECK(strstr(e.msg, "51") != NULL);
 }
+
+void test_a_test_start_takes_the_layer_switches_on_its_left(void) {   /* ROM-backed: RUINS1's attribute 54 column at x 208 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 6, .scale = 1, .section = -1, .near_type = 48, .near_n = 1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    CHECK_EQ(p.game.layer_flags, 3);                                 /* past the switch: in front, as when walked there */
+    for (int i = 0; i < 2000 && p.game.player.state != 20; i++) play_step(&p, 0);
+    kill_player(&p.game);
+    for (int i = 0; i < 2000 && !(p.game.player.state == 68 || p.game.player.state == 0); i++) play_step(&p, 0);
+    CHECK_EQ(p.game.layer_flags, 3);                                 /* and after a respawn there */
+    play_close(&p);
+    sk_args b = { .roms = roms, .level = 6, .scale = 1, .section = -1, .has_start = true, .start_x = 150, .start_y = 64 };
+    CHECK(play_open(&p, &b, &e));
+    CHECK_EQ(p.game.layer_flags, 0);                                 /* before it: behind */
+    play_close(&p);
+}

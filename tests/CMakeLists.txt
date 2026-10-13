@@ -280,7 +280,8 @@ set(SK_TEST_NAMES
   strider_kill_popup_shows_its_500
   set_tile_at_ignores_cells_off_the_map
   args_start_near_and_markers
-  play_starts_near_a_type)
+  play_starts_near_a_type
+  a_test_start_takes_the_layer_switches_on_its_left)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

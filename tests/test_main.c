@@ -239,6 +239,7 @@ void test_strider_kill_popup_shows_its_500(void);
 void test_set_tile_at_ignores_cells_off_the_map(void);
 void test_args_start_near_and_markers(void);
 void test_play_starts_near_a_type(void);
+void test_a_test_start_takes_the_layer_switches_on_its_left(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -475,6 +476,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "set_tile_at_ignores_cells_off_the_map", test_set_tile_at_ignores_cells_off_the_map },
     { "args_start_near_and_markers", test_args_start_near_and_markers },
     { "play_starts_near_a_type", test_play_starts_near_a_type },
+    { "a_test_start_takes_the_layer_switches_on_its_left", test_a_test_start_takes_the_layer_switches_on_its_left },
 };
 
 int main(int argc, char **argv) {

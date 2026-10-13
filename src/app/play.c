@@ -49,6 +49,13 @@ bool play_start_level(sk_play *p, int pos, int data_index, sk_err *e) {
     if (p->has_start && p->start_level == data_index) {                             /* a test start: kept for every restart of this level */
         p->game.world.start_x = p->start_x;
         p->game.world.start_y = p->start_y;
+        const sk_world *w = &p->game.world;                         /* the layer switches (attributes 53/54) he would have walked past */
+        for (int cx = 0; cx < w->w && cx * 16 + 8 <= p->start_x; cx++)
+            for (int cy = 0; cy < w->h; cy++) {
+                int at = world_attr(w, cx, cy);
+                if (at == 53) { p->game.layer_flags_record &= (uint8_t)~1; break; }   /* past a left-edge switch: behind */
+                if (at == 54) { p->game.layer_flags_record |= 1; break; }             /* past a right-edge switch: in front */
+            }
         init_player(&p->game);
     }
     if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit, p->game.kit);
