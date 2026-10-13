@@ -34,8 +34,8 @@ int cos_1024(int a) { return sin_1024(a + 0x100); }            /* 0x105F58 */
 
 void platform_velocity(int angle, int speed, int32_t *vx, int32_t *vy) {   /* 0x118108 */
     angle &= 0xFF; speed &= 0xFF;
-    *vx = (int32_t)((uint32_t)(sin_1024(angle * 4) * speed) << 3);
-    *vy = (int32_t)((uint32_t)(cos_1024(angle * 4) * speed) << 3);
+    *vx = (int32_t)((uint32_t)(cos_1024(angle * 4) * speed) << 3);   /* d0 = the cos term -> pvx: 0 right, 64 down */
+    *vy = (int32_t)((uint32_t)(sin_1024(angle * 4) * speed) << 3);   /* d1 = the sin term -> pvy */
 }
 
 void platforms_reset(sk_game *g) {                               /* sub_118136 */

@@ -42,11 +42,11 @@ static void tick(int n) { for (int i = 0; i < n; i++) { g_g.frame_ticks++; updat
 
 void test_platform_type_5_moves_and_reverses(void) {
     CHECK(make_game());
-    sk_slot *s = spawn(100, 120, 5, 0x12);                          /* speed (2 << 4) = 32: 1 px a frame; angle 0x10 << 2 = 64: right */
+    sk_slot *s = spawn(100, 120, 5, 0x02);                          /* speed (2 << 4) = 32: 1 px a frame; angle 0: right */
     CHECK(s != NULL);
     sk_platform *pf = slot_platform(&g_g, s);
     CHECK(pf != NULL);
-    CHECK_EQ(pf->px >> 16, 108); CHECK_EQ(pf->py >> 16, 120); CHECK_EQ(pf->half_w, 16); CHECK_EQ(pf->pspeed, 32); CHECK_EQ(pf->pangle, 64);
+    CHECK_EQ(pf->px >> 16, 108); CHECK_EQ(pf->py >> 16, 120); CHECK_EQ(pf->half_w, 16); CHECK_EQ(pf->pspeed, 32); CHECK_EQ(pf->pangle, 0);
     CHECK_EQ(pf->pvx, 0x10000); CHECK_EQ(pf->pvy, 0);
     tick(10);
     CHECK_EQ(pf->px >> 16, 118); CHECK_EQ(s->draw->x, 118 - 16);
@@ -56,13 +56,13 @@ void test_platform_type_5_moves_and_reverses(void) {
     tick(20);
     CHECK(pf->pvx < 0);                                             /* slowed, turned and speeding up leftward */
     tick(10);
-    CHECK_EQ(s->t0, 0); CHECK_EQ(pf->pspeed, 32); CHECK_EQ(pf->pangle, 192);
+    CHECK_EQ(s->t0, 0); CHECK_EQ(pf->pspeed, 32); CHECK_EQ(pf->pangle, 128);
     drop_game();
 }
 
 void test_triggered_platform_type_10_starts_when_stood_on(void) {
     CHECK(make_game());
-    sk_slot *s = spawn(100, 120, 10, 0x12);
+    sk_slot *s = spawn(100, 120, 10, 0x02);
     sk_platform *pf = slot_platform(&g_g, s);
     CHECK(pf != NULL);
     tick(5);
