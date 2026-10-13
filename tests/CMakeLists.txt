@@ -248,7 +248,8 @@ set(SK_TEST_NAMES
   animated_cells_draw_the_next_tile
   home1_cards_and_signs_animate
   pendulum_swings_and_reverses
-  jumper_lands_waits_and_jumps_again)
+  jumper_lands_waits_and_jumps_again
+  swing_platform_hangs_on_its_chain)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

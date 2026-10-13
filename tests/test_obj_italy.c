@@ -9,6 +9,7 @@
 #include "game/game.h"
 #include "game/level_flow.h"
 #include "game/obj_helpers.h"
+#include "game/platforms.h"
 #include "game/resources.h"
 
 static uint8_t *g_d; static sk_level g_lv; static sk_game g_g;
@@ -78,5 +79,39 @@ void test_jumper_lands_waits_and_jumps_again(void) {          /* type 37 */
     tick(20);
     CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->draw->y, s->y); CHECK_EQ(s->vy, -20);   /* back at its start */
     CHECK_EQ(s->draw->dflags & 6, 0);
+    drop_game();
+}
+
+static uint8_t g_plat[32 * 10 / 8 * 5];
+static sk_section g_psec;
+static void give_platform_param(int pos) {
+    memset(g_plat, 0xFF, sizeof g_plat);
+    g_psec.data = g_plat; g_psec.len = sizeof g_plat;
+    g_res.param[pos].sec = &g_psec;
+    static const uint8_t bytes[6] = { 16, 5, 0, 0, 0x01, 0 };     /* half 16 x 5, frame_sel 1, stand_dy 0 */
+    memcpy(g_res.param[pos].bytes, bytes, 6);
+}
+
+void test_swing_platform_hangs_on_its_chain(void) {           /* type 38 */
+    CHECK(make_game());
+    give_platform_param(0);
+    sk_slot *s = spawn(160, 4 * 16, 38, 0x10);                       /* radius 64 + 16 */
+    CHECK_EQ(s->x0, 80); CHECK_EQ(g_g.objs.chain_count, 3); CHECK(g_g.objs.chain_b);
+    sk_platform *pf = slot_platform(&g_g, s);
+    CHECK(pf != NULL);
+    CHECK_EQ(pf->pspeed, 0x1E); CHECK_EQ(pf->pangle, 0);
+    CHECK_EQ(pf->px >> 16, s->x); CHECK_EQ(pf->py >> 16, s->y + 80);
+    tick(1);
+    CHECK_EQ(pf->pangle, 3); CHECK_EQ(pf->pspeed, 0x1D);
+    CHECK((pf->px >> 16) > s->x);                                    /* swung right on its radius */
+    CHECK_EQ(s->draw->x, (pf->px >> 16) - 16); CHECK_EQ(s->draw->y, pf->py >> 16);
+    CHECK_EQ(g_g.objs.chain[0].y, s->y + 15);                        /* the first link 16 px down, cos(12) * 16 / 256 */
+    int i = 0;
+    while (((uint16_t)s->t0 >> 8) == 0 && i++ < 100) tick(1);
+    CHECK_EQ((uint16_t)s->t0 >> 8, 0xFF);                            /* turned at the top */
+    CHECK(pf->pangle > 40 && pf->pangle < 100);
+    g_g.camera_x = 3000;
+    tick(1);
+    CHECK(s->x < 0); CHECK(!g_g.objs.chain_b);
     drop_game();
 }

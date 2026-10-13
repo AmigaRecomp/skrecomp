@@ -132,7 +132,91 @@ static void obj_jumper_update(sk_game *g, sk_slot *s, int index) {             /
     if (object_offscreen(g, s->x, s->y, 64) < 0) free_object(g, s);
 }
 
+/* ---- type 38: the swinging platform (a param resource) on a chain of slot 46 links ---- */
+static int16_t hi(int32_t v) { return (int16_t)(v >> 16); }
+static int32_t with_hi(int32_t v, int h) { return (int32_t)((uint32_t)(uint16_t)h << 16 | ((uint32_t)v & 0xFFFF)); }
+static int t0_hi(const sk_slot *s) { return (uint16_t)s->t0 >> 8; }                              /* byte +0x14 */
+static void set_t0_hi(sk_slot *s, int v) { s->t0 = (int16_t)((v & 0xFF) << 8 | (s->t0 & 0xFF)); }
+
+static void obj_swing_platform_init(sk_game *g, sk_slot *s, int x, int y) {    /* 0x117A04 */
+    x += 8;
+    init_object_slot(g, s, x, y, s->type4);
+    int p = g->objs.marker_param & 0xFF;
+    int r = (p & 0x30) + 0x40;
+    s->x0 = (int16_t)r;
+    y += r;
+    g->objs.chain_count = (r >> 4) - 2;
+    int index = -1;
+    sk_platform *pf = alloc_platform(g, &index);
+    s->platform = index;
+    s->flags = (int16_t)(index < 0 ? 0xFF : (index * 32) >> 8);   /* move.w d0,$a(a6): byte +0xA */
+    const sk_section *sec = g->res ? g->res->param[(p & 0xC0) >> 6].sec : NULL;
+    const uint8_t *links = res(g, 46);
+    if (!pf || !sec || !links) { if (pf) free_platform(g, s); free_object(g, s); return; }   /* port guard */
+    const uint8_t *b = g->res->param[(p & 0xC0) >> 6].bytes;
+    pf->px = (int32_t)((uint32_t)(uint16_t)x << 16);
+    pf->py = (int32_t)((uint32_t)(uint16_t)y << 16);
+    pf->pspeed = 0x1E; pf->pangle = 0;
+    pf->half_w = b[0]; pf->half_h = b[1];
+    pf->px = with_hi(pf->px, hi(pf->px) + (int8_t)b[2]);
+    s->anim = b[3];
+    pf->py = with_hi(pf->py, hi(pf->py) + (int8_t)b[3]);
+    pf->stand_dy = b[5];
+    pf->frame_sel = b[4];                                           /* the whole byte (type 5 masks it) */
+    set_draw_size_at(g, s, 2 * pf->half_w, 2 * pf->half_h, sec->data);
+    sk_draw *d = slot_draw_record(g, s);
+    if (d) {
+        d->frames_len = sec->len;
+        int off = (uint16_t)d->frame_bytes - (pf->frame_sel ? 0 : (uint16_t)d->plane_bytes);
+        pf->pframe = (size_t)off < sec->len ? d->frames + off : NULL;
+    }
+    for (int i = 0; i <= g->objs.chain_count && i < 8; i++) {
+        chain_record(g, &g->objs.chain[i], s, 16, 16, links);
+        g->objs.chain[i].frame_bytes = 0x80;
+    }
+    g->objs.chain_b = true;
+}
+static void obj_swing_platform_update(sk_game *g, sk_slot *s, int index) {     /* 0x117B08 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    sk_platform *pf = slot_platform(g, s);
+    if (!pf) return;
+    int r = s->x0;
+    int sp = pf->pspeed < 0x12 ? pf->pspeed : 0x12;
+    int step = (uint8_t)(sp + 7) >> 3;
+    if (t0_hi(s)) step = -step;
+    pf->pangle = (uint8_t)(pf->pangle + step);
+    int a = pf->pangle;
+    bool turn = true;
+    if (t1_hi(s)) {
+        pf->pspeed++;
+        if (a != 0) turn = false;
+        else set_t1_hi(s, t1_hi(s) ^ 0xFF);
+    }
+    if (turn && --pf->pspeed == 0) { set_t0_hi(s, t0_hi(s) ^ 0xFF); set_t1_hi(s, t1_hi(s) ^ 0xFF); }
+    int c = cos_1024(a * 4), sn = sin_1024(a * 4);
+    int dx = (int16_t)(((int16_t)(sn * r >> 8)) + s->x - hi(pf->px));   /* muls, lsr.l #8: the low word */
+    int dy = (int16_t)(((int16_t)(c * r >> 8)) + s->y - hi(pf->py));
+    platform_carry(g, pf, dx, dy);
+    pf->px = with_hi(pf->px, hi(pf->px) + dx);
+    pf->py = with_hi(pf->py, hi(pf->py) + dy);
+    if (d) { d->x = (int16_t)(hi(pf->px) - pf->half_w); d->y = hi(pf->py); }
+    int lx = s->x - ((uint16_t)pf->half_w >> 1), ly = s->y;
+    int16_t ax = 0, ay = 0;
+    for (int i = 0; i <= g->objs.chain_count && i < 8; i++) {
+        ax = (int16_t)(ax + sn); ay = (int16_t)(ay + c);
+        g->objs.chain[i].x = (int16_t)(trunc16(ax) + lx);
+        g->objs.chain[i].y = (int16_t)(trunc16(ay) + ly);
+    }
+    if (object_offscreen(g, hi(pf->px), hi(pf->py), 160) < 0 && object_offscreen(g, s->x, s->y, 160) < 0) {
+        free_platform(g, s);
+        free_object(g, s);
+        g->objs.chain_b = false;
+    }
+}
+
 void obj_italy_install(void) {
     object_init_table[36] = obj_pendulum_init;         object_update_table[36] = obj_pendulum_update;
     object_init_table[37] = obj_jumper_init;           object_update_table[37] = obj_jumper_update;
+    object_init_table[38] = obj_swing_platform_init;   object_update_table[38] = obj_swing_platform_update;
 }
