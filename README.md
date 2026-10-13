@@ -36,11 +36,16 @@ size is estimated from the data unless given); `--cam X,Y` sets the camera; `--n
 and `--no-frames` reduce the picture to one layer.
 
 Playing: arrows or WASD move, up jumps, down crouches (down while running slides), Space,
-Left Ctrl or X is fire, `F` toggles fullscreen, Escape quits. The game runs at the original's
+Left Ctrl or X is fire, `F` toggles fullscreen, `M` mutes the sound, Escape quits. The game runs at the original's
 50 frames per second with the original's movement, camera, collision and level flow
 (`../re/docs/notes/gameplay.md`, `player.md`); the kid and the ball are drawn as the hardware
 sprite pairs the game uses, in the level's kit colours, and the HUD shows health, the timer, the
 score, the card pieces and the lives.
+
+Sound: each level plays its ProTracker module through the game's own replay routine (transcribed: its
+quirks included), with the KICK OFF, life-lost and game-over jingles and the bosses' music changes; the
+effects play on the fourth channel by the original's priority rule (`../re/docs/notes/audio.md`). With no
+audio device the game runs silent.
 
 The ball (England's six levels and Italy's six are complete: the streets, the country with its moving and sinking
 platforms, London with LONDON2's boss, and the Ruins, Venice and the Riviera with RIVIERA2's boss; the other
