@@ -88,7 +88,7 @@ struct sk_game {
     int message_box_shown_kind;         /* the box on screen (drawn by the HUD code) */
     uint8_t message_wait;               /* 0x3001DE: frame step 31 holds the game until fire */
     int flutter_max, flutter_last_cell; /* 0x300288 (5), 0x3002FA */
-    uint8_t ball_target[8];             /* 0x300395..: hits per target attribute */
+    uint8_t ball_target[8];             /* 0x300395 + n: hits per target attribute (67 68 69 70 71 72 73 74) */
 #define SK_BUMP_RESTORES 24
     struct { int cell; uint16_t word; } bump_list[SK_BUMP_RESTORES];   /* 0x300DAE: replayed by init_player */
     int bump_restores;

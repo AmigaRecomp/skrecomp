@@ -219,6 +219,9 @@ void test_thrower_68_throws_and_waits_25(void);
 void test_flyer_70_bobs_and_chases(void);
 void test_wings_88_follow_then_fly_off(void);
 void test_frog_31_hops_its_pattern_and_spits(void);
+void test_hazard_63_takes_a_rising_ball_and_hurts_from_below(void);
+void test_hazard_64_takes_a_falling_ball_and_hurts_from_above(void);
+void test_ball_targets_69_71_74_count_apart(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -435,6 +438,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "flyer_70_bobs_and_chases", test_flyer_70_bobs_and_chases },
     { "wings_88_follow_then_fly_off", test_wings_88_follow_then_fly_off },
     { "frog_31_hops_its_pattern_and_spits", test_frog_31_hops_its_pattern_and_spits },
+    { "hazard_63_takes_a_rising_ball_and_hurts_from_below", test_hazard_63_takes_a_rising_ball_and_hurts_from_below },
+    { "hazard_64_takes_a_falling_ball_and_hurts_from_above", test_hazard_64_takes_a_falling_ball_and_hurts_from_above },
+    { "ball_targets_69_71_74_count_apart", test_ball_targets_69_71_74_count_apart },
 };
 
 int main(int argc, char **argv) {

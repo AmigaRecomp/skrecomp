@@ -39,6 +39,7 @@ add_executable(sk_tests
   test_obj_london.c
   test_obj_country.c
   test_obj_italy.c
+  test_attr_italy.c
   test_attr_country_london.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
@@ -259,7 +260,10 @@ set(SK_TEST_NAMES
   thrower_68_throws_and_waits_25
   flyer_70_bobs_and_chases
   wings_88_follow_then_fly_off
-  frog_31_hops_its_pattern_and_spits)
+  frog_31_hops_its_pattern_and_spits
+  hazard_63_takes_a_rising_ball_and_hurts_from_below
+  hazard_64_takes_a_falling_ball_and_hurts_from_above
+  ball_targets_69_71_74_count_apart)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

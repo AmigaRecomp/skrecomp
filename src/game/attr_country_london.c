@@ -74,9 +74,9 @@ static void attr_splash(sk_game *g, int cx, int cy) {
 }
 
 /* attributes 70, 72, 73: more ball targets (0x11C34E, 0x11C372, 0x11C384) */
-static void attr_ball_target_b(sk_game *g, int cx, int cy) { ball_target(g, cx, cy, &g->ball_target[1], 0); }
-static void attr_ball_target_c(sk_game *g, int cx, int cy) { ball_target(g, cx, cy, &g->ball_target[2], 6); }
-static void attr_ball_target_d(sk_game *g, int cx, int cy) { ball_target(g, cx, cy, &g->ball_target[3], 6); }
+static void attr_ball_target_b(sk_game *g, int cx, int cy) { ball_target(g, cx, cy, &g->ball_target[3], 0); }
+static void attr_ball_target_c(sk_game *g, int cx, int cy) { ball_target(g, cx, cy, &g->ball_target[5], 6); }
+static void attr_ball_target_d(sk_game *g, int cx, int cy) { ball_target(g, cx, cy, &g->ball_target[6], 6); }
 
 void attr_country_london_install(void) {
     attr_table[23] = attr_platform_reverse;

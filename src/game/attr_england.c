@@ -78,7 +78,7 @@ static void attr_shade_x_dark(sk_game *g, int cx, int cy) { int d; if (shade_d(g
 static void attr_shade_x_dark_rev(sk_game *g, int cx, int cy) { int d; if (shade_d(g, cx, cy, false, &d)) set_kit(g, 28 - d); }   /* 0x11AF54 */
 
 /* ---- attributes 1 and 42: drains ---- */
-static void swallow_ball(sk_game *g) {
+void swallow_ball(sk_game *g) {
     sk_ball *b = &g->ball;
     if (b->vanishing) return;
     b->vx = b->vy = 0;

@@ -76,7 +76,8 @@ void test_ball_targets_70_72_73(void) {
             g_g.player.ball_free = 1;
             run(attrs[a], 1, 5, 10);
         }
-        CHECK_EQ(g_g.ball_target[1 + a], 0xFF);
+        static const int index[3] = { 3, 5, 6 };                     /* 0x300398, 0x30039A, 0x30039B */
+        CHECK_EQ(g_g.ball_target[index[a]], 0xFF);
         CHECK_EQ(g_g.objs.marker_param, kinds[a]);
     }
     drop_game();
