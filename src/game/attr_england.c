@@ -183,7 +183,7 @@ static void obj_bumped_block_update(sk_game *g, sk_slot *s, int index) {
 }
 
 /* ---- attributes 27 and 28: the message signs ---- */
-static int message_sign_check(sk_game *g, int cx, int cy) {             /* 0x11B5A2: -1 when the ball hits it hard */
+int message_sign_check(sk_game *g, int cx, int cy) {             /* 0x11B5A2: -1 when the ball hits it hard */
     int x = cx * 16, y = cy * 16;
     if (g->attrs.probe_kind != 1) return 0;
     int dx = (int16_t)(bx(g) - x), dy = (int16_t)(by(g) - y);
@@ -239,7 +239,7 @@ static void attr_butterflies(sk_game *g, int cx, int cy) {              /* 0x11B
     flutter(g, x, y);
 }
 
-static void ball_target(sk_game *g, int cx, int cy, uint8_t *count, int param) {   /* ball_target_tail 0x11C3A4 */
+void ball_target(sk_game *g, int cx, int cy, uint8_t *count, int param) {   /* ball_target_tail 0x11C3A4 */
     int x = cx * 16, y = cy * 16;
     g->objs.marker_param = param;
     if (g->attrs.probe_kind != 1 || !ball_hits_cell(g, x, y)) return;

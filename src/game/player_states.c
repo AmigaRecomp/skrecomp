@@ -32,6 +32,7 @@ static void player_state_death(sk_game *g) {                     /* 0x10BB28 */
     g->timer_flags = 0;
     if (p->lives < 0) p->state = 64;
     else { init_player(g); g->death_flags &= (uint8_t)~1; }     /* the jingle object clears the latch in the original */
+    g->splash_done = 0;                                          /* sf.b 0x300365 (0x10BBD0 / 0x10BBE8) */
     p->fall_flags = 0;
     p->kick_phase = 0;
     p->timer = 0;

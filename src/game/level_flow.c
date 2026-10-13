@@ -48,7 +48,7 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     memset(g->message_shown, 0, sizeof g->message_shown);
     g->message_box_timer = 0; g->message_box_request = 0; g->message_wait = 0;
     g->bump_restores = 0; g->flush_count = 0; g->bump_tile = -1; g->hud_card_flag = 0;   /* 0x104878 */
-    g->msg_visible = 0; g->msg_w = 0;
+    g->msg_visible = 0; g->msg_w = 0; g->splash_done = 0;
     memset(g->card_anim, 0, sizeof g->card_anim);
     g->untouchable = false;
     if (g->world.live) world_free(&g->world);

@@ -37,7 +37,8 @@ add_executable(sk_tests
   test_hud.c
   test_platforms.c
   test_obj_london.c
-  test_obj_country.c)
+  test_obj_country.c
+  test_attr_country_london.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -228,7 +229,12 @@ set(SK_TEST_NAMES
   mole_throws_a_clod
   leaper_jumps_from_below
   flies_use_a_fixed_record
-  country_london_markers_spawn_real_types)
+  country_london_markers_spawn_real_types
+  deadly_water_43_kills
+  splash_55_once_until_a_respawn
+  oneway_38_pushes_back
+  bare_sign_26_breaks_without_a_message
+  ball_targets_70_72_73)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

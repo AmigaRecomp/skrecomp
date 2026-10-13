@@ -190,6 +190,11 @@ void test_mole_throws_a_clod(void);
 void test_leaper_jumps_from_below(void);
 void test_flies_use_a_fixed_record(void);
 void test_country_london_markers_spawn_real_types(void);
+void test_deadly_water_43_kills(void);
+void test_splash_55_once_until_a_respawn(void);
+void test_oneway_38_pushes_back(void);
+void test_bare_sign_26_breaks_without_a_message(void);
+void test_ball_targets_70_72_73(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -377,6 +382,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "leaper_jumps_from_below", test_leaper_jumps_from_below },
     { "flies_use_a_fixed_record", test_flies_use_a_fixed_record },
     { "country_london_markers_spawn_real_types", test_country_london_markers_spawn_real_types },
+    { "deadly_water_43_kills", test_deadly_water_43_kills },
+    { "splash_55_once_until_a_respawn", test_splash_55_once_until_a_respawn },
+    { "oneway_38_pushes_back", test_oneway_38_pushes_back },
+    { "bare_sign_26_breaks_without_a_message", test_bare_sign_26_breaks_without_a_message },
+    { "ball_targets_70_72_73", test_ball_targets_70_72_73 },
 };
 
 int main(int argc, char **argv) {
