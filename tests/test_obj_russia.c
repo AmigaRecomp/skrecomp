@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "check.h"
+#include "core/tables.h"
+#include "core/hunk.h"
+#include "core/disks.h"
 #include "fixture.h"
 #include "game/attrs.h"
 #include "game/world.h"
@@ -354,4 +357,76 @@ void test_kid_catches_swings_and_lets_go(void) {                    /* rope_catc
     rope_catch(&g_g);
     CHECK_EQ(p->state, 0);                                           /* no catch again before a landing */
     drop_game();
+}
+
+static bool russia_open(sk_disks *d, sk_image *img, sk_tables *t) {
+    sk_err e = {0}; uint8_t *f = NULL; size_t n = 0;
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!disks_open(d, roms, &e) || !disks_read(d, 0, "sk.pak", &f, &n, &e)) return false;
+    bool ok = hunk_load(f, n, img, &e) && tables_load(t, img, &e);
+    free(f);
+    return ok;
+}
+
+void test_russia_markers_spawn_real_types(void) {               /* ROM-backed, indices 13..17 */
+    if (!getenv("SOCCERKID_ROMS")) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}; sk_image img = {0}; sk_tables t = {0}; sk_err e = {0};
+    CHECK(russia_open(&d, &img, &t));
+    static sk_game g;
+    memset(&g, 0, sizeof g);
+    objects_reset(&g);
+    for (int idx = 13; idx <= 17; idx++) {
+        uint8_t *f = NULL; size_t n = 0;
+        CHECK(disks_read_file_no(&d, t.record[idx].disk + 1, idx, false, &f, &n, &e));
+        sk_level lv = {0}; sk_world w = {0};
+        CHECK(level_parse(f, n, &lv, &e)); free(f);
+        CHECK(world_build(&w, &lv));
+        for (int cy = 0; cy < w.h; cy++)
+            for (int cx = 0; cx < w.w; cx++) {
+                int param = 0, type = world_marker_type(&w, cx, cy, &param);
+                if (type <= 0) continue;
+                bool real = type < 128 && object_init_table[type] && object_init_table[type] != obj_stub_init;
+                if (!real) printf("level %d: type %d at (%d, %d) is a stub\n", idx, type, cx, cy);
+                CHECK(real);
+            }
+        world_free(&w); level_free(&lv);
+    }
+    tables_free(&t); image_free(&img); disks_close(&d);
+}
+
+void test_russia_slots_cover_the_frames(void) {                 /* ROM-backed, Review Focus 1 */
+    if (!getenv("SOCCERKID_ROMS")) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}; sk_image img = {0}; sk_tables t = {0}; sk_err e = {0};
+    CHECK(russia_open(&d, &img, &t));
+    static const struct { int type, slot, frames, frame_bytes; } need[] = {   /* the highest frame each type indexes, + 1 */
+        { 35, 43, 3, 640 }, { 35, 44, 3, 130 }, { 65, 96, 14, 800 }, { 66, 97, 8, 520 }, { 72, 106, 7, 640 }, { 72, 105, 17, 900 },
+        { 72, 107, 8, 480 }, { 74, 127, 8, 2560 }, { 78, 116, 10, 2000 }, { 78, 117, 1, 2560 }, { 20, 18, 8, 220 }, { 20, 19, 16, 160 },
+        { 20, 20, 10, 320 }, { 42, 67, 8, 100 }, { 46, 60, 19, 2440 }, { 46, 61, 1, 300 }, { 46, 62, 5, 1920 }, { 46, 66, 8, 220 },
+        { 46, 68, 4, 560 }, { 52, 82, 28, 130 }, { 52, 83, 13, 260 }, { 71, 109, 2, 1600 }, { 76, 133, 9, 1280 }, { 76, 132, 22, 1920 },
+        { 11, 3, 10, 320 },
+    };   /* 52/83: the right-facing flash's last frame (13) lies past the 13-frame section: the port's frame guard skips it */
+    int seen = 0;
+    for (int idx = 13; idx <= 17; idx++) {
+        uint8_t *f = NULL; size_t n = 0;
+        CHECK(disks_read_file_no(&d, t.record[idx].disk + 1, idx, false, &f, &n, &e));
+        sk_level lv = {0}; sk_world w = {0};
+        CHECK(level_parse(f, n, &lv, &e)); free(f);
+        CHECK(world_build(&w, &lv));
+        bool present[128] = {0};
+        for (int cy = 0; cy < w.h; cy++)
+            for (int cx = 0; cx < w.w; cx++) { int param = 0, type = world_marker_type(&w, cx, cy, &param); if (type > 0 && type < 128) present[type] = true; }
+        static sk_resources r;
+        CHECK(resources_load(&r, &d, &t, idx, &e));
+        for (size_t k = 0; k < sizeof need / sizeof *need; k++) {
+            if (!present[need[k].type]) continue;
+            size_t len = 0;
+            CHECK(resource_slot(&r, need[k].slot, &len) != NULL);
+            seen++;
+            if (len < (size_t)need[k].frames * (size_t)need[k].frame_bytes) printf("level %d type %d slot %d: %zu bytes\n", idx, need[k].type, need[k].slot, len);
+            CHECK(len >= (size_t)need[k].frames * (size_t)need[k].frame_bytes);
+        }
+        resources_free(&r); world_free(&w); level_free(&lv);
+    }
+    CHECK(seen >= 20);
+    tables_free(&t); image_free(&img); disks_close(&d);
 }

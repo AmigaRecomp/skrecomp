@@ -282,3 +282,22 @@ void test_game_over_fades_the_music(void) {                          /* ROM-back
     for (int i = 0; i < 3; i++) CHECK_EQ(p.snd.paula.ch[i].vol, 0);
     play_close(&p);
 }
+
+void test_russia_run_without_a_crash(void) {                        /* ROM-backed: levels 13..17 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    for (int lv = 13; lv <= 17; lv++) {
+        sk_args a = { .roms = roms, .level = lv, .scale = 1, .section = -1, .frames = 2000,
+                      .script = ".180,R300,RU20,R400,RF3,R600,RU20,R500" };
+        static sk_play p; sk_err e = {0};
+        CHECK(play_open(&p, &a, &e));
+        for (int i = 0; i < a.frames; i++) play_step(&p, 0);
+        play_draw(&p);
+        static uint32_t out[SK_SCREEN_W * SK_SCREEN_H]; play_present(&p, out);
+        CHECK(!p.load_failed);
+        CHECK(p.game.object_count <= 16);
+        printf("level %d: kid %d,%d state %d lives %d score %06X objects %d platforms %d\n", lv, p.game.player.x, p.game.player.y,
+               p.game.player.state, p.game.player.lives, p.game.player.score, p.game.object_count, p.game.platform_count);
+        play_close(&p);
+    }
+}

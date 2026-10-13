@@ -331,7 +331,10 @@ set(SK_TEST_NAMES
   red_square_boss_76_dies_on_the_21st_hit
   rope_1_hangs_and_swings
   kid_catches_swings_and_lets_go
-  edge_row_scan_covers_27_cells)
+  edge_row_scan_covers_27_cells
+  russia_markers_spawn_real_types
+  russia_slots_cover_the_frames
+  russia_run_without_a_crash)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

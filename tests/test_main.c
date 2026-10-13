@@ -284,6 +284,9 @@ void test_red_square_boss_76_dies_on_the_21st_hit(void);
 void test_rope_1_hangs_and_swings(void);
 void test_kid_catches_swings_and_lets_go(void);
 void test_edge_row_scan_covers_27_cells(void);
+void test_russia_markers_spawn_real_types(void);
+void test_russia_slots_cover_the_frames(void);
+void test_russia_run_without_a_crash(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -565,6 +568,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "rope_1_hangs_and_swings", test_rope_1_hangs_and_swings },
     { "kid_catches_swings_and_lets_go", test_kid_catches_swings_and_lets_go },
     { "edge_row_scan_covers_27_cells", test_edge_row_scan_covers_27_cells },
+    { "russia_markers_spawn_real_types", test_russia_markers_spawn_real_types },
+    { "russia_slots_cover_the_frames", test_russia_slots_cover_the_frames },
+    { "russia_run_without_a_crash", test_russia_run_without_a_crash },
 };
 
 int main(int argc, char **argv) {

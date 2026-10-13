@@ -950,7 +950,7 @@ static void obj_rope_update(sk_game *g, sk_slot *s, int index) {              /*
     o->rope_base_x = s->x; o->rope_base_y = s->y;
     int r = o->rope_link_step;                                      /* rope_place_links 0x10E8D6 */
     uint16_t a = o->rope_angle;
-    int bend = (int16_t)(((o->rope_angle >> 8) - 0x40) << 3);
+    int bend = (int16_t)(((o->rope_angle >> 8) - 0x40) * 8);           /* lsl.w #3 on the word */
     int lx = 0, ly = 0;
     for (int i = 0; i < o->rope_links && i < 8; i++) {
         int sn = sin_1024(a >> 6), cs = cos_1024(a >> 6);
