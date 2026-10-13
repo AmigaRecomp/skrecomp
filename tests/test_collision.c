@@ -93,3 +93,36 @@ void test_probes_on_fixture_geometry(void) {
     CHECK(probe_edge(&m, 26 * 16 + 2, fy, -1));                 /* floor behind */
     teardown();
 }
+
+static void solid_column(sk_mask *m, int mx, int row0, int row1) {
+    for (int r = row0; r <= row1; r++) if (r >= 0 && r < SK_MASK_H) m->bits[r * 8 + (mx >> 3)] |= (uint8_t)(0x80 >> (mx & 7));
+}
+
+void test_wall_probe_scans_from_above_the_hit_to_row_39(void) {
+    sk_mask m = {0};                                            /* origin (0, 0): world = mask coordinates */
+    int y = 20;
+    int16_t px, speed;
+    solid_column(&m, 40, y + 31, y + 49);                        /* a 10-px step on the floor: 9 solid rows before y + 40 */
+    px = 32; speed = 16;
+    CHECK_EQ(probe_wall(&m, 40, y, 0, 1, false, &px, &speed), 0);   /* not a wall: push_up lifts the kid instead */
+    CHECK_EQ(speed, 16); CHECK_EQ(px, 32);
+    memset(&m, 0, sizeof m);
+    solid_column(&m, 40, y - 6, y + 5);                         /* an overhang above the first test row: 11 rows from y - 5 */
+    px = 32; speed = 16;
+    CHECK_EQ(probe_wall(&m, 40, y, 0, 1, false, &px, &speed), -1);
+    CHECK_EQ(speed, 0);
+    memset(&m, 0, sizeof m);
+    solid_column(&m, 40, y + 1, y + 8);                         /* 8 rows only: no wall */
+    px = 32; speed = 16;
+    CHECK_EQ(probe_wall(&m, 40, y, 0, 1, false, &px, &speed), 0);
+}
+
+void test_ceiling_probe_narrows_the_window_to_the_first_row(void) {
+    sk_mask m = {0};
+    int x = 24, y = 20;                                         /* facing left: the window covers x + 3 .. x + 14 = 27..38 */
+    for (int mx = 27; mx <= 32; mx++) solid_column(&m, mx, y - 5, y - 5);      /* row 0: left half of the window */
+    for (int mx = 33; mx <= 38; mx++) solid_column(&m, mx, y - 4, y + 4);      /* rows 1..9: right half only */
+    CHECK_EQ(probe_ceiling(&m, x, y, -1, false) & SK_CEIL_BUMP, 0);           /* the staircase corner is not a bump */
+    for (int mx = 27; mx <= 32; mx++) solid_column(&m, mx, y - 4, y + 4);      /* now the left half runs through all ten rows */
+    CHECK_EQ(probe_ceiling(&m, x, y, -1, false) & SK_CEIL_BUMP, SK_CEIL_BUMP);
+}

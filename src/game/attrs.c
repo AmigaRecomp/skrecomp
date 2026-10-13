@@ -122,7 +122,7 @@ void attr_checkpoint(sk_game *g, int cx, int cy) {              /* 0x11B250 */
     int flag = world_flag(&g->world, cx, cy);
     int bottom = cy;
     while (bottom + 1 < g->world.h && world_flag(&g->world, cx, bottom + 1) == flag) bottom++;
-    g->world.start_y = bottom * 16 - 40;
+    g->world.start_y = (bottom + 1) * 16 - 40;                  /* d1 has walked past the pole's last cell */
     for (int r = bottom; r >= 0 && world_flag(&g->world, cx, r) == flag; r--)
         g->world.live[cell_index(g, cx, r)] &= 0x01FF;           /* andi.b #1 on the high byte: the pole fires once */
     play_sfx(g, 12);

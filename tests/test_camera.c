@@ -18,6 +18,9 @@ static bool make_game(void) {
     return true;
 }
 static void drop_game(void) { world_free(&g_g.world); level_free(&g_lv); free(g_d); }
+static void frames(int n, uint8_t input) {
+    for (int i = 0; i < n; i++) { g_g.frame_ticks++; g_g.input_state = input; g_g.mask.built = false; player_input_state(&g_g); }
+}
 static int g_scanned_cells, g_last_cx;
 static void note_init(sk_game *g, sk_slot *s, int x, int y) { init_object_slot_invisible(g, s, x, y, s->type4); g_scanned_cells++; g_last_cx = x / 16; }
 
@@ -77,4 +80,18 @@ void test_camera_scans_stay_inside_a_tiny_level(void) {           /* Review Focu
     for (int i = 0; i < 5; i++) { edge_scan_columns(&g_g); edge_scan_rows(&g_g); }
     CHECK_EQ(g_g.camera_x, 0); CHECK_EQ(g_g.camera_y, 0); CHECK_EQ(g_g.object_count, 0);
     world_free(&g_g.world); level_free(&lv); free(d);
+}
+
+void test_camera_holds_its_height_during_a_jump(void) {
+    CHECK(make_game());
+    g_g.view.full_redraw = true;
+    frames(20, 0); update_camera(&g_g);                         /* standing at y 151: the camera target is 51, below the clamp (56) */
+    for (int i = 0; i < 30; i++) update_camera(&g_g);
+    CHECK_EQ(g_g.camera_y_raw, 51);
+    for (int i = 0; i < 12; i++) {                              /* the rise: camera_target returns jump_y while jumping */
+        frames(1, SK_IN_UP); update_camera(&g_g);
+        CHECK_EQ(g_g.camera_y_raw, 51);
+    }
+    CHECK(g_g.player.y < 151 - 30);
+    drop_game();
 }

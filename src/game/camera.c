@@ -29,13 +29,13 @@ void camera_target(sk_game *g, int *tx, int *ty) {               /* sub_106C32 *
         int ease = g->cam_ease;
         if (p->jumping && p->jump_y - y >= 0) {
             int d = y - g->camera_y_raw;
-            if (d < limit) y = p->jump_y;
-            else { p->jump_y = (int16_t)(g->camera_y_raw + 100); ease = limit - d - 1; }
+            if (d < limit) { p->jump_y = (int16_t)(g->camera_y_raw + 100); ease = limit - d - 1; }   /* near the top: follow */
+            else y = p->jump_y;                                  /* otherwise the camera holds still during the jump */
         }
         if (p->crouching) y = p->jump_y;
         int centre = g->camera_y_raw + 100, d = centre - y;
-        if (d > 0) y = centre - (d < ease ? d : ease);
-        else if (d < 0 && p->crouching) { if (p->falling) ease = 8; y = centre + (-d < ease ? -d : ease); }
+        if (d > 0) y = centre - ((uint16_t)d < (uint16_t)ease ? d : ease);            /* bcc: an unsigned compare */
+        else if (d < 0 && p->crouching) { if (p->falling) ease = 8; y = centre + ((uint16_t)-d < (uint16_t)ease ? -d : ease); }
     }
     *tx = x;
     *ty = y;

@@ -79,9 +79,8 @@ void timer_tick(sk_game *g) {                                   /* vbl_interrupt
     if (!(g->timer_flags & 0x80)) return;
     if (++g->timer_tick < g->timer_rate) return;
     g->timer_tick = 0;
-    if (g->level_timer == 0) {
+    if (g->level_timer == 0) {                                   /* the clock stops; only the scoreboard arms the time-out */
         g->timer_flags &= (uint8_t)~0x80;
-        g->timeout_armed = true;                                 /* ruling: 0x30038F is armed by a frontend routine */
         return;
     }
     g->level_timer = (g->level_timer & 0xFFFF0000u) | bcd_sub1((uint16_t)g->level_timer);

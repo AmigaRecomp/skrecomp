@@ -42,7 +42,8 @@ void test_timer_counts_down_in_bcd_and_times_out(void) {
     for (int i = 0; i < 9 * 2; i++) timer_tick(&g_g);
     CHECK_EQ(g_g.level_timer, 0); CHECK(g_g.timer_flags & 0x80);   /* the stop comes one period later */
     timer_tick(&g_g); timer_tick(&g_g);
-    CHECK_EQ(g_g.timer_flags & 0x80, 0); CHECK(g_g.timeout_armed);
+    CHECK_EQ(g_g.timer_flags & 0x80, 0); CHECK(!g_g.timeout_armed);   /* a normal level just stops its clock */
+    g_g.timeout_armed = true;                                     /* the scoreboard arms it (sub_11EF1C) */
     timeout_check(&g_g);
     CHECK_EQ(g_g.player.state, 68); CHECK(g_g.jingle_requested); CHECK_EQ(g_g.jingle, 2); CHECK(!g_g.timeout_armed);
     drop_game();

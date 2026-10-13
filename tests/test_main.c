@@ -103,6 +103,9 @@ void test_args_script_and_frames(void);
 void test_play_script_runs_headless_on_the_fixture(void);
 void test_play_script_survives_game_over(void);
 void test_play_real_level0_screenshot(void);
+void test_camera_holds_its_height_during_a_jump(void);
+void test_wall_probe_scans_from_above_the_hit_to_row_39(void);
+void test_ceiling_probe_narrows_the_window_to_the_first_row(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -203,6 +206,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "play_script_runs_headless_on_the_fixture", test_play_script_runs_headless_on_the_fixture },
     { "play_script_survives_game_over", test_play_script_survives_game_over },
     { "play_real_level0_screenshot", test_play_real_level0_screenshot },
+    { "camera_holds_its_height_during_a_jump", test_camera_holds_its_height_during_a_jump },
+    { "wall_probe_scans_from_above_the_hit_to_row_39", test_wall_probe_scans_from_above_the_hit_to_row_39 },
+    { "ceiling_probe_narrows_the_window_to_the_first_row", test_ceiling_probe_narrows_the_window_to_the_first_row },
 };
 
 int main(int argc, char **argv) {

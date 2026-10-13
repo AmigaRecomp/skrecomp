@@ -92,11 +92,11 @@ int probe_wall(const sk_mask *m, int probe_x, int y, int dir, int facing, bool s
     int mx = probe_x - m->origin_x, my = y - m->origin_y - 5;       /* the routine's base is five rows above the mask */
     int budget = 0x2C;
     if (sliding) { budget -= 16; my += 16; }
-    int row;
-    if (bit(m, mx, my + 6)) { row = my + 6; }
-    else if ((budget -= 6), bit(m, mx, my + 16)) { row = my + 16; }
-    else if ((budget -= 10), bit(m, mx, my + 26)) { row = my + 26; }
-    else if ((budget -= 10), bit(m, mx, my + 36)) { row = my + 36; }
+    int row;                                                     /* the scan starts above the hit: at my, my + 6, my + 16, my + 26 */
+    if (bit(m, mx, my + 6)) { row = my; }
+    else if ((budget -= 6), bit(m, mx, my + 16)) { row = my + 6; }
+    else if ((budget -= 10), bit(m, mx, my + 26)) { row = my + 16; }
+    else if ((budget -= 10), bit(m, mx, my + 36)) { row = my + 26; }
     else return 0;
     int run = 0;
     for (;;) {
@@ -124,7 +124,8 @@ int probe_ceiling(const sk_mask *m, int x, int y, int facing, bool sliding) {
         if (longword(m, mx, my) & window) result |= SK_CEIL_SLIDE_BLOCKED;
         my += 16;
     }
-    if (!(longword(m, mx, my) & window)) return result;
+    window &= longword(m, mx, my);                               /* narrowed to the first row's solid pixels */
+    if (!window) return result;
     for (int i = 1; i <= 9; i++)
         if (!(longword(m, mx, my + i) & window)) return result;
     return result | SK_CEIL_BUMP;

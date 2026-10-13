@@ -38,7 +38,7 @@ void test_checkpoint_moves_the_respawn_and_fires_once(void) {
     g_g.player.x = 16 * 16 + 2; g_g.player.y = 12 * 16 - 41;
     g_g.layer_flags = 1;
     player_tile_attrs(&g_g);
-    CHECK_EQ(g_g.world.start_x, 16 * 16 + 16); CHECK_EQ(g_g.world.start_y, 11 * 16 - 40);
+    CHECK_EQ(g_g.world.start_x, 16 * 16 + 16); CHECK_EQ(g_g.world.start_y, 11 * 16 - 24);   /* feet on the row below the pole */
     CHECK_EQ(world_flag(&g_g.world, 16, 11) & 0x7E, 0);          /* marker bits stripped (andi.b #1) */
     CHECK_EQ(g_g.sfx_last, 12); CHECK_EQ(g_g.layer_flags_record, 1);   /* the respawn keeps the layers */
     g_g.sfx_last = 0; player_tile_attrs(&g_g); CHECK_EQ(g_g.sfx_last, 0);

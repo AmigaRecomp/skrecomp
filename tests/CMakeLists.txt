@@ -131,7 +131,10 @@ set(SK_TEST_NAMES
   args_script_and_frames
   play_script_runs_headless_on_the_fixture
   play_script_survives_game_over
-  play_real_level0_screenshot)
+  play_real_level0_screenshot
+  camera_holds_its_height_during_a_jump
+  wall_probe_scans_from_above_the_hit_to_row_39
+  ceiling_probe_narrows_the_window_to_the_first_row)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
