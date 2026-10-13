@@ -38,6 +38,7 @@ add_executable(sk_tests
   test_platforms.c
   test_obj_london.c
   test_obj_country.c
+  test_paula.c
   test_obj_italy.c
   test_attr_italy.c
   test_attr_country_london.c)
@@ -281,7 +282,10 @@ set(SK_TEST_NAMES
   set_tile_at_ignores_cells_off_the_map
   args_start_near_and_markers
   play_starts_near_a_type
-  a_test_start_takes_the_layer_switches_on_its_left)
+  a_test_start_takes_the_layer_switches_on_its_left
+  paula_plays_at_the_period_rate
+  paula_latches_the_loop_at_the_block_end
+  paula_short_and_bad_loops)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

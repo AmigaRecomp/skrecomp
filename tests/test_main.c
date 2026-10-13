@@ -240,6 +240,9 @@ void test_set_tile_at_ignores_cells_off_the_map(void);
 void test_args_start_near_and_markers(void);
 void test_play_starts_near_a_type(void);
 void test_a_test_start_takes_the_layer_switches_on_its_left(void);
+void test_paula_plays_at_the_period_rate(void);
+void test_paula_latches_the_loop_at_the_block_end(void);
+void test_paula_short_and_bad_loops(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -477,6 +480,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "args_start_near_and_markers", test_args_start_near_and_markers },
     { "play_starts_near_a_type", test_play_starts_near_a_type },
     { "a_test_start_takes_the_layer_switches_on_its_left", test_a_test_start_takes_the_layer_switches_on_its_left },
+    { "paula_plays_at_the_period_rate", test_paula_plays_at_the_period_rate },
+    { "paula_latches_the_loop_at_the_block_end", test_paula_latches_the_loop_at_the_block_end },
+    { "paula_short_and_bad_loops", test_paula_short_and_bad_loops },
 };
 
 int main(int argc, char **argv) {
