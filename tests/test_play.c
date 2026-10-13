@@ -121,3 +121,25 @@ void test_country_london_run_without_a_crash(void) {               /* ROM-backed
         play_close(&p);
     }
 }
+
+void test_london1_kid_rides_a_platform(void) {                     /* ROM-backed: the kid placed on LONDON1's type 10 platform */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 4, .scale = 1, .section = -1, .frames = 0 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    int mx = -1, my = -1;
+    for (int cy = 0; cy < p.game.world.h && mx < 0; cy++)
+        for (int cx = 0; cx < p.game.world.w; cx++) {
+            int param = 0;
+            if (world_marker_type(&p.game.world, cx, cy, &param) == 10) { mx = cx; my = cy; break; }
+        }
+    CHECK(mx >= 0);
+    for (int i = 0; i < 200; i++) play_step(&p, 0);                 /* KICK OFF */
+    p.game.player.x = (int16_t)(mx * 16 + 8); p.game.player.y = (int16_t)(my * 16 - 60);
+    int rode = 0;
+    for (int i = 0; i < 600; i++) { play_step(&p, 0); rode |= p.game.player.on_platform; }
+    CHECK(p.game.platform_count >= 1);
+    CHECK(rode);
+    play_close(&p);
+}

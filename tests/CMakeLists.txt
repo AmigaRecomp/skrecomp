@@ -237,7 +237,11 @@ set(SK_TEST_NAMES
   ball_targets_70_72_73
   boss_type_75_runs_its_script_and_ends_the_level
   boss_disc_is_thrown_and_bounces
-  country_london_run_without_a_crash)
+  country_london_run_without_a_crash
+  ball_on_clears_when_the_ball_leaves
+  a_rising_ball_passes_through_a_platform
+  country_london_slots_cover_the_frames
+  london1_kid_rides_a_platform)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

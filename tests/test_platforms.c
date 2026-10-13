@@ -2,6 +2,7 @@
 #include <string.h>
 #include "check.h"
 #include "fixture.h"
+#include "game/ball.h"
 #include "game/game.h"
 #include "game/level_flow.h"
 #include "game/platforms.h"
@@ -65,17 +66,20 @@ void test_ball_rides_a_platform(void) {                         /* Review Focus 
     drop_game();
 }
 
-void test_platform_carry_against_a_ceiling(void) {              /* Review Focus 1: the mask merge clips */
+void test_platform_carry_against_a_ceiling(void) {              /* Review Focus 1: carried up into a ceiling and above the map */
     CHECK(make_game());
-    sk_platform *pf = platform_at(2 * 16, -20);                   /* partly above the map */
-    pf->player_on = 1;
-    g_g.mask.dirty = true; g_g.mask.built = false;
-    g_g.player.x = 3 * 16; g_g.player.y = 0;
-    rebuild_player_mask(&g_g);                                     /* no write outside the 64 x 96 mask */
-    pf->px = (int32_t)((uint32_t)(uint16_t)-40 << 16); pf->py = 30 << 16;   /* left of the mask */
-    g_g.mask.dirty = true; g_g.mask.built = false;
-    rebuild_player_mask(&g_g);
-    CHECK(1);
+    static sk_sprite kid;
+    for (int i = 0; i < 200; i++) game_frame_step(&g_g, 0, &kid);   /* KICK OFF over */
+    sk_platform *pf = platform_at(5 * 16, 7 * 16 + 30);              /* under the ceiling cell (6, 7) */
+    g_g.player.x = 6 * 16 + 4; g_g.player.y = (int16_t)(7 * 16 + 30 - 41);
+    for (int i = 0; i < 200; i++) {                                   /* lift him 1 px a frame, through the ceiling and off the top */
+        g_g.player.jumping = 0; g_g.player.falling = 0;
+        platform_carry(&g_g, pf, 0, -1);
+        pf->py -= 0x10000;
+        game_frame_step(&g_g, 0, &kid);
+    }
+    CHECK(pf->py >> 16 < 0);                                         /* the platform is above the map: no crash, no wild write */
+    CHECK(g_g.player.y < 7 * 16);
     drop_game();
 }
 
@@ -85,5 +89,33 @@ void test_platform_records_full(void) {                         /* Review Focus 
     for (int i = 0; i < 16; i++) CHECK(alloc_platform(&g_g, &idx) != NULL);
     CHECK_EQ(g_g.platform_count, 16);
     CHECK(alloc_platform(&g_g, &idx) == NULL); CHECK_EQ(idx, -1);
+    drop_game();
+}
+
+void test_ball_on_clears_when_the_ball_leaves(void) {             /* clr.w $1c(a4) clears player_on and ball_on (0x118028) */
+    CHECK(make_game());
+    sk_platform *pf = platform_at(27 * 16, 160);
+    g_g.player.x = 500; g_g.player.ball_hold = 0;
+    g_g.ball.x = (27 * 16 + 10) << 16; g_g.ball.y = (160 - 16) << 16;
+    platform_carry(&g_g, pf, 0, 0);
+    CHECK(pf->ball_on);
+    g_g.ball.x = 600 << 16;
+    platform_carry(&g_g, pf, 0, 0);
+    CHECK_EQ(pf->ball_on, 0);
+    drop_game();
+}
+
+void test_a_rising_ball_passes_through_a_platform(void) {       /* tst.w vy; bmi: no merge (0x109BD4 / 0x109C68) */
+    CHECK(make_game());
+    sk_platform *pf = platform_at(10 * 16, 100);
+    pf->ball_on = 1;
+    g_g.ball.x = (10 * 16 + 8) << 16; g_g.ball.y = 96 << 16; g_g.ball.vy = (int32_t)0xFFFE0000;
+    g_g.bw.mask_valid = false;
+    rebuild_ball_mask(&g_g);
+    int mx = 10 * 16 + 8 - g_g.bw.mask_x, my = 100 - g_g.bw.mask_y;
+    CHECK_EQ(g_g.bw.mask[my * 8 + (mx >> 3)], 0);                    /* rising: not merged */
+    g_g.ball.vy = 0x10000; g_g.bw.mask_dirty = true;
+    rebuild_ball_mask(&g_g);
+    CHECK(g_g.bw.mask[my * 8 + (mx >> 3)] != 0);                     /* falling: merged */
     drop_game();
 }

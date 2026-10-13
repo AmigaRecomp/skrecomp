@@ -77,6 +77,7 @@ int platform_carry(sk_game *g, sk_platform *pf, int dx, int dy) {   /* 0x118014 
     int result = 0;
     g->bw.mask_dirty = true;
     pf->player_on = 0;
+    pf->ball_on = 0;                                              /* clr.w $1c(a4): both bytes */
     int surface = hi(pf->py) + pf->stand_dy;
     int d6 = (int16_t)(p->x - hi(pf->px) + pf->half_w);
     if ((uint16_t)d6 < (uint16_t)(2 * pf->half_w)) {

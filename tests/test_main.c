@@ -198,6 +198,10 @@ void test_ball_targets_70_72_73(void);
 void test_boss_type_75_runs_its_script_and_ends_the_level(void);
 void test_boss_disc_is_thrown_and_bounces(void);
 void test_country_london_run_without_a_crash(void);
+void test_ball_on_clears_when_the_ball_leaves(void);
+void test_a_rising_ball_passes_through_a_platform(void);
+void test_country_london_slots_cover_the_frames(void);
+void test_london1_kid_rides_a_platform(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -393,6 +397,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "boss_type_75_runs_its_script_and_ends_the_level", test_boss_type_75_runs_its_script_and_ends_the_level },
     { "boss_disc_is_thrown_and_bounces", test_boss_disc_is_thrown_and_bounces },
     { "country_london_run_without_a_crash", test_country_london_run_without_a_crash },
+    { "ball_on_clears_when_the_ball_leaves", test_ball_on_clears_when_the_ball_leaves },
+    { "a_rising_ball_passes_through_a_platform", test_a_rising_ball_passes_through_a_platform },
+    { "country_london_slots_cover_the_frames", test_country_london_slots_cover_the_frames },
+    { "london1_kid_rides_a_platform", test_london1_kid_rides_a_platform },
 };
 
 int main(int argc, char **argv) {

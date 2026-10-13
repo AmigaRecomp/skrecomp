@@ -141,3 +141,33 @@ void test_country_london_markers_spawn_real_types(void) {     /* ROM-backed, ind
     }
     tables_free(&t); image_free(&img); disks_close(&d);
 }
+
+void test_country_london_slots_cover_the_frames(void) {         /* ROM-backed, Review Focus 3 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}; sk_image img = {0}; sk_tables t = {0}; sk_err e = {0};
+    uint8_t *f = NULL; size_t n = 0;
+    CHECK(disks_open(&d, roms, &e) && disks_read(&d, 0, "sk.pak", &f, &n, &e));
+    CHECK(hunk_load(f, n, &img, &e)); free(f);
+    CHECK(tables_load(&t, &img, &e));
+    static const struct { int slot, frames, frame_bytes; } need[] = {   /* the highest frame each type indexes, + 1 */
+        { 28, 12, 0x2D0 }, { 79, 7, 0x258 }, { 80, 10, 840 }, { 86, 26, 320 }, { 87, 9, 2560 }, { 81, 12, 160 },
+        { 90, 22, 1280 }, { 91, 8, 100 }, { 89, 16, 2560 }, { 98, 2, 240 }, { 129, 26, 2840 }, { 130, 4, 440 },
+        { 12, 6, 160 }, { 13, 11, 260 },
+    };
+    int seen = 0;
+    for (int lv = 2; lv <= 5; lv++) {
+        static sk_resources r;
+        CHECK(resources_load(&r, &d, &t, lv, &e));
+        for (size_t k = 0; k < sizeof need / sizeof *need; k++) {
+            size_t len = 0;
+            if (!resource_slot(&r, need[k].slot, &len)) continue;
+            seen++;
+            if (len < (size_t)need[k].frames * (size_t)need[k].frame_bytes) printf("level %d slot %d: %zu bytes\n", lv, need[k].slot, len);
+            CHECK(len >= (size_t)need[k].frames * (size_t)need[k].frame_bytes);
+        }
+        resources_free(&r);
+    }
+    CHECK(seen >= 14);
+    tables_free(&t); image_free(&img); disks_close(&d);
+}
