@@ -259,6 +259,10 @@ void test_kick_off_plays_the_jingle_then_the_level_tune(void);
 void test_play_runs_without_audio(void);
 void test_music_survives_a_level_change(void);
 void test_paula_without_a_rate_is_silent(void);
+void test_music_start_leaves_the_effect_channel(void);
+void test_freeing_level_effects_stops_channel_four(void);
+void test_audio_queue_keeps_its_latency(void);
+void test_game_over_fades_the_music(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -515,6 +519,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "play_runs_without_audio", test_play_runs_without_audio },
     { "music_survives_a_level_change", test_music_survives_a_level_change },
     { "paula_without_a_rate_is_silent", test_paula_without_a_rate_is_silent },
+    { "music_start_leaves_the_effect_channel", test_music_start_leaves_the_effect_channel },
+    { "freeing_level_effects_stops_channel_four", test_freeing_level_effects_stops_channel_four },
+    { "audio_queue_keeps_its_latency", test_audio_queue_keeps_its_latency },
+    { "game_over_fades_the_music", test_game_over_fades_the_music },
 };
 
 int main(int argc, char **argv) {

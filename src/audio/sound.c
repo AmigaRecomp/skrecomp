@@ -30,7 +30,12 @@ void sound_init(sk_sound *s, const sk_image *sk, int rate) {
     s->jingle_src = image_ptr(sk, JINGLE_ADDR, JINGLE_LEN);
 }
 
-static void free_level_sfx(sk_sound *s) {                           /* sub_1031D2 */
+void sound_free_level_sfx(sk_sound *s) {                            /* sub_1031D2 */
+    paula_dma(&s->paula, 0x0008);                                   /* port: freed heap is not chip memory: channel 4 lets go first */
+    paula_set_ptr(&s->paula, 3, (sk_amem){ silent, silent + 2 });
+    paula_set_len(&s->paula, 3, 1);
+    s->hs_25e &= (uint16_t)~0x0008; s->hs_260 &= (uint16_t)~0x0008;
+    if (!s->hs_25e) s->hs_25c = false;
     for (int i = 0; i < SK_SFX_COUNT; i++)
         if (s->sfx_owned[i]) { free(s->sfx_owned[i]); s->sfx_owned[i] = NULL; s->sfx[i].mem = (sk_amem){ NULL, NULL }; }
 }
@@ -41,7 +46,7 @@ static void free_slots(sk_sound *s) {
 void sound_free(sk_sound *s) {
     pt_stop(&s->pt);
     s->pt.mod = NULL; s->pt.n = 0;
-    free_level_sfx(s);
+    sound_free_level_sfx(s);
     free_slots(s);
     sound_jingle_free(s);
 }
@@ -67,7 +72,7 @@ bool sound_load_level(sk_sound *s, sk_disks *d, const sk_tables *t, int data_ind
     s->pt.mod = NULL; s->pt.n = 0;
     s->request = false;
     free_slots(s);
-    free_level_sfx(s);
+    sound_free_level_sfx(s);
     for (int k = 0; k < r->n_sfx; k++) {                            /* sub_10307E */
         const sk_sfx_entry *x = tables_sfx(t, r->disk, r->sfx[k]);
         if (!x || x->effect >= SK_SFX_COUNT) continue;

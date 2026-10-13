@@ -147,6 +147,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
         p->fade_wait = 64;
         break;
     case SK_OUTCOME_GAME_OVER:
+        if (p->game_over_frames == 0) sound_fade_out(&p->snd);       /* fade_music_out 0x1040F2: every level exit */
         if (++p->game_over_frames >= GAME_OVER_FRAMES) {
             game_new_game(&p->game);
             if (p->level_pos >= 0) p->game.level_number = p->level_pos;

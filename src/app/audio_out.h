@@ -12,6 +12,7 @@ typedef struct sk_audio_out {
 } sk_audio_out;
 
 bool audio_out_open(sk_audio_out *o, int rate);   /* false: no device (the game runs silent) */
+int  audio_out_wants(int queued_bytes, int frame_bytes);   /* how many frames to queue now: 0 (ahead), 1, or 2 (ran dry) */
 void audio_out_push(sk_audio_out *o, const int16_t *frames, int n);
 void audio_out_mute(sk_audio_out *o, bool muted);
 void audio_out_close(sk_audio_out *o);

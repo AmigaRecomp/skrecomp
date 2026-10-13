@@ -108,7 +108,7 @@ bool pt_start(sk_pt *pt, sk_paula *paula, uint8_t *mod, size_t n, int tune, bool
     }
     pt->speed = 6;
     pt->counter = pt->speed;
-    for (int i = 0; i < 4; i++) paula_set_vol(paula, i, 0);
+    for (int i = 0; i < nch(pt); i++) paula_set_vol(paula, i, 0);   /* AUD3 only when the music has it (0x101072) */
     pt->patternpos = 0;
     pt->pattdelay2 = 0;
     pt->songpos = (uint8_t)tune;

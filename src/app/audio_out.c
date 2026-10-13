@@ -15,12 +15,20 @@ bool audio_out_open(sk_audio_out *o, int rate) {
     return true;
 }
 
+int audio_out_wants(int queued_bytes, int frame_bytes) {
+    if (queued_bytes == 0) return 2;                                /* ran dry (a stall): one frame of slack back */
+    if (queued_bytes >= frame_bytes * 4) return 0;                  /* ahead: drop this frame, latency stays near 3 frames */
+    return 1;
+}
+
 void audio_out_push(sk_audio_out *o, const int16_t *frames, int n) {
     if (!o || !o->stream) return;
     SDL_AudioStream *s = o->stream;
     int bytes = n * 4;
-    if (SDL_GetAudioStreamQueued(s) > bytes * 8) return;         /* far ahead (a stall caught up): drop a frame, keep the latency */
-    SDL_PutAudioStreamData(s, frames, bytes);
+    int want = audio_out_wants(SDL_GetAudioStreamQueued(s), bytes);
+    static const int16_t silence[2 * 960];
+    if (want == 2 && bytes <= (int)sizeof silence) SDL_PutAudioStreamData(s, silence, bytes);
+    if (want >= 1) SDL_PutAudioStreamData(s, frames, bytes);
 }
 
 void audio_out_mute(sk_audio_out *o, bool muted) {

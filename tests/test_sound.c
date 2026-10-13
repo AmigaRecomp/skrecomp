@@ -2,6 +2,7 @@
 #include <string.h>
 #include "check.h"
 #include "audio/sound.h"
+#include "app/audio_out.h"
 #include "core/disks.h"
 #include "core/hunk.h"
 #include "core/tables.h"
@@ -130,4 +131,52 @@ void test_level_music_and_effects_load(void) {                       /* ROM-back
     CHECK(energy > 0);
     sound_free(&s);
     tables_free(&t); image_free(&img); disks_close(&d);
+}
+
+void test_music_start_leaves_the_effect_channel(void) {             /* 0x101066..0x10107E: AUD3 only with 0x200314 */
+    static sk_sound s; sound_init(&s, NULL, 48000);
+    fake_sfx(&s, 3, 50, 428, 30);
+    sound_play_sfx(&s, 3);
+    sound_tick(&s); sound_tick(&s);
+    CHECK_EQ(s.paula.ch[3].vol, 64);
+    uint8_t *m = calloc(1, 0x43C + 1024);
+    m[0x3B6] = 1; memcpy(m + 0x438, "M.K.", 4);
+    sound_set_module(&s, 0, m, 0x43C + 1024);
+    sound_music(&s, SK_MUSIC_LEVEL, 0);
+    sound_frame(&s, NULL, 0);
+    CHECK(s.pt.playing);
+    CHECK_EQ(s.paula.ch[3].vol, 64); CHECK(s.paula.ch[3].on);       /* the effect plays on */
+    sound_free(&s);
+}
+
+void test_freeing_level_effects_stops_channel_four(void) {          /* no read of a freed sample (ASan) */
+    static sk_sound s; sound_init(&s, NULL, 48000);
+    uint8_t *buf = malloc(400);
+    memset(buf, 40, 400);
+    s.sfx_owned[20] = buf;
+    s.sfx[20] = (sk_sfx){ { (const int8_t *)buf, (const int8_t *)buf + 400 }, 200, 300, 90 };
+    sound_play_sfx(&s, 20);
+    sound_tick(&s); sound_tick(&s);
+    CHECK(s.paula.ch[3].on);
+    sound_free_level_sfx(&s);
+    static int16_t out[2 * 960];
+    for (int i = 0; i < 5; i++) sound_frame(&s, out, 960);
+    CHECK(!s.paula.ch[3].on || s.paula.ch[3].cur != (const int8_t *)buf);
+    sound_play_sfx(&s, 21);                                          /* queued in the same frame, then freed */
+    fake_sfx(&s, 21, 50, 300, 200);
+    uint8_t *b2 = malloc(200); memset(b2, 1, 200);
+    s.sfx_owned[21] = b2; s.sfx[21].mem = (sk_amem){ (const int8_t *)b2, (const int8_t *)b2 + 200 };
+    sound_play_sfx(&s, 21);
+    sound_free_level_sfx(&s);
+    for (int i = 0; i < 5; i++) sound_frame(&s, out, 960);
+    CHECK(s.paula.ch[3].cur != (const int8_t *)b2);
+    sound_free(&s);
+}
+
+void test_audio_queue_keeps_its_latency(void) {
+    int frame = 960 * 4;
+    CHECK(audio_out_wants(0, frame) == 2);                           /* ran dry: refill one more */
+    CHECK(audio_out_wants(frame, frame) == 1);
+    CHECK(audio_out_wants(3 * frame, frame) == 1);
+    CHECK(audio_out_wants(4 * frame, frame) == 0);                   /* ahead: drop, latency stays near 3 frames */
 }

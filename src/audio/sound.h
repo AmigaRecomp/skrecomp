@@ -40,6 +40,7 @@ void sound_init(sk_sound *s, const sk_image *sk, int rate);         /* effects 0
 void sound_free(sk_sound *s);
 /* A level's music (record +43, +44..46) and effect samples (+47 through table 2), replacing the last level's. */
 bool sound_load_level(sk_sound *s, sk_disks *d, const sk_tables *t, int data_index, sk_err *e);
+void sound_free_level_sfx(sk_sound *s);                            /* sub_1031D2: the per-level effect samples */
 void sound_set_module(sk_sound *s, int slot, uint8_t *mod, size_t n);   /* takes ownership */
 
 void sound_play_sfx(sk_sound *s, int n);                            /* play_sfx */

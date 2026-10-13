@@ -268,3 +268,17 @@ void test_music_survives_a_level_change(void) {                     /* ROM-backe
     CHECK(p.snd.pt.mod == NULL || p.snd.pt.mod == p.snd.slot[0] || p.snd.pt.mod == p.snd.jingle);
     play_close(&p);
 }
+
+void test_game_over_fades_the_music(void) {                          /* ROM-backed: fade_music_out 0x1040F2 on every level exit */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 0, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    for (int i = 0; i < 300; i++) play_step(&p, 0);
+    p.game.player.state = 64;                                        /* GAME OVER */
+    for (int i = 0; i < 70; i++) play_step(&p, 0);
+    CHECK(p.snd.fading >= 64);
+    for (int i = 0; i < 3; i++) CHECK_EQ(p.snd.paula.ch[i].vol, 0);
+    play_close(&p);
+}
