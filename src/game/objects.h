@@ -50,6 +50,7 @@ void objects_reset(sk_game *g);                   /* clear_object_slots + the re
 void objects_flush_deferred(sk_game *g);          /* init_player (0x10BC68): those markers may spawn again */
 void free_object_keep(sk_game *g, sk_slot *s);    /* 0x10D7C6: its marker stays used */
 sk_slot *find_free_slot(sk_game *g);
+sk_slot *find_slot_by_type(sk_game *g, int type);   /* sub_10DF8A: the first live slot of that type, NULL none */
 void spawn_marker(sk_game *g, int cx, int cy);    /* type/param from the PALS bytes; types >= 128 ignored */
 sk_slot *spawn_object(sk_game *g, int x, int y, int type);
 void scan_cell_for_marker(sk_game *g, int cx, int cy);

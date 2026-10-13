@@ -117,3 +117,41 @@ void test_fade_colour_steps_toward_white(void) {
     CHECK_EQ(fade_colour(0x000, 0xFFF, 8), 0x777);                  /* 8 steps of 15/16 */
     CHECK_EQ(fade_colour(0x123, 0xFFF, 15), 0xEEE);
 }
+
+static int count_type(int type) { int c = 0; for (int i = 0; i < 16; i++) c += g_g.objs.slot[i].x >= 0 && (g_g.objs.slot[i].type4 & 0x1FF) == type * 4; return c; }
+
+void test_boss_type_75_runs_its_script_and_ends_the_level(void) {
+    CHECK(make_game());
+    sk_slot *s = spawn(400, 11 * 16, 75, 0);
+    CHECK(s != NULL);
+    CHECK_EQ(s->hits, 10); CHECK_EQ(s->draw->w, 64); CHECK_EQ(s->draw->h, 71); CHECK_EQ(g_g.push_x, 400 - 16 - 128);
+    CHECK_EQ(count_type(118), 1); CHECK_EQ(count_type(87), 1);
+    sk_slot *disc = find_slot_by_type(&g_g, 87);
+    CHECK(disc != NULL); CHECK_EQ(aux_c(disc), 1);                  /* hidden in his hands */
+    tick(150);
+    CHECK_EQ(s->t1, 4); CHECK_EQ(s->vx, 8);                          /* entry 1: walking */
+    int x0 = s->draw->x;
+    tick(4);
+    CHECK_EQ(x0 - s->draw->x, 16);                                   /* 4 px a frame, facing left */
+    s->hits = 1;                                                     /* the last hit */
+    g_g.ball.x = (s->draw->x + 8) << 16; g_g.ball.y = (s->draw->y + 10) << 16; g_g.ball.vx = 4 << 16; g_g.ball.vy = 0;
+    g_g.player.ball_free = 1; g_g.player.ball_hold = 0;
+    tick(1);
+    CHECK_EQ(s->t1, 9 * 4);                                          /* down */
+    uint32_t score = g_g.player.score;
+    tick(11);
+    CHECK(g_g.player.score != score); CHECK_EQ(count_type(117), 1);
+    tick(200);
+    CHECK_EQ(g_g.level_outcome, 0x81); CHECK(g_g.curtain_flags & 0x10);
+    drop_game();
+}
+
+void test_boss_disc_is_thrown_and_bounces(void) {
+    CHECK(make_game());
+    spawn(400, 11 * 16, 75, 0);
+    sk_slot *disc = find_slot_by_type(&g_g, 87);
+    set_aux_c(disc, 3);
+    tick(1);
+    CHECK_EQ(aux_c(disc), 5); CHECK_EQ(disc->vx, 16); CHECK(disc->flags & 4);
+    drop_game();
+}

@@ -17,6 +17,7 @@ bool ball_kill_check(sk_game *g, sk_slot *s, int dead_frame, uint32_t score);   
 int  revive_offscreen(sk_game *g, sk_slot *s, int frames, int frame);  /* 0x10E20C: -1 revived this frame */
 int  ground_ahead(const sk_game *g, const sk_slot *s, int facing);     /* 0x10DCFC: -1 at an edge */
 int  probe_rows_below(const sk_game *g, const sk_slot *s, int dx, int dy);   /* 0x10D9A2: 0, or -rows (up to 5) */
+int  probe_rows_below2(const sk_game *g, const sk_slot *s, int dx, int dy);   /* 0x10DA3A: < 0 rows to climb out, else free rows below (up to 5) */
 int  ledge_distance(const sk_game *g, const sk_slot *s, int dx, int dy, int *signed_out);   /* 0x10DD80 */
 void frames_wh(sk_game *g, sk_slot *s, int w, int h, const uint8_t *frames, int prio);       /* set_frames_base 0x108124 */
 #define SK_FRAMES(W, H) static inline void frames_##W##x##H(sk_game *g, sk_slot *s, const uint8_t *f, int prio) { frames_wh(g, s, W, H, f, prio); }

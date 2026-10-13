@@ -264,7 +264,228 @@ static void obj_stomper_update(sk_game *g, sk_slot *s, int index) {           /*
     despawn_if_far(g, s);
 }
 
+/* ---- the script engine (sub_10E69C / sub_10E730 / sub_10E772): phases of (frames, motion offset, next offset),
+   motion records of (vx, vy, animation script, code); t0 counts frames, t1 is the phase's byte offset ---- */
+typedef struct { uint16_t frames; uint8_t motion, next; } sk_phase;
+typedef struct { int16_t vx, vy; const uint8_t *script; int code; } sk_motion;
+
+static void motion_apply(sk_slot *s, const sk_motion *m) {
+    s->vx = m->vx;
+    s->flags &= ~4;
+    s->vy = m->vy;
+    if (m->vy) s->flags |= 4;
+}
+
+static int script_step(sk_game *g, sk_slot *s, const sk_phase *ph, const sk_motion *mo, int *changed) {   /* sub_10E69C */
+    sk_draw *d = slot_draw_record(g, s);
+    const sk_phase *cur = &ph[(uint16_t)s->t1 >> 2];
+    const sk_motion *m;
+    if ((uint16_t)++s->t0 == cur->frames) {
+        if (d) d->x = (int16_t)(d->x - (int8_t)s->anim);
+        s->anim = 0;
+        set_aux_c(s, aux_c(s) & ~1);
+        s->anim_tick = 0; s->anim_index = 0; s->t0 = 0;
+        s->t1 = cur->next;
+        m = &mo[ph[(uint16_t)s->t1 >> 2].motion / 10];
+        motion_apply(s, m);
+    } else m = &mo[cur->motion / 10];
+    apply_velocity(s);
+    *changed = 0;
+    if (m->script) { int wrapped = 0; *changed = step_animation(s, m->script, s->flags, &wrapped); }
+    return m->code;
+}
+
+static void script_start(sk_slot *s, int idx, const sk_phase *ph, const sk_motion *mo) {   /* sub_10E730 */
+    set_aux_c(s, aux_c(s) & ~1);
+    s->anim_tick = 0; s->anim_index = 0; s->t0 = 0;
+    s->t1 = (int16_t)(idx * 4);
+    motion_apply(s, &mo[ph[idx].motion / 10]);
+}
+
+static void script_end_next(sk_slot *s, const sk_phase *ph) {   /* sub_10E772 */
+    s->t0 = (int16_t)(ph[(uint16_t)s->t1 >> 2].frames - 1);
+}
+
+/* ---- type 75: LONDON2's boss (slot 129) with its disc (87), dust puff (118) and burst (117) ---- */
+static const uint8_t boss_s74[] = { 0, 1, 0, 1, 12, 12 }, boss_s7a[] = { 0, 1, 0, 1, 16, 17 }, boss_s80[] = { 0, 1, 0, 1, 14, 15 };
+static const uint8_t boss_s86[] = { 0, 1, 0, 1, 18, 19 }, boss_s8c[] = { 0, 3, 0, 4, 20, 20, 20, 21, 21, 21 };
+static const uint8_t boss_s96[] = { 0, 6, 0, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, boss_sa6[] = { 0, 2, 0, 8, 12, 13, 12, 13 };
+static const uint8_t boss_sae[] = { 0, 2, 0, 6, 24, 25, 22, 23 }, boss_sb6[] = { 0, 1, 0, 1, 25, 23 };
+static const sk_phase boss_phases[12] = {                                                  /* 0x115CD6 */
+    { 150, 0, 4 }, { 32, 20, 8 }, { 0xFFFF, 10, 12 }, { 30, 40, 16 }, { 11, 60, 20 }, { 75, 30, 24 },
+    { 50, 50, 28 }, { 56, 20, 8 }, { 0xFFFF, 70, 32 }, { 11, 80, 40 }, { 200, 90, 44 }, { 0xFFFF, 100, 44 },
+};
+static const sk_motion boss_motions[11] = {                                                /* 0x115D06 */
+    { 0, 0, boss_s74, 0 }, { 0, 0, boss_s7a, 4 }, { 8, 0, boss_s96, 8 }, { 0, 0, boss_s7a, 12 }, { 0, 0, boss_s86, 16 },
+    { 0, 0, boss_s80, 20 }, { 0, 0, boss_s8c, 24 }, { 0, 0, boss_sa6, 28 }, { 0, 0, boss_sae, 32 }, { 0, 0, boss_sb6, 36 },
+    { 0, 0, boss_sb6, 40 },
+};
+static const uint8_t disc_script[] = { 0, 4, 0, 4, 0, 1, 2, 3, 0, 1, 2, 3 };              /* 0x115F0A */
+static const uint8_t puff_script[] = { 0, 6, 0, 3, 0, 1, 2, 3, 4, 5 };                    /* 0x1148F0 */
+static const uint8_t burst_script[] = { 0, 11, 0, 2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0 };  /* 0x114932 */
+
+static const uint8_t *slot_res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
+static void music_slot(sk_game *g, int slot) { g->music_requested = true; g->music_request = -10 - slot; }   /* sub_103770: hook */
+
+static void obj_boss_init(sk_game *g, sk_slot *s, int x, int y) {              /* 0x115A10 */
+    init_object_slot(g, s, x - 16, y - 55, s->type4);
+    s->vx = 0;
+    s->hits = 10;
+    const uint8_t *f = slot_res(g, 129);
+    if (!f) { free_object(g, s); return; }
+    frames_wh(g, s, 64, 71, f, 1);                                  /* sub_108054 */
+    sk_draw *d = slot_draw_record(g, s);
+    g->push_x = s->x - 0x80;                                        /* the arena's left wall (READING) */
+    spawn_object(g, s->x, s->y, 118);
+    music_slot(g, 1);
+    g->objs.marker_param = s->flags & 0xFF;
+    spawn_object(g, d->x - 4, d->y + 3, 87);
+    sk_slot *disc = find_slot_by_type(g, 87);
+    if (disc) set_aux_c(disc, 1);
+}
+static bool once(sk_slot *s) {                                      /* bset.b #0,aux.lo; bne: the first frame of an entry */
+    if (aux_c(s) & 1) return false;
+    set_aux_c(s, aux_c(s) | 1);
+    return true;
+}
+static void disc_command(sk_game *g, int cmd, bool unless_hidden) {
+    sk_slot *disc = find_slot_by_type(g, 87);
+    if (!disc || (unless_hidden && aux_c(disc) == 1)) return;
+    set_aux_c(disc, cmd);
+}
+static void obj_boss_update(sk_game *g, sk_slot *s, int index) {               /* 0x115A8E */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    sk_player *p = &g->player;
+    int changed = 0, code = script_step(g, s, boss_phases, boss_motions, &changed);
+    switch (code) {
+    case 0x00: despawn_if_far(g, s); return;
+    case 0x04: s->flags ^= 1; script_end_next(s, boss_phases); break;
+    case 0x08: {
+        sk_slot *puff = find_slot_by_type(g, 118);
+        if (puff) { set_aux_c(puff, aux_c(puff) | 1); puff->t0 = (int16_t)(d->x + 32); puff->t1 = (int16_t)(d->y + 46); }
+        if (once(s)) disc_command(g, 1, false);
+        break;
+    }
+    case 0x0C: break;
+    case 0x10: if (once(s)) disc_command(g, 2, false); break;
+    case 0x14: if (once(s)) { g->objs.marker_param = s->flags & 0xFF; spawn_object(g, d->x - 4, d->y + 3, 87); } break;
+    case 0x18:
+        if (once(s)) disc_command(g, 3, false);
+        if (changed && s->anim_index == 3) d->x = (int16_t)(d->x + ((s->flags & 1) ? 8 : -8));   /* dead: 3 frames */
+        break;
+    case 0x1C: if (object_offscreen(g, d->x, d->y, 0x40) < 0) free_object(g, s); return;
+    case 0x20:
+        if (once(s)) {
+            g->score_value = 0x20000;
+            add_score(g, 0x20000);
+            spawn_object(g, d->x + 32, d->y + 24, 113);
+            spawn_object(g, d->x + 6 + ((s->flags & 1) ? 0x22 : 0), d->y + 32, 117);
+            play_sfx(g, 17);
+            g->shake_amplitude = 6;
+            music_slot(g, 2);
+        }
+        despawn_if_far(g, s);
+        return;
+    case 0x28:
+        if (once(s)) { g->level_outcome = 0x81; g->level_number++; g->curtain_flags |= 0x10; }
+        /* fall through */
+    default: despawn_if_far(g, s); return;
+    }
+    touch_player(g, d->x + 10, d->y + 10, 0x2C, 0x2C);              /* codes 0x04..0x18 */
+    if (p->dying) { script_start(s, 8, boss_phases, boss_motions); disc_command(g, 6, true); }
+    ball_hits_object_simple(g, s, 8, 0, 0x30, 0x40);
+    if (!s->hits) {
+        d->dflags &= ~2;
+        script_start(s, 9, boss_phases, boss_motions);
+        disc_command(g, 6, true);
+    }
+    despawn_if_far(g, s);
+}
+
+static void obj_disc_init(sk_game *g, sk_slot *s, int x, int y) {              /* 0x115DBC */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->flags = (int16_t)(g->objs.marker_param & 1);
+    s->vx = 0; s->vy = 0;
+    const uint8_t *f = slot_res(g, 130);
+    if (!f) { free_object(g, s); return; }
+    frames_wh(g, s, 32, 22, f, 1);                                  /* sub_107B04 */
+    if (!(s->flags & 1)) { sk_draw *d = slot_draw_record(g, s); d->x = (int16_t)(d->x + 38); }
+}
+static void obj_disc_update(sk_game *g, sk_slot *s, int index) {              /* 0x115DFE */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    apply_velocity(s);
+    bool touch = true;
+    switch (aux_c(s)) {
+    case 1: d->dflags |= 4; touch = false; break;                   /* in the boss's hands, hidden */
+    case 2: {                                                       /* picked up: at his hands */
+        d->dflags &= ~4;
+        s->flags ^= 1;
+        sk_slot *boss = find_slot_by_type(g, 75);
+        sk_draw *bd = boss ? slot_draw_record(g, boss) : NULL;
+        if (bd) { d->x = (int16_t)(bd->x - 7 + ((s->flags & 1) ? 0 : 0x2C)); d->y = (int16_t)(bd->y - 10); }
+        set_aux_c(s, 4);
+        break;
+    }
+    case 3: s->flags |= 4; s->vx = 16; s->vy = 4; set_aux_c(s, 5);  /* thrown */
+        /* fall through */
+    case 5: {
+        int wrapped = 0;
+        step_animation(s, disc_script, 0, &wrapped);
+        if (probe_rows_below2(g, s, 16, 0) < 0) s->vy = (int16_t)-s->vy;   /* bounces off the floor */
+        break;
+    }
+    case 6: s->flags |= 4; d->dflags &= ~4; set_aux_c(s, 4); break;   /* dropped */
+    case 4: break;
+    default: if (!(g->frame_ticks & 3)) d->dflags ^= 4; break;      /* just spawned: blinks */
+    }
+    if (touch) touch_player(g, d->x, d->y, 0x20, 0x16);
+    if (object_offscreen(g, d->x, d->y, 0x40) < 0) free_object(g, s);
+}
+
+static void obj_puff_ctl_init(sk_game *g, sk_slot *s, int x, int y) {          /* 0x114882 (type 118) */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    const uint8_t *f = slot_res(g, 12);
+    if (!f) { free_object(g, s); return; }
+    frames_16x16(g, s, f, 1);
+    slot_draw_record(g, s)->dflags |= 4;
+}
+static void obj_puff_ctl_update(sk_game *g, sk_slot *s, int index) {           /* 0x1148A4 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!(aux_c(s) & 2)) {
+        if (!(aux_c(s) & 1)) { d->dflags |= 4; despawn_if_far(g, s); return; }
+        set_aux_c(s, aux_c(s) & ~1);
+        d->x = s->t0; d->y = s->t1;
+    }
+    set_aux_c(s, aux_c(s) | 2);
+    d->dflags &= ~4;
+    int wrapped = 0;
+    step_animation(s, puff_script, 0, &wrapped);
+    if (wrapped) { set_aux_c(s, aux_c(s) & ~2); d->dflags |= 4; }
+    despawn_if_far(g, s);
+}
+
+static void obj_burst_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x1148FA (type 117) */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    const uint8_t *f = slot_res(g, 13);
+    if (!f) { free_object(g, s); return; }
+    frames_wh(g, s, 32, 13, f, 1);                                  /* sub_107A5A */
+    slot_draw_record(g, s)->dflags &= ~4;
+}
+static void obj_burst_update(sk_game *g, sk_slot *s, int index) {              /* 0x11491C */
+    (void)index;
+    int wrapped = 0;
+    step_animation(s, burst_script, 0, &wrapped);
+    despawn_if_far(g, s);
+}
+
 void obj_london_install(void) {
+    object_init_table[75] = obj_boss_init;             object_update_table[75] = obj_boss_update;
+    object_init_table[87] = obj_disc_init;             object_update_table[87] = obj_disc_update;
+    object_init_table[117] = obj_burst_init;           object_update_table[117] = obj_burst_update;
+    object_init_table[118] = obj_puff_ctl_init;        object_update_table[118] = obj_puff_ctl_update;
     object_init_table[26] = obj_sinking_init;          object_update_table[26] = obj_sinking_update;
     object_init_table[61] = obj_stomper_init;          object_update_table[61] = obj_stomper_update;
     object_init_table[5] = obj_platform_init;          object_update_table[5] = obj_platform_update;

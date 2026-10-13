@@ -174,6 +174,15 @@ int probe_rows_below(const sk_game *g, const sk_slot *s, int dx, int dy) {   /* 
     return n;
 }
 
+int probe_rows_below2(const sk_game *g, const sk_slot *s, int dx, int dy) {   /* 0x10DA3A */
+    int r = probe_rows_below(g, s, dx, dy);
+    if (r < 0) return r;
+    const sk_draw *d = s->draw;
+    int x = d->x + dx, y = d->y + d->h - 1 + dy, n = 0;
+    for (int k = 0; k < 5 && !pixel(g, x, y + n + 1); k++) n++;
+    return n;
+}
+
 int ledge_distance(const sk_game *g, const sk_slot *s, int dx, int dy, int *signed_out) {   /* 0x10DD80 */
     const sk_draw *d = s->draw;
     int x = d->x + dx, y = d->y + d->h + dy;
