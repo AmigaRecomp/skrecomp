@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "check.h"
+#include "audio/sound.h"
 #include "fixture.h"
 #include "game/game.h"
 #include "game/player.h"
@@ -42,7 +43,8 @@ void test_death_counts_a_life_and_respawns(void) {
     CHECK_EQ(g_g.player.lives, 2); CHECK_EQ(g_g.player.state, 20); CHECK_EQ(g_g.player.anim, 0x1B);
     CHECK(rise > 10 && rise < 40);                               /* the bounce rises before the life is taken */
     CHECK(g_g.player.y < 12 * 16 - 41);
-    CHECK(g_g.music_requested); CHECK_EQ(g_g.music_request, 0);  /* the level tune restarts */
+    CHECK(g_g.music_requested); CHECK_EQ(g_g.music_module, SK_MUSIC_JINGLE); CHECK_EQ(g_g.music_request, 0);   /* the life-lost jingle */
+    CHECK_EQ(g_g.jingle_loads, 1);                                  /* sub_1037C4 copied the jingle module out */
     for (int i = 0; i < 130 && g_g.player.state == 20; i++) frames(1, 0);
     CHECK_EQ(g_g.player.state, 0); CHECK_EQ(g_g.player.x, 3 * 16); CHECK_EQ(g_g.player.health, 2);   /* init_player ran */
     CHECK_EQ(g_g.timer_flags & 0x80, 0);
@@ -56,7 +58,7 @@ void test_death_with_no_lives_left_is_game_over(void) {
     hurt_player(&g_g);
     for (int i = 0; i < 130 && g_g.player.state == 20; i++) frames(1, 0);
     CHECK_EQ(g_g.player.lives, -1); CHECK_EQ(g_g.player.state, 64); CHECK_EQ(g_g.player.controllable, 0);
-    CHECK(g_g.jingle_requested); CHECK_EQ(g_g.jingle, 1); CHECK_EQ(g_g.music_request, 3);
+    CHECK(g_g.jingle_requested); CHECK_EQ(g_g.jingle, 1); CHECK_EQ(g_g.music_module, SK_MUSIC_JINGLE); CHECK_EQ(g_g.music_request, 3);
     frames(1, 0); CHECK_EQ(g_g.player.state, 64); CHECK_EQ(g_g.player.controllable, 0);
     drop_game();
 }

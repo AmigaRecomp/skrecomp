@@ -283,7 +283,7 @@ static const uint8_t puff_script[] = { 0, 6, 0, 3, 0, 1, 2, 3, 4, 5 };          
 static const uint8_t burst_script[] = { 0, 11, 0, 2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0 };  /* 0x114932 */
 
 static const uint8_t *slot_res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
-static void music_slot(sk_game *g, int slot) { g->music_requested = true; g->music_request = -10 - slot; }   /* sub_103770: hook */
+static void music_slot(sk_game *g, int slot) { game_music_slot(g, slot); }   /* sub_103770 */
 
 static void obj_boss_init(sk_game *g, sk_slot *s, int x, int y) {              /* 0x115A10 */
     init_object_slot(g, s, x - 16, y - 55, s->type4);

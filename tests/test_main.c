@@ -255,6 +255,7 @@ void test_music_requests_start_on_the_next_frame(void);
 void test_music_slot_swaps_once(void);
 void test_fade_keeps_the_music_playing(void);
 void test_level_music_and_effects_load(void);
+void test_kick_off_plays_the_jingle_then_the_level_tune(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -507,6 +508,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "music_slot_swaps_once", test_music_slot_swaps_once },
     { "fade_keeps_the_music_playing", test_fade_keeps_the_music_playing },
     { "level_music_and_effects_load", test_level_music_and_effects_load },
+    { "kick_off_plays_the_jingle_then_the_level_tune", test_kick_off_plays_the_jingle_then_the_level_tune },
 };
 
 int main(int argc, char **argv) {

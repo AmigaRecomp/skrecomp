@@ -299,7 +299,8 @@ set(SK_TEST_NAMES
   music_requests_start_on_the_next_frame
   music_slot_swaps_once
   fade_keeps_the_music_playing
-  level_music_and_effects_load)
+  level_music_and_effects_load
+  kick_off_plays_the_jingle_then_the_level_tune)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

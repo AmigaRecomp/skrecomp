@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "check.h"
+#include "audio/sound.h"
 #include "fixture.h"
 #include "core/disks.h"
 #include "core/hunk.h"
@@ -266,5 +267,20 @@ void test_flash_does_not_leak(void) {                           /* 5c Review Foc
     free_object(&g_g, a);
     sk_slot *b = spawn(200, 60, 12, 0x55);
     CHECK(b->draw == d); CHECK_EQ(b->draw->dflags & 2, 0);
+    drop_game();
+}
+
+void test_kick_off_plays_the_jingle_then_the_level_tune(void) {   /* the banner (type 105) 0x111BEA, 0x111C7E */
+    CHECK(make_game(true));
+    g_g.music_requested = false; g_g.jingle_loads = 0; g_g.death_flags = 0; g_g.game_flags = 0;
+    spawn_jingle(&g_g, 0);                                           /* KICK OFF (init_player's; the fixture reset the objects) */
+    int i = 0;
+    while (!g_g.music_requested && i++ < 400) tick(1);
+    CHECK_EQ(g_g.music_module, SK_MUSIC_JINGLE); CHECK_EQ(g_g.music_request, 1); CHECK_EQ(g_g.jingle_loads, 1);
+    g_g.music_requested = false;
+    i = 0;
+    while (!g_g.music_requested && i++ < 400) tick(1);
+    CHECK_EQ(g_g.music_module, SK_MUSIC_LEVEL); CHECK_EQ(g_g.music_request, 0);
+    CHECK_EQ(g_g.jingle_frees, 1);
     drop_game();
 }

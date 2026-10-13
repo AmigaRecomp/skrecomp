@@ -1,5 +1,6 @@
 /* The player: init_player (0x10BC28), player_input_state (0x10A576) and the movement chain it runs.
    Each function is the routine of the same name in re/symbols/sk.sym; see re/docs/notes/player.md. */
+#include "audio/sound.h"
 #include <stddef.h>
 #include <string.h>
 #include "game/camera.h"
@@ -7,7 +8,14 @@
 #include "game/game.h"
 #include "game/obj_england.h"
 
-void play_sfx(sk_game *g, int n) { g->sfx_last = n; g->sfx_count++; }
+void play_sfx(sk_game *g, int n) { g->sfx_last = n; g->sfx_count++; if (g->snd) sound_play_sfx(g->snd, n); }
+void game_music(sk_game *g, int module, int tune) {
+    g->music_requested = true; g->music_module = module; g->music_request = tune;
+    if (g->snd) sound_music(g->snd, module, tune);
+}
+void game_music_slot(sk_game *g, int slot) { g->music_slot_last = slot; if (g->snd) sound_music_slot(g->snd, slot); }
+void game_jingle_load(sk_game *g) { g->jingle_loads++; if (g->snd) sound_jingle_load(g->snd); }
+void game_jingle_free(sk_game *g) { g->jingle_frees++; if (g->snd) sound_jingle_free(g->snd); }
 
 static int airborne(const sk_player *p) { return p->jumping || p->falling; }   /* tst.w $8(a6) */
 

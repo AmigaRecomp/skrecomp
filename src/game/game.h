@@ -71,7 +71,9 @@ struct sk_game {
     uint8_t hud_redraw;                 /* bit 0 health, 1 lives, 2 score, 3 cards (0x300350..3) */
     int sfx_last, sfx_count;            /* play_sfx hook */
     bool jingle_requested; int jingle;  /* spawn_jingle hook */
-    bool music_requested; int music_request;   /* music_request hook (tune number) */
+    bool music_requested; int music_module, music_request;   /* the last music request: SK_MUSIC_LEVEL / SK_MUSIC_JINGLE, the tune */
+    int music_slot_last, jingle_loads, jingle_frees;   /* for the tests */
+    struct sk_sound *snd;               /* the sound driver; NULL plays nothing (tests) */
     uint8_t kill_kind;                  /* 0x30037F: 1 pick-up kick, 2 volley, 3 overhead (kill statistics) */
     uint8_t kills[4];                   /* 0x300373 / 0x300375 / 0x300374 by kill_kind 1..3 */
     uint32_t score_value;               /* 0x300050: the score the type-113 popup shows */
@@ -122,6 +124,10 @@ struct sk_game {
     void (*step_probe)(sk_game *, int step);
 };
 
-void play_sfx(sk_game *g, int n);
+void play_sfx(sk_game *g, int n);                   /* play_sfx 0x102140 */
+void game_music(sk_game *g, int module, int tune);  /* music_request 0x100F80 */
+void game_music_slot(sk_game *g, int slot);         /* sub_103770 */
+void game_jingle_load(sk_game *g);                  /* sub_1037C4 */
+void game_jingle_free(sk_game *g);                  /* 0x111C90 */
 
 #endif

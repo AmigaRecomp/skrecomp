@@ -1,4 +1,5 @@
 /* dispatch_player_state (0x10A672) and the 19 entries of player_state_table (0x10A676); player.md "States". */
+#include "audio/sound.h"
 #include "game/game.h"
 #include "game/obj_england.h"
 
@@ -19,12 +20,11 @@ static void player_state_death(sk_game *g) {                     /* 0x10BB28 */
     int d0 = (int8_t)((uint16_t)p->timer >> 8);                 /* the word's high byte: an 8.8 bounce speed */
     if (d0 < 0 && !(g->death_flags & 1)) {
         g->death_flags |= 1;
-        if (!g->game_flags) play_sfx(g, -1);                    /* the death sample (sub_1037C4) */
+        if (!g->game_flags) game_jingle_load(g);                /* sub_1037C4: the jingle module */
         g->hud_redraw |= 2;
         p->lives--;
-        g->music_requested = true;
-        if (p->lives < 0) { g->music_request = 3; spawn_jingle(g, 1); }
-        else g->music_request = 0;
+        if (p->lives < 0) { game_music(g, SK_MUSIC_JINGLE, 3); spawn_jingle(g, 1); }   /* game over */
+        else game_music(g, SK_MUSIC_JINGLE, 0);                     /* a life lost */
     }
     p->anim = 0x1B;
     p->y = (int16_t)(p->y - d0);

@@ -3,6 +3,7 @@
    byte +0xD aux_d; byte-wide stores to +0x14 / +0x16 are kept in t0 / t1. Frames come from the level's resource
    slots (slot_table); a type whose slot is missing frees itself in its init. */
 #include <string.h>
+#include "audio/sound.h"
 #include "game/game.h"
 #include "game/attr_england.h"
 #include "game/obj_england.h"
@@ -414,16 +415,17 @@ static void obj_jingle_update(sk_game *g, sk_slot *s, int index) {             /
         if (--s->t0 == 0) { s->t0 = 75; set_aux_c(s, aux_c(s) + 1); }
         return;
     case 1:                                                         /* slide in; the jingle tune with KICK OFF */
-        if (s->t1 == 0 && !(g->death_flags & 2)) {
+        if (s->t1 == 0 && !(g->death_flags & 2)) {                  /* 0x111BEA */
             g->death_flags |= 2;
-            if (g->death_flags & 1) g->death_flags &= ~1;
-            if (!g->game_flags) { g->music_requested = true; g->music_request = -1; }   /* the jingle module (audio: hook) */
+            bool died = g->death_flags & 1;                         /* the jingle module is loaded already */
+            g->death_flags &= ~1;
+            if (!g->game_flags) { if (!died) game_jingle_load(g); game_music(g, SK_MUSIC_JINGLE, 1); }
         }
         s->x0 = (int16_t)(s->x0 + s->vx);
         if (s->x0 >= 0x48) set_aux_c(s, 2);
         return;
     case 3:
-        if ((g->death_flags & 2) && (g->death_flags &= ~2, !g->game_flags)) { g->music_requested = true; g->music_request = 0; }
+        if ((g->death_flags & 2) && (g->death_flags &= ~2, !g->game_flags)) { game_jingle_free(g); game_music(g, SK_MUSIC_LEVEL, 0); }   /* 0x111C7E */
         if (s->t1 == 1) { g->curtain_flags |= 0x10; return; }      /* GAME OVER: the level ends */
         if (s->t1 == 2) { g->level_number = g->fulltime_level; g->level_outcome = 0x81; g->curtain_flags |= 0x10; return; }
         if (s->t1 != 0) { g->curtain_flags |= 0x10; return; }

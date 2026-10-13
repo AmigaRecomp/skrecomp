@@ -711,7 +711,7 @@ static void obj_blob_update(sk_game *g, sk_slot *s, int index) {              /*
 
 /* ---- type 51: RIVIERA2's boss (slot 69) and its arena: the wipe (96), the spirit (93), the lift (95),
    the shots (94) and the suction column (92) ---- */
-static void music_slot(sk_game *g, int slot) { g->music_requested = true; g->music_request = -10 - slot; }   /* sub_103770: hook */
+static void music_slot(sk_game *g, int slot) { game_music_slot(g, slot); }   /* sub_103770 */
 static bool once_bit(sk_slot *s, int bit) {                         /* bset.b #bit,aux.lo; bne */
     if (aux_c(s) & (1 << bit)) return false;
     set_aux_c(s, aux_c(s) | (1 << bit));
