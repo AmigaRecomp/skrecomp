@@ -6,6 +6,7 @@
 #include "game/attr_england.h"
 #include "game/attrs.h"
 #include "game/game.h"
+#include "game/hud.h"
 #include "game/obj_helpers.h"
 #include "game/player.h"
 #include "game/resources.h"
@@ -200,6 +201,7 @@ void message_box_tick(sk_game *g) {                              /* 0x11C66E */
     if (g->message_shown[k]) return;
     g->message_shown[k] = 1;
     g->message_box_shown_kind = k;
+    message_box_build(g, k);                                        /* the table at 0x200DA4: kind k shows message k */
     play_sfx(g, 10);
     g->message_wait = 1;                                            /* 0x3001DE = 150: step 31 holds the game until fire */
     g->message_box_timer = 250;

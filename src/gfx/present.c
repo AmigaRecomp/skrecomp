@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "gfx/present.h"
+#include "game/hud.h"
 #include "gfx/display_model.h"
 
 static inline uint32_t resolve(const sk_palette *pal, uint8_t v, uint32_t c17, uint32_t c18, int has_sky) {
@@ -35,7 +36,8 @@ void present_rows(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky,
     }
 }
 
-void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky, const sk_sprite_layer *spr, int curtain_rows, uint32_t *out) {
+void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky, const sk_sprite_layer *spr, int curtain_rows,
+                    const struct sk_hud *hud, uint32_t *out) {
     for (size_t i = 0; i < (size_t)SK_SCREEN_W * SK_SCREEN_H; i++) out[i] = pal->xrgb[0];
     static uint32_t window[SK_VIEW_W * SK_VIEW_H];
     present_rows(fb, pal, sky, SK_VIEW_X, 0, SK_VIEW_W, SK_VIEW_H, window);
@@ -63,4 +65,10 @@ void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky, c
         const uint32_t *src = window + (size_t)y * SK_VIEW_W;
         for (int x = 0; x < SK_VIEW_W; x++) dst[x] = src[x];
     }
+    if (!hud) return;
+    uint32_t colours[16];
+    for (int i = 0; i < 16; i++) colours[i] = i ? rgb12_to_xrgb(hud->palette12[i]) : pal->xrgb[0];
+    for (int y = 0; y < SK_HUD_H; y++)
+        for (int x = 0; x < SK_SCREEN_W; x++)                     /* DDFSTRT 0x30: panel pixel x + 16 shows at frame x (as the play area) */
+            out[(size_t)(SK_HUD_Y + y) * SK_SCREEN_W + x] = colours[hud_pixel(hud, x + SK_HUD_FETCH_X, y)];
 }

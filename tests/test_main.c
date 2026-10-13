@@ -147,6 +147,14 @@ void test_bump_block_falls_and_is_restored(void);
 void test_message_sign_raises_the_box_once(void);
 void test_butterflies_rise_from_a_hit_bush(void);
 void test_ball_target_counts_hits(void);
+void test_hud_lives_draw_without_a_leading_zero(void);
+void test_hud_score_draws_seven_digits(void);
+void test_hud_digits_wrap(void);
+void test_hud_timer_draws_in_three_planes(void);
+void test_hud_health_icons(void);
+void test_hud_card_slots_and_collect(void);
+void test_message_box_draws_the_text(void);
+void test_hud_palette_is_the_game_palette(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -291,6 +299,14 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "message_sign_raises_the_box_once", test_message_sign_raises_the_box_once },
     { "butterflies_rise_from_a_hit_bush", test_butterflies_rise_from_a_hit_bush },
     { "ball_target_counts_hits", test_ball_target_counts_hits },
+    { "hud_lives_draw_without_a_leading_zero", test_hud_lives_draw_without_a_leading_zero },
+    { "hud_score_draws_seven_digits", test_hud_score_draws_seven_digits },
+    { "hud_digits_wrap", test_hud_digits_wrap },
+    { "hud_timer_draws_in_three_planes", test_hud_timer_draws_in_three_planes },
+    { "hud_health_icons", test_hud_health_icons },
+    { "hud_card_slots_and_collect", test_hud_card_slots_and_collect },
+    { "message_box_draws_the_text", test_message_box_draws_the_text },
+    { "hud_palette_is_the_game_palette", test_hud_palette_is_the_game_palette },
 };
 
 int main(int argc, char **argv) {

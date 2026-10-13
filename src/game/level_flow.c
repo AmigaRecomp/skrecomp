@@ -42,6 +42,8 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     memset(g->message_shown, 0, sizeof g->message_shown);
     g->message_box_timer = 0; g->message_box_request = 0; g->message_wait = 0;
     g->bump_restores = 0; g->flush_count = 0; g->bump_tile = -1; g->hud_card_flag = 0;   /* 0x104878 */
+    g->msg_visible = 0; g->msg_w = 0;
+    memset(g->card_anim, 0, sizeof g->card_anim);
     g->untouchable = false;
     if (g->world.live) world_free(&g->world);
     if (!world_build(&g->world, lv)) return false;
@@ -68,6 +70,7 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     g->curtain_top = g->curtain_bottom = 100;
     g->level_end = false;
     g->view.full_redraw = true;
+    hud_init(g);                                                 /* 0x10372E: clear and draw the panel */
     return true;
 }
 
@@ -136,7 +139,9 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     if (g->message_wait) {                                       /* step 31 (sub_11C816): the game waits for fire */
         g->input_state = input;
         if (!(input & SK_IN_FIRE)) return;
-        g->message_wait = 0;
+        g->message_wait = 0;                                     /* sub_11C89E: the box goes, its flag clears */
+        g->msg_visible = 0;
+        g->message_shown[g->message_box_shown_kind & 7] = 0;
     }
     g->frame_counter++;                                          /* the VBL's work */
     timer_tick(g);
@@ -158,7 +163,7 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     step(g, 15); edge_scan_rows(g);
     step(g, 16); edge_scan_columns(g);
     step(g, 21);                                                 /* draw_all_objects: the app draws after the step */
-    step(g, 24);                                                 /* hud_update: 5b */
+    step(g, 24); hud_update(g);
     step(g, 25);                                                 /* update_ball: 5b */
     step(g, 26); player_input_state(g);
     step(g, 27); update_objects(g);

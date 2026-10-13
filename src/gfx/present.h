@@ -21,6 +21,9 @@ void present_rows(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky,
    (SK_PLAY_X, SK_PLAY_Y); the HUD area is left colour 0 by the engine core. spr (may be NULL): the hardware
    sprites, each over playfield 2 and in front of playfield 1 only when its in_front flag is set; curtain_rows play rows
    at the top and the bottom are colour 0 (run_curtain). */
-void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky, const sk_sprite_layer *spr, int curtain_rows, uint32_t *out);
+struct sk_hud;
+/* hud (may be NULL): the 320 x 25 panel at line SK_HUD_Y through its own 16 colours. */
+void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky, const sk_sprite_layer *spr, int curtain_rows,
+                    const struct sk_hud *hud, uint32_t *out);
 
 #endif

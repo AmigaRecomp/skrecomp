@@ -114,12 +114,18 @@ void play_draw(sk_play *p) {
     if (p->scene.backdrop) scene_draw_backdrop(lv, fb, bg_x, bg_y);
     scene_draw_tiles(lv, fb, p->game.world.tile, p->game.camera_x, p->game.camera_y);
     draw_all_objects(&p->game, fb, p->game.camera_x + SK_BUFFER_WORLD_X, p->game.camera_y);
+    const sk_game *g = &p->game;
+    if (g->msg_visible && g->msg_w > 0) {                        /* the message box: centred on the view (show_message_box) */
+        int plane = g->msg_w / 8 * g->msg_h;
+        sk_frame fr = { g->msg_w, g->msg_h, g->msg_w / 8, { g->msg_bits, g->msg_bits + plane, g->msg_bits + 2 * plane, g->msg_bits + 3 * plane }, g->msg_bits + 4 * plane };
+        fb_blit_bob(fb, &fr, 160 - g->msg_w / 2 - SK_BUFFER_WORLD_X, 100 - g->msg_h / 2, SK_GROUP_TILES_A);
+    }
 }
 
 void play_present(sk_play *p, uint32_t *out) {
     sk_sky sky;
     scene_sky(&p->scene.level, p->game.view.bg_y, &sky);
-    present_screen(&p->scene.fb, &p->scene.palette, &sky, &p->sprites, curtain_rows(&p->game), out);
+    present_screen(&p->scene.fb, &p->scene.palette, &sky, &p->sprites, curtain_rows(&p->game), &p->game.hud, out);
 }
 
 void play_close(sk_play *p) {

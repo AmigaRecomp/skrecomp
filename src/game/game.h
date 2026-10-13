@@ -11,6 +11,7 @@
 #include "game/input.h"
 #include "game/attrs.h"
 #include "game/ball.h"
+#include "game/hud.h"
 #include "game/objects.h"
 #include "game/player.h"
 #include "game/world.h"
@@ -93,6 +94,13 @@ struct sk_game {
     int flush_list[16], flush_count;    /* 0x302856 / 0x30022A (attribute 24) */
     int bump_tile;                      /* the tile copied into bump_bob (0x427CFC) */
     uint8_t bump_bob[0xA0];             /* 0x427CFE: 16 x 16, four planes and a full mask */
+    sk_hud hud;                         /* the panel (hud_bitmap_ptr) */
+    int cards, cards_taken;             /* 0x3001E6, 0x300370 */
+    uint8_t all_cards;                  /* 0x3001E9 */
+    int card_anim[11];                  /* 0x301AE8 */
+    uint8_t msg_bits[256 * 72 / 8 * 5]; /* 0x300030: the message box bob */
+    int msg_w, msg_h;
+    uint8_t msg_visible;
     int8_t kick_result;                 /* 0x300338 */
     int32_t trick8_bias;                /* 0x30029C */
     int throw_x, throw_y;               /* 0x3002E4/E6: where the recalled ball appears */

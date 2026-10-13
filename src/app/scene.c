@@ -206,7 +206,7 @@ void scene_present(const sk_scene *s, uint32_t *out) {
     scene_backdrop_pos(&s->level, s->cam_x, s->cam_y, &bg_x, &bg_y);
     sk_sky sky;
     scene_sky(&s->level, bg_y, &sky);
-    present_screen(&s->fb, &s->palette, &sky, NULL, 0, out);
+    present_screen(&s->fb, &s->palette, &sky, NULL, 0, NULL, out);
 }
 
 void scene_close(sk_scene *s) {

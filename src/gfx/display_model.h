@@ -17,6 +17,7 @@
 #define SK_PLAY_Y 0
 #define SK_HUD_Y 201            /* lines 245..269: a 320x25 four-plane panel (VERIFIED) */
 #define SK_HUD_H 25
+#define SK_HUD_FETCH_X 0         /* panel pixel 0 at frame x 0 (DIW 129..448): READING, the panel keeps 8 px margins on both sides this way */
 #define SK_GROUP_TILES_A 0      /* foreground = playfield 1 = low nibble (VERIFIED) */
 #define SK_GROUP_TILES_B 1      /* backdrop = playfield 2 = high nibble (VERIFIED) */
 #define SK_GROUP_BOB 0          /* object flag bit 6 clear; set -> group 1 (VERIFIED, sprites.md) */

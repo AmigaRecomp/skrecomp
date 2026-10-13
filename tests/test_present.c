@@ -75,7 +75,7 @@ void test_present_screen_places_the_play_window(void) {
     fb_clear(&fb, 0x01);                           /* everything playfield-1 colour 1 */
     uint32_t *out = calloc(SK_SCREEN_W * SK_SCREEN_H, sizeof *out);
     memset(out, 0x55, SK_SCREEN_W * SK_SCREEN_H * sizeof *out);
-    present_screen(&fb, &p, &none, NULL, 0, out);
+    present_screen(&fb, &p, &none, NULL, 0, NULL, out);
     CHECK_EQ(out[0], 0);                                                   /* left border */
     CHECK_EQ(out[SK_PLAY_X - 1], 0);
     CHECK_EQ(out[SK_PLAY_X], 0xFF0000);                                    /* first play pixel */
@@ -101,14 +101,14 @@ void test_present_sprite_priority(void) {
     L.spr[0].px[0] = 5; L.spr[0].px[1] = 5;                     /* covers window x 10 and 11 */
     static uint32_t out[SK_SCREEN_W * SK_SCREEN_H];
     sk_sky none = { NULL, 0, 0, NULL, 0, 0 };
-    present_screen(&fb, &pal, &none, &L, 0, out);
+    present_screen(&fb, &pal, &none, &L, 0, NULL, out);
     CHECK_EQ(out[SK_PLAY_X + 10], pal.xrgb[3]);                  /* behind playfield 1 */
     CHECK_EQ(out[SK_PLAY_X + 11], pal.xrgb[48 + 5]);             /* over playfield 2 */
     L.spr[0].in_front = true;
-    present_screen(&fb, &pal, &none, &L, 0, out);
+    present_screen(&fb, &pal, &none, &L, 0, NULL, out);
     CHECK_EQ(out[SK_PLAY_X + 10], pal.xrgb[48 + 5]);
     L.spr[0].x = SK_VIEW_X - 63; L.spr[0].y = SK_VIEW_H - 1;     /* clipped at the edges: no crash */
-    present_screen(&fb, &pal, &none, &L, 0, out);
+    present_screen(&fb, &pal, &none, &L, 0, NULL, out);
     CHECK_EQ(out[SK_PLAY_X + 0 + (SK_PLAY_Y + SK_VIEW_H - 1) * SK_SCREEN_W], pal.xrgb[SK_PF2_COLOUR_BASE]);   /* only transparent pixels reach the window */
     fb_free(&fb);
 }
@@ -120,7 +120,7 @@ void test_present_curtain_blacks_rows(void) {
     pal.xrgb[1] = 0xABCDEF;
     static uint32_t out[SK_SCREEN_W * SK_SCREEN_H];
     sk_sky none = { NULL, 0, 0, NULL, 0, 0 };
-    present_screen(&fb, &pal, &none, NULL, 10, out);
+    present_screen(&fb, &pal, &none, NULL, 10, NULL, out);
     CHECK_EQ(out[(SK_PLAY_Y + 9) * SK_SCREEN_W + SK_PLAY_X + 5], 0);                   /* hidden top row */
     CHECK_EQ(out[(SK_PLAY_Y + 10) * SK_SCREEN_W + SK_PLAY_X + 5], 0xABCDEF);          /* first visible row */
     CHECK_EQ(out[(SK_PLAY_Y + SK_VIEW_H - 10) * SK_SCREEN_W + SK_PLAY_X + 5], 0);      /* hidden bottom row */

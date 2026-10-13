@@ -33,7 +33,8 @@ add_executable(sk_tests
   test_tricks.c
   test_obj_helpers.c
   test_obj_england.c
-  test_attr_england.c)
+  test_attr_england.c
+  test_hud.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -181,7 +182,15 @@ set(SK_TEST_NAMES
   bump_block_falls_and_is_restored
   message_sign_raises_the_box_once
   butterflies_rise_from_a_hit_bush
-  ball_target_counts_hits)
+  ball_target_counts_hits
+  hud_lives_draw_without_a_leading_zero
+  hud_score_draws_seven_digits
+  hud_digits_wrap
+  hud_timer_draws_in_three_planes
+  hud_health_icons
+  hud_card_slots_and_collect
+  message_box_draws_the_text
+  hud_palette_is_the_game_palette)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
