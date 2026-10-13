@@ -91,6 +91,11 @@ void test_exit_attribute_starts_the_exit_walk(void);
 void test_checkpoint_moves_the_respawn_and_fires_once(void);
 void test_layer_switch_changes_the_priority_word(void);
 void test_tile_queue_kinds_step_as_the_table_says(void);
+void test_frame_step_runs_the_steps_in_the_notes_order(void);
+void test_timer_counts_down_in_bcd_and_times_out(void);
+void test_curtain_opens_and_closes(void);
+void test_play_level_next_skips_non_tile_levels(void);
+void test_level_setup_and_outcome(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -179,6 +184,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "checkpoint_moves_the_respawn_and_fires_once", test_checkpoint_moves_the_respawn_and_fires_once },
     { "layer_switch_changes_the_priority_word", test_layer_switch_changes_the_priority_word },
     { "tile_queue_kinds_step_as_the_table_says", test_tile_queue_kinds_step_as_the_table_says },
+    { "frame_step_runs_the_steps_in_the_notes_order", test_frame_step_runs_the_steps_in_the_notes_order },
+    { "timer_counts_down_in_bcd_and_times_out", test_timer_counts_down_in_bcd_and_times_out },
+    { "curtain_opens_and_closes", test_curtain_opens_and_closes },
+    { "play_level_next_skips_non_tile_levels", test_play_level_next_skips_non_tile_levels },
+    { "level_setup_and_outcome", test_level_setup_and_outcome },
 };
 
 int main(int argc, char **argv) {

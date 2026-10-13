@@ -65,6 +65,7 @@ struct sk_game {
     uint8_t game_flags;                 /* 0x30034C */
     uint8_t curtain_flags;              /* 0x300212 */
     int curtain_step;                   /* 0x30020A */
+    int curtain_top, curtain_bottom;    /* play-area rows hidden by the DIW words */
     bool level_end;                     /* 0x300214 */
     int level_number, level_data_index; /* 0x30022E, 0x300230 */
     uint8_t hud_redraw;                 /* bit 0 health, 1 lives, 2 score, 3 cards (0x300350..3) */

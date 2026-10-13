@@ -25,7 +25,8 @@ add_executable(sk_tests
   test_player_states.c
   test_objects.c
   test_camera.c
-  test_attrs.c)
+  test_attrs.c
+  test_level_flow.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -117,7 +118,12 @@ set(SK_TEST_NAMES
   exit_attribute_starts_the_exit_walk
   checkpoint_moves_the_respawn_and_fires_once
   layer_switch_changes_the_priority_word
-  tile_queue_kinds_step_as_the_table_says)
+  tile_queue_kinds_step_as_the_table_says
+  frame_step_runs_the_steps_in_the_notes_order
+  timer_counts_down_in_bcd_and_times_out
+  curtain_opens_and_closes
+  play_level_next_skips_non_tile_levels
+  level_setup_and_outcome)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

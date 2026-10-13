@@ -1,0 +1,172 @@
+#include <string.h>
+#include "game/attrs.h"
+#include "game/camera.h"
+#include "game/game.h"
+#include "game/level_flow.h"
+#include "game/objects.h"
+#include "game/player.h"
+
+#define TIMER_RATE 0x5DC                /* frames per timer unit (0x10066C) */
+#define DIW_PLAY_TOP 0x2D               /* the open window's first line (DIWSTRT 0x2D91) */
+#define DIW_PLAY_BOTTOM 0xF5            /* the play area's last line + 1 (DIWSTOP 0xF5B1 at the close request) */
+#define DIW_CLOSED 0x91                 /* both edges meet here when closed */
+
+static void step(sk_game *g, int n) { if (g->step_probe) g->step_probe(g, n); }
+
+void game_new_game(sk_game *g) {                                /* 0x10402E and the score clears */
+    g->player.lives = 3;
+    g->player.score = 0;
+    g->level_number = 1;
+}
+
+static void level_record_head(const sk_game *g, int data_index, uint32_t *timer, uint8_t *layer, int *kit) {
+    *timer = 0x45; *layer = 0; *kit = 0;                        /* England's values when no image is loaded */
+    if (!g->sk) return;
+    uint32_t a = SK_LEVEL_RECORDS_ADDR + (uint32_t)data_index * SK_LEVEL_RECORD;
+    *timer = image_u16(g->sk, a);
+    *layer = image_u8(g->sk, a + 3);
+    *kit = image_u8(g->sk, a + 4);
+}
+
+bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* setup_level + load_level's gameplay part */
+    g->level_outcome = 0;
+    /* reset_level_state (0x1047F8) */
+    memset(&g->ball, 0, sizeof g->ball);
+    g->frame_ticks = 0;
+    g->push_x = 0; g->shake_amplitude = 0; g->powerup_timer = 0; g->scroll_mode = 0; g->cam_ease = 4;
+    g->death_flags = 0;                                          /* free_level_data clears it (0x10374C) */
+    g->untouchable = false;
+    if (g->world.live) world_free(&g->world);
+    if (!world_build(&g->world, lv)) return false;
+    objects_reset(g);
+    attrs_reset(g);
+    uint32_t timer; uint8_t layer; int kit;
+    level_record_head(g, data_index, &timer, &layer, &kit);
+    g->level_data_index = data_index;
+    g->layer_flags_record = layer;
+    g->kit = g->kit_current = kit;
+    g->mask.built = false; g->mask.dirty = true;
+    g->camera_x = g->camera_y = g->camera_y_raw = 0;
+    g->scan_col_left = g->scan_row_left = 0;
+    g->scrolled_right = g->scrolled_down = false;
+    init_player(g);
+    g->player.top_speed = 16;                                    /* move.w #$10, player (0x104188) */
+    g->timer_tick = 0;
+    g->timer_rate = TIMER_RATE;
+    g->level_timer = timer;
+    g->timer_flags |= 0x80;                                      /* ruling: the jingle object starts it in the original */
+    g->timeout_armed = false;
+    g->curtain_flags = 4;                                        /* open request */
+    g->curtain_step = 0x62;
+    g->curtain_top = g->curtain_bottom = 100;
+    g->level_end = false;
+    g->view.full_redraw = true;
+    return true;
+}
+
+void game_close(sk_game *g) { if (g->world.live) world_free(&g->world); }
+
+static uint16_t bcd_sub1(uint16_t w) {                           /* sbcd over the two low bytes */
+    for (int i = 0; i < 4; i++) {
+        unsigned d = w >> (4 * i) & 15;
+        if (d) { w = (uint16_t)(w - (1u << (4 * i))); return w; }
+        w = (uint16_t)(w | 9u << (4 * i));                       /* borrow: this digit becomes 9 */
+    }
+    return w;
+}
+
+void timer_tick(sk_game *g) {                                   /* vbl_interrupt 0x100D60 */
+    if (!(g->timer_flags & 0x80)) return;
+    if (++g->timer_tick < g->timer_rate) return;
+    g->timer_tick = 0;
+    if (g->level_timer == 0) {
+        g->timer_flags &= (uint8_t)~0x80;
+        g->timeout_armed = true;                                 /* ruling: 0x30038F is armed by a frontend routine */
+        return;
+    }
+    g->level_timer = (g->level_timer & 0xFFFF0000u) | bcd_sub1((uint16_t)g->level_timer);
+    g->timer_flags |= 1;
+}
+
+void timeout_check(sk_game *g) {                                /* sub_11EF7C */
+    if (g->level_timer != 0) return;
+    g->player.state = 68;
+    g->jingle_requested = true; g->jingle = 2;
+    g->timer_rate = TIMER_RATE;
+    g->timeout_armed = false;
+}
+
+void run_curtain(sk_game *g) {                                  /* 0x10471A */
+    if (!g->curtain_flags) return;
+    if (g->curtain_flags & 4) {                                  /* open request: start closed, then open */
+        g->curtain_flags &= (uint8_t)~4;
+        g->curtain_step = 0x62;
+        g->curtain_top = g->curtain_bottom = DIW_CLOSED - DIW_PLAY_TOP;   /* 100 */
+        g->curtain_flags |= 2;
+    }
+    if (g->curtain_flags & 8) { g->curtain_flags &= (uint8_t)~8; g->curtain_top = g->curtain_bottom = 0; }
+    if (g->curtain_flags & 1) {                                  /* closing */
+        if (g->curtain_step >= 0x64) g->level_end = true;
+        g->curtain_step += 2;
+        g->curtain_top += 2; g->curtain_bottom += 2;
+        return;
+    }
+    if (g->curtain_flags & 0x10) {                               /* close request */
+        g->curtain_flags &= (uint8_t)~0x10;
+        g->curtain_flags |= 1;
+        g->curtain_step = 2;
+        g->curtain_bottom = 0;
+    }
+    if (g->curtain_flags & 2) {                                  /* opening */
+        if (g->curtain_step <= 2) { g->curtain_flags &= (uint8_t)~2; g->curtain_flags |= 8; }
+        g->curtain_step -= 2;
+        g->curtain_top -= 2; g->curtain_bottom -= 2;
+    }
+}
+
+int curtain_rows(const sk_game *g) { return g->curtain_top > 0 ? g->curtain_top : 0; }
+
+void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
+    g->frame_counter++;                                          /* the VBL's work */
+    timer_tick(g);
+    g->input_state = input;
+    step(g, 1); g->frame_ticks++;
+    step(g, 2);
+    if (g->powerup_timer && --g->powerup_timer == 0) g->player.powerup = 0;
+    step(g, 3);
+    if (g->shake_amplitude && g->scroll_mode != 2 && (g->frame_ticks & 3) == 0) {
+        g->shake_amplitude = -g->shake_amplitude;
+        if (g->shake_amplitude > 0) g->shake_amplitude--;
+    }
+    step(g, 8); if (g->timeout_armed) timeout_check(g);
+    objects_flush_deferred(g);                                   /* step 9's place: records freed last frame */
+    step(g, 10); update_camera(g);
+    step(g, 11); update_player(g, kid);
+    step(g, 13);                                                 /* message_box_tick: 5b */
+    step(g, 14); process_tile_queue(g);
+    step(g, 15); edge_scan_rows(g);
+    step(g, 16); edge_scan_columns(g);
+    step(g, 21);                                                 /* draw_all_objects: the app draws after the step */
+    step(g, 24);                                                 /* hud_update: 5b */
+    step(g, 25);                                                 /* update_ball: 5b */
+    step(g, 26); player_input_state(g);
+    step(g, 27); update_objects(g);
+    step(g, 29); run_curtain(g);
+    step(g, 32);                                                 /* request flags: the window handles Escape */
+}
+
+int play_level_next(const sk_tables *t, int level_number) {
+    for (int i = level_number + 1; i < SK_LEVEL_SEQUENCE_LEN; i++) {
+        int d = t->sequence[i];
+        if (d == 42) return -1;
+        if (d == 12 || d == 29 || (d >= 30 && d <= 35)) continue;
+        return i;
+    }
+    return -1;
+}
+
+sk_outcome game_outcome(const sk_game *g) {
+    if (g->level_end && (g->level_outcome & 0x80)) return SK_OUTCOME_NEXT_LEVEL;
+    if (g->player.state == 64) return SK_OUTCOME_GAME_OVER;
+    return SK_OUTCOME_RUNNING;
+}
