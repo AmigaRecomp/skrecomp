@@ -276,7 +276,9 @@ set(SK_TEST_NAMES
   find_slot_by_type_sees_a_slot_spawned_this_frame
   italy_markers_spawn_real_types
   italy_slots_cover_the_frames
-  italy_run_without_a_crash)
+  italy_run_without_a_crash
+  strider_kill_popup_shows_its_500
+  set_tile_at_ignores_cells_off_the_map)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -345,6 +345,7 @@ static void obj_strider_update(sk_game *g, sk_slot *s, int index) {           /*
     g->objs.marker_param = s->flags & 0xFF;
     spawn_object(g, d->x, s->y + 27, 100);
     set_frame2(s, 0, 3, s->flags);
+    g->score_value = 0x500;                                         /* the popup reads it */
     add_score(g, 0x500);
     spawn_object(g, d->x + ((uint16_t)d->w >> 1), d->y + ((uint16_t)d->h >> 1), 113);
     despawn_if_far(g, s);

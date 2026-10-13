@@ -2,6 +2,7 @@
 #include <string.h>
 #include "game/game.h"
 #include "game/objects.h"
+#include "gfx/display_model.h"
 #include "formats/bobs.h"
 #include "game/obj_england.h"
 #include "game/obj_country.h"
@@ -266,7 +267,7 @@ static void draw_record(sk_fb *fb, const sk_draw *d, int cam_x, int cam_y, int b
     int sx = d->x, sy = d->y;
     if ((d->dflags & 9) == 9) { sx += 32; }                        /* clipped path, bit 3: x + cam_x + 16 on the window (0x108946) */
     else if (!(d->dflags & 0x10)) { sx -= cam_x; sy -= cam_y; }
-    else { sx -= bg_x; sy -= bg_y; }                               /* bit 4: buffer coordinates, whose origin is the backdrop scroll (view +0x18 = 0x30019E) */
+    else { sx -= bg_x + SK_BUFFER_WORLD_X; sy -= bg_y; }           /* the backdrop's own buffer offset */                               /* bit 4: buffer coordinates, whose origin is the backdrop scroll (view +0x18 = 0x30019E) */
     sk_frame fr = { d->w, d->h, d->w / 8, { d->frame, d->frame + d->plane_bytes, d->frame + 2 * d->plane_bytes, d->frame + 3 * d->plane_bytes }, d->frame + 4 * d->plane_bytes };
     int group = (d->dflags & 0x40) ? SK_GROUP_TILES_B : SK_GROUP_TILES_A;
     if (d->dflags & 2) fb_blit_bob_flash(fb, &fr, sx, sy, group);   /* 0x108D96 */

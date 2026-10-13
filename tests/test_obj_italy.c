@@ -315,7 +315,8 @@ void test_backdrop_relative_records_draw_at_the_backdrop_scroll(void) {   /* dra
     g_g.view.bg_x = 200; g_g.view.bg_y = 30;
     fb_clear(&fb, 0);
     draw_all_objects(&g_g, &fb, 1000, 500);
-    CHECK(fb.px[(20 + 4) * fb.w + 40 + 4] != 0);                     /* backdrop coordinates, whatever the camera */
+    CHECK(fb.px[(20 + 4) * fb.w + 40 - SK_BUFFER_WORLD_X + 4] != 0);   /* backdrop coordinates, as the backdrop's own pixels */
+    CHECK_EQ(fb.px[(20 + 4) * fb.w + 40 - 4], 0);
     fb_free(&fb);
     drop_game();
 }
@@ -520,4 +521,29 @@ void test_italy_slots_cover_the_frames(void) {                 /* ROM-backed, Re
     }
     CHECK(seen >= 26);
     tables_free(&t); image_free(&img); disks_close(&d);
+}
+
+void test_strider_kill_popup_shows_its_500(void) {             /* 0x112734: score_value before add_score and type 113 */
+    CHECK(make_game());
+    g_g.camera_x = 400;
+    sk_slot *s = spawn(600, 11 * 16, 43, 0);
+    s->hits = 1;
+    g_g.score_value = 0x200;                                         /* a frog's, before */
+    sk_draw *d = s->draw;
+    g_g.ball.x = (d->x + 24) * 65536; g_g.ball.y = (d->y + 24) * 65536; g_g.ball.vx = 3 * 65536; g_g.ball.vy = 0;
+    g_g.player.ball_free = 1; g_g.ball.inactive = 0;
+    int i = 0;
+    while (aux_c(s) != 2 && i++ < 3) tick(1);
+    CHECK_EQ(aux_c(s), 2);
+    CHECK_EQ(g_g.score_value, 0x500);
+    drop_game();
+}
+
+void test_set_tile_at_ignores_cells_off_the_map(void) {        /* port guard: the original writes anywhere */
+    CHECK(make_game());
+    uint16_t before = g_g.world.tile[0];
+    set_tile_at(&g_g, 32, -20, 0x1BB, 0);
+    set_tile_at(&g_g, g_g.world.w * 16 + 40, 32, 0x1BB, 0);
+    CHECK_EQ(g_g.world.tile[0], before);
+    drop_game();
 }

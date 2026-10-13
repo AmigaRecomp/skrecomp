@@ -235,6 +235,8 @@ void test_find_slot_by_type_sees_a_slot_spawned_this_frame(void);
 void test_italy_markers_spawn_real_types(void);
 void test_italy_slots_cover_the_frames(void);
 void test_italy_run_without_a_crash(void);
+void test_strider_kill_popup_shows_its_500(void);
+void test_set_tile_at_ignores_cells_off_the_map(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -467,6 +469,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "italy_markers_spawn_real_types", test_italy_markers_spawn_real_types },
     { "italy_slots_cover_the_frames", test_italy_slots_cover_the_frames },
     { "italy_run_without_a_crash", test_italy_run_without_a_crash },
+    { "strider_kill_popup_shows_its_500", test_strider_kill_popup_shows_its_500 },
+    { "set_tile_at_ignores_cells_off_the_map", test_set_tile_at_ignores_cells_off_the_map },
 };
 
 int main(int argc, char **argv) {

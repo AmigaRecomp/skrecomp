@@ -122,7 +122,9 @@ void set_cell_tile(sk_game *g, int cx, int cy, int index, int state) {   /* 0x11
 }
 
 void set_tile_at(sk_game *g, int x, int y, int index, int state) {       /* 0x11A3E2 */
-    set_cell_tile(g, (x & 0xFFF0) >> 4, (y & 0xFFF0) >> 4, index, state);
+    int cx = (x & 0xFFF0) >> 4, cy = (y & 0xFFF0) >> 4;
+    if (cx >= g->world.w || cy >= g->world.h) return;                   /* port guard: the original writes anywhere */
+    set_cell_tile(g, cx, cy, index, state);
 }
 
 void fill_cells(sk_game *g, int x, int y, int index, int state, int n) { /* sub_11A41E */
