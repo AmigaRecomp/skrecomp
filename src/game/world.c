@@ -79,16 +79,16 @@ void world_free(sk_world *w) {
 int world_attr(const sk_world *w, int cx, int cy) {
     int f = world_flag(w, cx, cy);
     if (f < 33) return -1;                                  /* flag 32 is neither marker nor attribute */
-    size_t i = 5 + (size_t)(f - 33);
+    size_t i = SK_PALS_ATTR + (size_t)(f - 33);
     return i < w->lv->pals_len ? w->lv->pals[i] : -1;
 }
 
 int world_marker_type(const sk_world *w, int cx, int cy, int *param) {
     int f = world_flag(w, cx, cy);
     if (f < 1 || f > 31) return -1;
-    if (133 + (size_t)f >= w->lv->pals_len) return -1;
-    *param = w->lv->pals[133 + f];
-    return w->lv->pals[100 + f];
+    if (SK_PALS_PARAM + (size_t)f >= w->lv->pals_len) return -1;
+    *param = w->lv->pals[SK_PALS_PARAM + f];
+    return w->lv->pals[SK_PALS_TYPE + f];
 }
 
 const uint8_t *world_tail(const sk_world *w, int cx, int cy) {

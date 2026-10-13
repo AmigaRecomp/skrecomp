@@ -8,6 +8,10 @@
 #include <stdint.h>
 #include "formats/level.h"
 
+/* PALS payload offsets (the chunk after its tag; the game's level_pals points at the tag, so it reads +5, +100, +133) */
+#define SK_PALS_ATTR 1              /* + (flag - 33): the attribute of flags 33..127 */
+#define SK_PALS_TYPE 96             /* + flag: the object type of marker flags 1..31 */
+#define SK_PALS_PARAM 129           /* + flag: its spawn parameter */
 #define SK_MARKER_BIT 0x8000        /* bit 31 of the original cell long: a spawn marker (flags 1..31) */
 
 typedef struct sk_world {

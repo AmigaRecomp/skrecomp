@@ -202,13 +202,18 @@ void test_every_home_marker_spawns_a_real_type(void) {         /* ROM-backed */
         sk_level lv = {0}; sk_world w = {0};
         CHECK(level_parse(f, n, &lv, &e)); free(f);
         CHECK(world_build(&w, &lv));
+        int found = 0;
         for (int cy = 0; cy < w.h; cy++)
             for (int cx = 0; cx < w.w; cx++) {
                 int param = 0, type = world_marker_type(&w, cx, cy, &param);
                 if (type <= 0) continue;
-                if (object_init_table[type] == obj_stub_init) printf("level %d: type %d at (%d, %d) is a stub\n", idx, type, cx, cy);
-                CHECK(object_init_table[type] != obj_stub_init);
+                found++;
+                bool real = type < 128 && object_init_table[type] && object_init_table[type] != obj_stub_init;
+                if (!real) printf("level %d: type %d at (%d, %d) is a stub\n", idx, type, cx, cy);
+                CHECK(real);
             }
+        printf("level %d: %d markers\n", idx, found);
+        CHECK(found > 10);
         world_free(&w); level_free(&lv);
     }
     tables_free(&t); image_free(&img); disks_close(&d);
