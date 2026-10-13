@@ -120,3 +120,20 @@ void test_walkers_74_78_patrol(void) {                              /* types 74 
     CHECK(b->flags & 1); CHECK(b->x - b->draw->x >= 180 || i < 200);   /* turned at 180 px (or an edge) */
     drop_game();
 }
+
+void test_sprout_11_grows_and_rests(void) {                         /* type 11: the flags word as its pause counter */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 12 * 16, 11, 0x12);                      /* t0 2, t1 0x10 * 2 */
+    CHECK_EQ(s->t0, 2); CHECK_EQ(s->t1, 0x20); CHECK_EQ(s->aux, 2); CHECK_EQ(s->x, 153); CHECK_EQ(s->y, 12 * 16 - 22);
+    int i = 0;
+    while (!(s->draw->dflags & 4) && i++ < 60) tick(1);
+    CHECK(s->draw->dflags & 4);                                      /* grown: back to frame 0, hidden */
+    CHECK_EQ(s->flags, 0); CHECK_EQ(s->flags_b, 9);                 /* 10, less this frame's */
+    CHECK_EQ(s->aux, 1);
+    tick(9);
+    CHECK_EQ(s->draw->dflags & 4, 0);
+    i = 0;
+    while (!(s->draw->dflags & 4) && i++ < 60) tick(1);
+    CHECK_EQ(s->aux, 2); CHECK_EQ(s->flags_b, 0x1F);                /* every second cycle: the longer pause, t1 */
+    drop_game();
+}

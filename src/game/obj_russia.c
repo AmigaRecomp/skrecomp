@@ -22,9 +22,13 @@ static const uint8_t burrow_up_script[] = { 0, 4, 0, 4, 8, 9, 10, 11, 8, 9, 10, 
 static const uint8_t walker74_script[] = { 0, 4, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7 };              /* 0x119DB6 */
 static const uint8_t walker78_script[] = { 0, 5, 0, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };        /* 0x119B6E */
 
+static const uint8_t sprout_script[] = { 0, 10, 0, 3, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 97, 0, 230, 2, 112, 0, 16, 57, 0, 48 };   /* 0x10EFC4 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
+static int flags_word(const sk_slot *s) { return (uint16_t)((s->flags & 0xFF) << 8 | s->flags_b); }   /* the word at +0xA */
+static void set_flags_word(sk_slot *s, int v) { s->flags = (int16_t)((v >> 8) & 0xFF); s->flags_b = (uint8_t)v; }
 static int iabs(int v) { return v < 0 ? -v : v; }
 
 /* ---- type 35: the mine (slot 43): set off, it bursts into four pieces (type 111, slot 44) and leaves tiles 0x150/0x151 ---- */
@@ -347,7 +351,43 @@ static void obj_walker78_update(sk_game *g, sk_slot *s, int index) {          /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 11: the sprout (slot 3): grows, bursts, rests; its flags word counts the rest ---- */
+static void obj_sprout_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x10EF0C */
+    init_object_slot(g, s, x - 7, y - 22, s->type4);
+    int p = g->objs.marker_param & 0xFF;
+    s->t0 = (int16_t)((p & 0xF) ? (p & 0xF) : 1);
+    s->t1 = (int16_t)(((p & 0xF0) ? (p & 0xF0) : 1) * 2);
+    s->aux = s->t0;
+    const uint8_t *f = res(g, 3);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 32, f, 1);                                  /* frames_16x32 */
+}
+static void obj_sprout_update(sk_game *g, sk_slot *s, int index) {            /* 0x10EF56 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    bool count = flags_word(s) != 0;
+    if (!count) {
+        int wrapped = 0;
+        if (step_animation(s, sprout_script, 0, &wrapped) && s->frame == 0) {
+            d->dflags |= 4;
+            set_flags_word(s, 10);
+            s->aux = (int16_t)(s->aux - 1);
+            if (s->aux == 0) { s->aux = s->t0; set_flags_word(s, s->t1); }
+            count = true;
+        }
+    }
+    if (count) {
+        set_flags_word(s, flags_word(s) - 1);
+        if (flags_word(s)) { despawn_if_far(g, s); return; }
+        d->dflags &= (uint8_t)~4;
+    }
+    if (s->frame >= 4) touch_player(g, d->x + 2, d->y, 12, 20);
+    despawn_if_far(g, s);
+}
+
 void obj_russia_install(void) {
+    object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;

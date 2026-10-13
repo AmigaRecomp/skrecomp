@@ -21,6 +21,7 @@ typedef struct sk_draw {
 typedef struct sk_slot {
     int16_t x, y, x0, y0, type4, flags, aux, draw_index, vy, vx, t0, t1;
     sk_draw *draw;
+    uint8_t flags_b;               /* byte +0xB: the flags word's low byte (types that count in the whole word) */
     uint8_t anim, hits, frame, anim_tick, anim_index, timer;
     const uint8_t *script;         /* the long at +0x14 for the child types that keep a script there */
     int marker_cell;               /* +0x18: the marker cell that spawned it (cell index), -1 none */
