@@ -328,7 +328,10 @@ set(SK_TEST_NAMES
   spring_40_launches_a_falling_kid
   side_drain_41_needs_a_side_entry
   object_marks_52_77_and_trap_60_61
-  red_square_boss_76_dies_on_the_21st_hit)
+  red_square_boss_76_dies_on_the_21st_hit
+  rope_1_hangs_and_swings
+  kid_catches_swings_and_lets_go
+  edge_row_scan_covers_27_cells)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

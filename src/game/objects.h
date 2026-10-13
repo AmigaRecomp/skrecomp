@@ -16,6 +16,7 @@ typedef struct sk_draw {
     size_t frames_len;             /* bytes from frames to the end of its section; 0 = unknown (not checked) */
     uint8_t prio, dflags;          /* dflags: bit 0 clipped blitter, 1 flash, 2 hidden, 4 screen-relative, 6 playfield 2 */
     bool used;                     /* bit 6 of the record's first byte: set by the slot initialisers, cleared on free */
+    const uint8_t *mask;           /* port: the mask plane when it is not frame + 4 planes (the rope's tiles keep it in their table) */
 } sk_draw;
 
 typedef struct sk_slot {
@@ -37,6 +38,13 @@ typedef struct sk_objects {
     sk_draw chain[8];              /* objects_c 0x302306: the records of types 36 and 38 */
     bool chain_a, chain_b, chain_c;   /* 0x300345 (all 8, before the list), 0x300346 (before), 0x300347 (after) */
     int chain_count;               /* 0x3002FC: records - 1 drawn for chain_b / chain_c */
+    sk_draw rope[8];               /* objects_b 0x302226: the rope's links (type 1) */
+    int8_t rope_active;            /* 0x300344: 1 after init, -1 (drawn) after the first update */
+    int16_t rope_link_step, rope_links;   /* 0x3001C8, 0x3001CA */
+    uint16_t rope_angle;           /* 0x3001CC: 0x4000 straight down */
+    int16_t rope_swing;            /* 0x3001CE: the angular speed */
+    int16_t rope_base_x, rope_base_y, rope_end_x, rope_end_y, rope_end_x0, rope_end_y0;   /* 0x3001BC.. */
+    bool strip_row;                /* 0x300348: the marker was found by vertical scrolling */
     int draw_count;                /* draw_record_count */
     int deferred[64]; int n_deferred;   /* 0x300C1E: marker cells of objects freed by free_object_deferred */
     int spawn_cell;                /* a4 during spawn_marker: the cell index, -1 otherwise */

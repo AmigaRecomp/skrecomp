@@ -5,6 +5,9 @@
 #include "game/obj_helpers.h"
 #include "game/obj_russia.h"
 #include "game/resources.h"
+#include "game/platforms.h"
+#include "game/world.h"
+#include "formats/level.h"
 
 static const uint8_t mine_script[] = { 0, 5, 0, 4, 0, 1, 2, 2, 255, 0, 1, 2, 2, 255 };          /* 0x111A38 */
 static const uint8_t mine_piece_script[] = { 0, 1, 0, 2, 0, 1 };                               /* 0x111A32 */
@@ -903,6 +906,74 @@ static void obj_rboss2_update(sk_game *g, sk_slot *s, int index) {            /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 1: the rope (objects_b, links from tiles 496 / 497 with their tables as the masks); the kid's side is state 12 ---- */
+static void rope_layout(sk_game *g, bool tiles_b) {                 /* rope_layout_b 0x10E95A (rope_layout_a: param bit 0 clear, unused by the levels) */
+    sk_objects *o = &g->objs;
+    int p = g->objs.marker_param & 0xFF;
+    int link_h = ((((p << 3) | (p >> 5)) & 7) + 1) * 2, end_h = (((p >> 2) & 7) + 1) * 2;   /* rope_link_sizes 0x10EA2C */
+    const sk_level *lv = g->world.lv;
+    const uint8_t *img = NULL, *tail = NULL;
+    for (int i = 0; i < o->rope_links && i < 8; i++) {
+        sk_draw *d = &o->rope[i];
+        bool last = i == o->rope_links - 1;
+        int tile = last ? 497 : 496;
+        img = lv && lv->tiles_a.tiles && tile < lv->tiles_a.count ? lv->tiles_a.tiles + (size_t)tile * SK_TILE_BYTES : NULL;
+        tail = lv && lv->tiles_a.tails && tile < lv->tiles_a.count ? lv->tiles_a.tails + (size_t)tile * SK_TILE_TAIL : NULL;
+        memset(d, 0, sizeof *d);
+        d->w = 16; d->h = (int16_t)(last ? end_h : link_h);
+        d->blit_size = (int16_t)(d->h << 6 | 2);
+        d->plane_bytes = 0x20; d->frame_bytes = 0x80;
+        d->frames = d->frame = img;                                 /* the tile's 128 bytes read as four planes of 32 */
+        d->mask = tail;                                             /* the next 32: the tile's collision table */
+        d->prio = 0; d->dflags = tiles_b ? 1 : 0;
+        d->used = true;
+    }
+}
+static void obj_rope_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x10E7A2 */
+    sk_objects *o = &g->objs;
+    if (o->rope_active) { obj_stub_init(g, s, x, y); free_object(g, s); return; }   /* obj_none_init: one rope at a time */
+    init_object_slot_shared(g, s, x, y, s->type4, &o->chain[7]);
+    s->draw = NULL;
+    s->x = (int16_t)(s->x - 8);
+    o->rope_active = 1;
+    o->rope_link_step = 15;
+    o->rope_links = 6;
+    rope_layout(g, g->objs.marker_param & 1);
+    if (o->strip_row) { o->rope_angle = 0x1000; o->rope_swing = 0; }
+    else { o->rope_angle = 0x4000; o->rope_swing = 0x280; }
+}
+static int16_t shr8_toward_zero(int v) { return (int16_t)(v < 0 ? -((-v) >> 8) : (v & 0xFFFF) >> 8); }   /* neg, lsr.l, neg / lsr.w */
+static void obj_rope_update(sk_game *g, sk_slot *s, int index) {              /* 0x10E816 */
+    (void)index;
+    sk_objects *o = &g->objs;
+    o->rope_active = -1;
+    o->rope_base_x = s->x; o->rope_base_y = s->y;
+    int r = o->rope_link_step;                                      /* rope_place_links 0x10E8D6 */
+    uint16_t a = o->rope_angle;
+    int bend = (int16_t)(((o->rope_angle >> 8) - 0x40) << 3);
+    int lx = 0, ly = 0;
+    for (int i = 0; i < o->rope_links && i < 8; i++) {
+        int sn = sin_1024(a >> 6), cs = cos_1024(a >> 6);
+        lx = (int16_t)(shr8_toward_zero(cs * r) + o->rope_base_x);
+        ly = (int16_t)(shr8_toward_zero(sn * r) + o->rope_base_y);
+        o->rope[i].x = (int16_t)lx; o->rope[i].y = (int16_t)ly;
+        r += o->rope_link_step;
+        a = (uint16_t)(a + bend);
+    }
+    o->rope_end_x0 = o->rope_end_x; o->rope_end_y0 = o->rope_end_y;  /* rope_step 0x10E88C */
+    o->rope_end_x = (int16_t)lx; o->rope_end_y = (int16_t)ly;
+    o->rope_swing = (int16_t)(o->rope_swing + 16);
+    if ((uint16_t)(o->rope_angle + 0x4000) > 0x8000) o->rope_swing = (int16_t)(o->rope_swing - 32);
+    o->rope_angle = (uint16_t)(o->rope_angle + (o->rope_swing & 0xFFF0));
+    if (g->player.on_rope < 0) { g->player.x = o->rope_end_x; g->player.y = o->rope_end_y; }   /* the kid hangs on the end */
+    int hi = o->rope_angle >> 8;
+    if (object_offscreen(g, o->rope_base_x, o->rope_base_y, 64) < 0 && hi >= 0x3C && hi < 0x44
+        && object_offscreen(g, o->rope_end_x, o->rope_end_y, 64) < 0) {
+        o->rope_active = 0;
+        free_object(g, s);
+    }
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
@@ -920,6 +991,7 @@ void obj_russia_install(void) {
     object_init_table[104] = obj_roller_init;          object_update_table[104] = obj_roller_update;
     object_init_table[101] = obj_falling_piece_init;   object_update_table[101] = obj_falling_piece_update;
     object_init_table[76] = obj_rboss2_init;           object_update_table[76] = obj_rboss2_update;
+    object_init_table[1] = obj_rope_init;              object_update_table[1] = obj_rope_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;

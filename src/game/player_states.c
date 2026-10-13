@@ -6,7 +6,6 @@
 static int left(const sk_player *p) { return p->facing < 0; }
 
 static void player_state_none(sk_game *g) { (void)g; }
-static void player_state_stub(sk_game *g) { g->player.state = 0; g->player.timer = 0; }   /* state 12, the rope: 5c */
 
 static void select_death_layers(sk_game *g) { g->layer_flags = 3; select_layers(g); }
 
@@ -164,8 +163,34 @@ static void player_state_exit_walk(sk_game *g) {                 /* 0x10C04C, sc
 static void player_state_game_over(sk_game *g) { g->player.controllable = 0; }               /* 0x10C106 */
 static void player_state_timeout(sk_game *g) { g->player.input = 0; g->player.run_chain = 1; }   /* 0x10C10C */
 
+static void player_state_rope(sk_game *g) {                     /* 0x10BF84: state 12 */
+    sk_player *p = &g->player;
+    sk_objects *o = &g->objs;
+    p->controllable = 0;
+    p->run_chain = 0;
+    if (!(p->input & SK_IN_FIRE)) {
+        int d = 0;
+        if (p->input & SK_IN_LEFT) d = 2;
+        else if (p->input & SK_IN_RIGHT) d = -2;
+        o->rope_swing = (int16_t)(o->rope_swing + d);
+        if (o->rope_swing > 0x280) o->rope_swing = 0x280;
+        if (o->rope_swing < -0x280) o->rope_swing = -0x280;
+        int n = o->rope_angle < 0x3900 ? 0 : o->rope_angle < 0x4700 ? 1 : 2;   /* the sprite leans with the swing */
+        p->anim = (int16_t)(p->facing < 0 ? 0x2D + n : 0x2C - n);
+        return;
+    }
+    p->jump_hold = 16; p->vy = 0; p->jumping = 0xFF; p->skidding = 0;   /* restart_jump 0x10BB0A */
+    int dx = (int16_t)(o->rope_end_x - o->rope_end_x0);
+    if (dx < 0) dx = -dx;
+    p->speed = (int16_t)(dx * 3);
+    p->vy = 16;
+    p->on_rope = (int8_t)(p->on_rope & 0x7F);
+    p->fire_lock = 0xFF;
+    p->state = 0;
+}
+
 static void (*const player_state_table[19])(sk_game *) = {
-    player_state_none, player_state_none, player_state_kick, player_state_stub, player_state_tricks,
+    player_state_none, player_state_none, player_state_kick, player_state_rope, player_state_tricks,
     player_state_death, player_state_ladder_a, player_state_ladder_b, player_state_fell_out, player_state_ball_spring,
     player_state_trick_hold, player_state_volley_right, player_state_volley_left, player_state_knockback, player_state_carried,
     player_state_exit_walk, player_state_game_over, player_state_timeout, player_state_bounce,

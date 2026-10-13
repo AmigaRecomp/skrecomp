@@ -98,6 +98,7 @@ void update_camera(sk_game *g) {                                 /* 0x106190 */
 
 void scan_column_strip(sk_game *g, int n, int x) {               /* build_column_strip's marker scan */
     int cx0 = x >> 4, cy0 = (g->view.cam_y & ~15) >> 4;
+    g->objs.strip_row = false;                                  /* sf.b 0x300348 */
     for (int c = 0; c < n; c++)
         for (int r = 0; r < 14; r++) scan_cell_for_marker(g, cx0 + c, cy0 + r);
     g->scan_col_left = 3;
@@ -107,6 +108,7 @@ void scan_column_strip(sk_game *g, int n, int x) {               /* build_column
 
 void scan_row_strip(sk_game *g, int n, int y) {                  /* build_row_strip's marker scan */
     int cy0 = y >> 4, cx0 = (g->view.cam_x & ~15) >> 4;
+    g->objs.strip_row = true;                                   /* st.b 0x300348 */
     for (int r = 0; r < n; r++)
         for (int c = 0; c < 21; c++) scan_cell_for_marker(g, cx0 + c, cy0 + r);
     g->scan_row_left = 3;
@@ -116,14 +118,20 @@ void scan_row_strip(sk_game *g, int n, int y) {                  /* build_row_st
 
 void edge_scan_columns(sk_game *g) {                             /* 0x106DBE */
     if (g->scan_col_left <= 0) return;
-    for (int r = 0; r < 20; r++) scan_cell_for_marker(g, g->scan_col_cx, g->scan_col_cy0 + r);
+    for (int r = 0; r < 20; r++) {                              /* the flag: set for the 3 rows above and below the view */
+        g->objs.strip_row = r < 3 || r >= 17;
+        scan_cell_for_marker(g, g->scan_col_cx, g->scan_col_cy0 + r);
+    }
     g->scan_col_cx++;
     g->scan_col_left--;
 }
 
 void edge_scan_rows(sk_game *g) {                                /* 0x106E0C: only while no column scan is pending */
     if (g->scan_col_left > 0 || g->scan_row_left <= 0) return;
-    for (int c = 0; c < 26; c++) scan_cell_for_marker(g, g->scan_row_cx0 + c, g->scan_row_cy);
+    for (int c = 0; c < 27; c++) {                              /* moveq #$1a, dbra: 27 cells; the flag set for the view's 21 */
+        g->objs.strip_row = c >= 3 && c < 24;
+        scan_cell_for_marker(g, g->scan_row_cx0 + c, g->scan_row_cy);
+    }
     g->scan_row_cy++;
     g->scan_row_left--;
 }

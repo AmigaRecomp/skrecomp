@@ -314,9 +314,20 @@ void player_input_state(sk_game *g) {                           /* 0x10A576 */
     g->ball.touched = 0;
     g->layer_zone = 0;
     player_tile_attrs(g);
-    /* rope_catch: 5b */
+    rope_catch(g);
     p->idle_frames++;
     p->on_platform = 0;
+}
+
+void rope_catch(sk_game *g) {                                   /* 0x10BF34 */
+    sk_player *p = &g->player;
+    const sk_objects *o = &g->objs;
+    if (p->state != 0 || !o->rope_active || p->on_rope || !(p->jumping | p->falling)) return;
+    if ((uint16_t)(o->rope_end_x - p->x + 24) >= 48) return;
+    if ((uint16_t)(o->rope_end_y - p->y + 6) >= 12) return;
+    p->on_rope = -1;
+    p->timer = 0;
+    p->state = 12;
 }
 
 void freeze_death_target(sk_game *g) {                          /* sub_106C22 */

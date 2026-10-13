@@ -95,3 +95,15 @@ void test_camera_holds_its_height_during_a_jump(void) {
     CHECK(g_g.player.y < 151 - 30);
     drop_game();
 }
+
+void test_edge_row_scan_covers_27_cells(void) {                     /* 0x106E2E: moveq #$1a / dbra */
+    CHECK(make_game());
+    g_g.scan_col_left = 0; g_g.scan_row_left = 1; g_g.scan_row_cx0 = 2; g_g.scan_row_cy = 5;
+    int cell = 5 * g_g.world.w + 2 + 26;
+    g_g.world.live[cell] = (uint16_t)((g_g.world.live[cell] & 0x1FF) | (3 << 9));   /* a marker in the 27th cell */
+    g_g.world.tile[cell] |= SK_MARKER_BIT;
+    int before = g_g.object_count;
+    edge_scan_rows(&g_g);
+    CHECK(g_g.object_count > before);
+    drop_game();
+}

@@ -67,6 +67,7 @@ typedef struct sk_player {
     uint8_t crushed;        /* +0x5D */
 } sk_player;
 
+void rope_catch(sk_game *g);                /* 0x10BF34: a jump that meets the rope's end hangs on it (state 12) */
 void init_player(sk_game *g);               /* 0x10BC28 */
 void player_input_state(sk_game *g);        /* 0x10A576: the per-frame routine (frame-loop step 26) */
 void rebuild_player_mask(sk_game *g);       /* rebuild_collision_mask with the player's position */

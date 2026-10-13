@@ -298,3 +298,60 @@ void test_red_square_boss_76_dies_on_the_21st_hit(void) {          /* type 76 */
     CHECK_EQ(g_g.level_outcome, 0x81); CHECK_EQ(g_g.music_slot_last, 2); CHECK(g_g.curtain_flags & 0x10);
     drop_game();
 }
+
+void test_rope_1_hangs_and_swings(void) {                           /* type 1 */
+    CHECK(make_game());
+    sk_objects *o = &g_g.objs;
+    o->strip_row = false;                                            /* found by a column strip: it swings */
+    sk_slot *s = spawn(200, 3 * 16, 1, 79);
+    CHECK_EQ(s->x, 192); CHECK(s->draw == NULL);
+    CHECK_EQ(o->rope_active, 1); CHECK_EQ(o->rope_links, 6); CHECK_EQ(o->rope_angle, 0x4000); CHECK_EQ(o->rope_swing, 640);
+    CHECK_EQ(o->rope[0].h, 6); CHECK_EQ(o->rope[5].h, 8); CHECK_EQ(o->rope[0].w, 16);
+    CHECK(o->rope[0].frame == g_lv.tiles_a.tiles + 496 * SK_TILE_BYTES || g_lv.tiles_a.count <= 497);
+    tick(1);
+    CHECK_EQ(o->rope_active, -1);                                    /* drawn from now on */
+    CHECK_EQ(o->rope_swing, 640 + 16); CHECK_EQ(o->rope_angle, 0x4000 + 656);   /* the swing first, then the angle */
+    CHECK_EQ(o->rope[0].x, 192); CHECK_EQ(o->rope[0].y, 3 * 16 + 15);   /* straight down: 15 px a link */
+    CHECK_EQ(o->rope_end_x, o->rope[5].x); CHECK_EQ(o->rope_end_y, o->rope[5].y);
+    CHECK_EQ(o->rope[5].y, 3 * 16 + 90);
+    int maxa = 0, mina = 0xFFFF;
+    for (int i = 0; i < 400; i++) { tick(1); if (o->rope_angle > maxa) maxa = o->rope_angle; if (o->rope_angle < mina) mina = o->rope_angle; }
+    CHECK(maxa > 0x4000 + 0x400); CHECK(mina < 0x4000 - 0x400);     /* a pendulum about straight down */
+    drop_game();
+    CHECK(make_game());
+    g_g.objs.strip_row = true;                                       /* found by a row strip: raised, still */
+    spawn(200, 3 * 16, 1, 79);
+    CHECK_EQ(g_g.objs.rope_angle, 0x1000); CHECK_EQ(g_g.objs.rope_swing, 0);
+    CHECK(spawn(300, 3 * 16, 1, 79)->x < 0 || count_type(1) == 1);   /* one rope at a time */
+    drop_game();
+}
+
+void test_kid_catches_swings_and_lets_go(void) {                    /* rope_catch 0x10BF34, state 12 0x10BF84 */
+    CHECK(make_game());
+    sk_objects *o = &g_g.objs;
+    sk_player *p = &g_g.player;
+    spawn(200, 3 * 16, 1, 79);
+    tick(1);
+    p->state = 0; p->jumping = 0xFF; p->on_rope = 0;
+    p->x = (int16_t)(o->rope_end_x + 10); p->y = (int16_t)(o->rope_end_y - 3);
+    rope_catch(&g_g);
+    CHECK_EQ(p->state, 12); CHECK_EQ(p->on_rope, -1); CHECK_EQ(p->timer, 0);
+    tick(1);
+    CHECK_EQ(p->x, o->rope_end_x); CHECK_EQ(p->y, o->rope_end_y);    /* the rope carries him */
+    o->rope_swing = 0; int sw = 0;                                   /* away from the 640 clamp */
+    p->input = SK_IN_LEFT; p->facing = 1;
+    dispatch_player_state(&g_g);
+    CHECK_EQ(o->rope_swing, sw + 2); CHECK_EQ(p->controllable, 0); CHECK_EQ(p->run_chain, 0);
+    o->rope_angle = 0x4800;
+    dispatch_player_state(&g_g);
+    CHECK_EQ(p->anim, 0x2A);                                         /* leaning: 0x2C - 2 */
+    o->rope_end_x = 210; o->rope_end_x0 = 205;
+    p->input = SK_IN_FIRE;
+    dispatch_player_state(&g_g);
+    CHECK_EQ(p->state, 0); CHECK_EQ(p->vy, 16); CHECK_EQ(p->speed, 15); CHECK_EQ(p->on_rope, 0x7F);
+    CHECK_EQ(p->fire_lock, 0xFF); CHECK_EQ(p->jumping, 0xFF); CHECK_EQ(p->jump_hold, 16);
+    p->x = (int16_t)(o->rope_end_x + 10); p->y = (int16_t)(o->rope_end_y - 3);
+    rope_catch(&g_g);
+    CHECK_EQ(p->state, 0);                                           /* no catch again before a landing */
+    drop_game();
+}
