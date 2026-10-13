@@ -273,6 +273,7 @@ void test_shell_20_fires_every_100_frames(void);
 void test_conveyor_42_pushes_and_feeds_its_belt(void);
 void test_gunner_46_fires_both_ways(void);
 void test_bullet_97_bursts_on_the_kid(void);
+void test_wall_cannon_52_fires_every_100(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -543,6 +544,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "conveyor_42_pushes_and_feeds_its_belt", test_conveyor_42_pushes_and_feeds_its_belt },
     { "gunner_46_fires_both_ways", test_gunner_46_fires_both_ways },
     { "bullet_97_bursts_on_the_kid", test_bullet_97_bursts_on_the_kid },
+    { "wall_cannon_52_fires_every_100", test_wall_cannon_52_fires_every_100 },
 };
 
 int main(int argc, char **argv) {

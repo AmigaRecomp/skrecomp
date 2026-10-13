@@ -37,6 +37,10 @@ static const uint8_t gunner_fire_script[] = { 0, 16, 0, 4, 9, 9, 9, 10, 11, 12, 
 static const uint8_t splash_script[] = { 0, 5, 0, 5, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4 };            /* 0x112D8A */
 static const uint8_t bullet_script[] = { 0, 4, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7 };                 /* 0x112E54 */
 
+static const uint8_t cannon_script[] = { 0, 8, 0, 1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };   /* 0x113488 */
+static const uint8_t cannon_shot_script[] = { 0, 6, 0, 2, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 };     /* 0x113516 */
+static const uint8_t cannon_flash_script[] = { 0, 7, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };      /* 0x113588 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -619,6 +623,73 @@ static void obj_hurt_effect_update(sk_game *g, sk_slot *s, int index) {       /*
     free_if_far(g, s);
 }
 
+/* ---- type 52: the wall cannon (a fixed record, slot 82): its shot (type 91) and flash (type 90, slot 83) ---- */
+static void obj_cannon_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x1133C6 */
+    init_object_slot_fixed(g, s, x, y, s->type4);
+    s->flags = (int16_t)(g->objs.marker_param & 1);
+    s->t0 = 100;
+    const uint8_t *f = res(g, 82);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 13, f, 1);                                  /* sub_1078C2 */
+    set_frame2(s, 0, 8, s->flags);
+    if (s->flags & 1) s->draw->x = (int16_t)(s->draw->x - 1);
+}
+static void obj_cannon_update(sk_game *g, sk_slot *s, int index) {            /* 0x11340C */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    bool run = true;
+    if (!aux_c(s)) { if (--s->t0) run = false; else set_aux_c(s, 1); }
+    if (run) {
+        int wrapped = 0;
+        int changed = step_animation(s, cannon_script, s->flags, &wrapped);
+        if (wrapped) { reset_animation(s); s->t0 = 100; set_aux_c(s, 0); }
+        if (changed && s->anim_index == 4) {
+            g->objs.marker_param = s->flags & 0xFF;
+            spawn_object(g, d->x, d->y, 91);
+            g->objs.marker_param = s->flags & 0xFF;
+            spawn_object(g, d->x, d->y, 90);
+        }
+    }
+    if (object_offscreen(g, s->x, s->y, 64) < 0) free_fixed_object(g, s);
+}
+static void obj_cannon_shot_init(sk_game *g, sk_slot *s, int x, int y) {      /* 0x11349C */
+    init_object_slot_fixed_nodraw(g, s, x, y, s->type4);
+    s->flags = (int16_t)(g->objs.marker_param & 1);
+    s->x = (int16_t)(s->x - 8 + ((s->flags & 1) ? 16 : 0));
+    s->vx = 10; s->vy = 0;
+    const uint8_t *f = res(g, 82);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 13, f, 1);                                  /* sub_1078C2 */
+}
+static void obj_cannon_shot_update(sk_game *g, sk_slot *s, int index) {       /* 0x1134DE */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    int dx = (uint16_t)s->vx >> 1;                                  /* sub_10E07C */
+    d->x = (int16_t)(d->x + ((s->flags & 1) ? dx : -dx));
+    int wrapped = 0;
+    step_animation(s, cannon_shot_script, s->flags, &wrapped);
+    touch_player(g, d->x, d->y, d->w, d->h);
+    if (object_offscreen(g, d->x, d->y, 64) < 0) free_fixed_object(g, s);
+}
+static void obj_cannon_flash_init(sk_game *g, sk_slot *s, int x, int y) {     /* 0x113526 */
+    init_object_slot_fixed_nodraw(g, s, x, y - 7, s->type4);
+    s->flags = (int16_t)(g->objs.marker_param & 1);
+    s->x = (int16_t)(s->x - 16 + ((s->flags & 1) ? 32 : 0));
+    const uint8_t *f = res(g, 83);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 26, f, 1);                                  /* sub_10798E */
+}
+static void obj_cannon_flash_update(sk_game *g, sk_slot *s, int index) {      /* 0x113562 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    int wrapped = 0;
+    step_animation(s, cannon_flash_script, s->flags, &wrapped);
+    if (wrapped || object_offscreen(g, d->x, d->y, 64) < 0) free_fixed_object(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
@@ -627,6 +698,9 @@ void obj_russia_install(void) {
     object_init_table[46] = obj_gunner_init;           object_update_table[46] = obj_gunner_update;
     object_init_table[97] = obj_bullet_init;           object_update_table[97] = obj_bullet_update;
     object_init_table[114] = obj_hurt_effect_init;     object_update_table[114] = obj_hurt_effect_update;
+    object_init_table[52] = obj_cannon_init;           object_update_table[52] = obj_cannon_update;
+    object_init_table[91] = obj_cannon_shot_init;      object_update_table[91] = obj_cannon_shot_update;
+    object_init_table[90] = obj_cannon_flash_init;     object_update_table[90] = obj_cannon_flash_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;

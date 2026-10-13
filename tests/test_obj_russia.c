@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "check.h"
 #include "fixture.h"
@@ -205,5 +206,26 @@ void test_bullet_97_bursts_on_the_kid(void) {                       /* type 97 *
     int i = 0;
     while (b->x >= 0 && i++ < 40) tick(1);
     CHECK(b->x < 0);
+    drop_game();
+}
+
+void test_wall_cannon_52_fires_every_100(void) {                    /* types 52, 91, 90 */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 10 * 16, 52, 1);
+    CHECK_EQ(s->flags & 1, 1); CHECK_EQ(s->t0, 100); CHECK(s->draw_index >= SK_FIXED_INDEX_BASE);
+    CHECK_EQ(s->draw->w, 16); CHECK_EQ(s->draw->x, 159); CHECK_EQ(s->frame, 8);
+    tick(99);
+    CHECK_EQ(count_type(91), 0);
+    int i = 0;
+    while (count_type(91) == 0 && i++ < 20) tick(1);
+    CHECK_EQ(count_type(91), 1); CHECK_EQ(count_type(90), 1);        /* the shot and the flash, on the 5th frame */
+    sk_slot *b = NULL;
+    for (int k = 0; k < 16; k++) if (g_g.objs.slot[k].x >= 0 && (g_g.objs.slot[k].type4 & 0x1FF) == 91 * 4) b = &g_g.objs.slot[k];
+    CHECK(b != NULL); CHECK_EQ(b->vx, 10); CHECK_EQ(b->flags & 1, 1);
+    sk_draw *bd = slot_draw_record(&g_g, b);                         /* a fixed record: looked up, not s->draw */
+    CHECK(bd != NULL);
+    int x = bd->x;
+    tick(2);
+    CHECK_EQ(bd->x, x + 10);
     drop_game();
 }
