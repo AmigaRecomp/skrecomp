@@ -54,7 +54,8 @@ static void change_section(sk_scene *s, int delta) {
     }
 }
 
-static bool handle_events(sk_window *w, sk_scene *s) {
+/* Quit and one-shot keys: polled every iteration so the window stays responsive. */
+static bool poll_events(sk_window *w, sk_scene *s) {
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
         if (ev.type == SDL_EVENT_QUIT) return false;
@@ -74,11 +75,26 @@ static bool handle_events(sk_window *w, sk_scene *s) {
             }
         }
     }
+    return true;
+}
+
+/* Held keys: applied once per fixed step, so the scroll speed is 50 Hz whatever the display does. */
+static void step_held_keys(sk_scene *s) {
     const bool *keys = SDL_GetKeyboardState(NULL);
     int dx = (keys[SDL_SCANCODE_RIGHT] ? 1 : 0) - (keys[SDL_SCANCODE_LEFT] ? 1 : 0);
     int dy = (keys[SDL_SCANCODE_DOWN] ? 1 : 0) - (keys[SDL_SCANCODE_UP] ? 1 : 0);
     if (dx || dy) window_step_camera(s, dx, dy, SCROLL_PX);
-    return true;
+}
+
+int window_steps_for(uint64_t *acc_ns, uint64_t elapsed_ns) {
+    *acc_ns += elapsed_ns;
+    int steps = 0;
+    while (*acc_ns >= STEP_NS && steps < MAX_CATCH_UP) {
+        *acc_ns -= STEP_NS;
+        steps++;
+    }
+    if (*acc_ns > STEP_NS) *acc_ns = STEP_NS;
+    return steps;
 }
 
 int window_run(sk_window *w, sk_scene *s, int exit_after) {
@@ -86,20 +102,11 @@ int window_run(sk_window *w, sk_scene *s, int exit_after) {
     bool running = true;
     while (running) {
         uint64_t now = SDL_GetTicksNS();
-        acc += now - last;
+        int steps = window_steps_for(&acc, now - last);
         last = now;
-        int steps = 0;
-        while (acc >= STEP_NS && steps < MAX_CATCH_UP) {
-            running = handle_events(w, s) && running;
-            scene_draw(s);
-            acc -= STEP_NS;
-            steps++;
-        }
-        if (steps == 0) {                           /* nothing simulated yet: still poll so quit is prompt */
-            running = handle_events(w, s) && running;
-            scene_draw(s);
-        }
-        if (acc > MAX_CATCH_UP * STEP_NS) acc = STEP_NS;
+        running = poll_events(w, s);
+        for (int i = 0; i < steps; i++) step_held_keys(s);
+        scene_draw(s);
         scene_present(s, w->pixels);
         SDL_UpdateTexture(w->tex, NULL, w->pixels, SK_SCREEN_W * (int)sizeof *w->pixels);
         SDL_RenderClear(w->ren);

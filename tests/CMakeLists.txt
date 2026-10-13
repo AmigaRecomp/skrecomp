@@ -69,7 +69,9 @@ set(SK_TEST_NAMES
   scene_real_level0_screenshot
   bobs_estimate_real_sheets
   window_runs_headless_frames
-  window_camera_step_clamps)
+  window_camera_step_clamps
+  window_fixed_step_accumulator
+  adf_rejects_out_of_range_pointers)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

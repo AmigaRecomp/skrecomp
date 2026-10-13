@@ -99,6 +99,15 @@ void test_scene_real_level0_screenshot(void) {       /* ROM-backed */
     CHECK_STR(e.msg, "section 9");
     CHECK(!scene_load_level(&s, 42, &e));
     CHECK_STR(e.msg, "42");
+    /* errors from inner decoders keep their text and get exactly one context prefix */
+    CHECK(!scene_load_level(&s, 41, &e));                 /* disk 4 file041 is a graphics set, not a level */
+    CHECK_STR(e.msg, "level 41");
+    CHECK_STR(e.msg, "chunk 0");
+    CHECK(strstr(e.msg, "level 41") == strrchr(e.msg, 'l') - 7 || strstr(strstr(e.msg, "level 41") + 1, "level 41") == NULL);
+    CHECK(!scene_load_section(&s, "file000", 0, 0, 0, &e));   /* a level file is not a sections file */
+    CHECK_STR(e.msg, "file000");
+    CHECK_STR(e.msg, "bad section header");
+    CHECK(strstr(strstr(e.msg, "file000") + 1, "file000") == NULL);
     scene_close(&s);
 }
 

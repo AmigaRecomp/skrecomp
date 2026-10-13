@@ -65,3 +65,29 @@ void test_adf_rejects_damaged_images(void) {
     CHECK_STR(e.msg, "cycle");
     free(img);
 }
+
+void test_adf_rejects_out_of_range_pointers(void) {   /* hostile images must fail, never index past the bitmap */
+    uint8_t *img = NULL;
+    size_t n = 0;
+    sk_adf v;
+    sk_err e = {0};
+    uint8_t *f = NULL;
+    size_t fn = 0;
+    CHECK(load_image(&img, &n));
+    uint8_t *root = img + 880 * 512;
+    uint32_t saved = be32(root + 24);
+    put_be32(root + 24, 0xFFFFFFF0u);                  /* first hash slot points far outside the image */
+    CHECK(adf_open(&v, img, n, &e));
+    CHECK(!adf_read_file(&v, "nope", &f, &fn, &e));
+    CHECK_STR(e.msg, "out of range");
+    put_be32(root + 24, saved);
+    /* the first file's extension pointer points outside the image */
+    uint32_t b = 0;
+    for (int i = 0; i < 72 && b == 0; i++) b = be32(root + 24 + 4 * i);
+    CHECK(b != 0);
+    put_be32(img + b * 512 + 512 - 8, 0x7FFFFFFFu);
+    CHECK(!adf_read_file(&v, "file000", &f, &fn, &e));
+    CHECK_STR(e.msg, "out of range");
+    CHECK(f == NULL);
+    free(img);
+}

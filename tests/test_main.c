@@ -51,6 +51,8 @@ void test_scene_real_level0_screenshot(void);
 void test_bobs_estimate_real_sheets(void);
 void test_window_runs_headless_frames(void);
 void test_window_camera_step_clamps(void);
+void test_window_fixed_step_accumulator(void);
+void test_adf_rejects_out_of_range_pointers(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -99,6 +101,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "bobs_estimate_real_sheets", test_bobs_estimate_real_sheets },
     { "window_runs_headless_frames", test_window_runs_headless_frames },
     { "window_camera_step_clamps", test_window_camera_step_clamps },
+    { "window_fixed_step_accumulator", test_window_fixed_step_accumulator },
+    { "adf_rejects_out_of_range_pointers", test_adf_rejects_out_of_range_pointers },
 };
 
 int main(int argc, char **argv) {

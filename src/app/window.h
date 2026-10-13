@@ -24,4 +24,8 @@ void window_close(sk_window *w);
 /* Moves the camera by (dx, dy) * step pixels, clamped to the scene's limits (pure, for tests). */
 void window_step_camera(sk_scene *s, int dx, int dy, int step);
 
+/* Fixed-step pacing: adds elapsed_ns to the accumulator and returns how many 20 ms steps to run
+   (at most 5; a longer backlog is dropped so a stall never turns into a burst). Pure, for tests. */
+int window_steps_for(uint64_t *acc_ns, uint64_t elapsed_ns);
+
 #endif

@@ -40,3 +40,13 @@ void test_window_camera_step_clamps(void) {
     window_step_camera(&s, 0, 1, 121);
     CHECK_EQ(s.cam_y, 120);
 }
+
+void test_window_fixed_step_accumulator(void) {
+    uint64_t acc = 0;
+    CHECK_EQ(window_steps_for(&acc, 50000000ull), 2);     /* 50 ms -> two 20 ms steps, 10 ms left */
+    CHECK_EQ(acc, 10000000ull);
+    CHECK_EQ(window_steps_for(&acc, 5000000ull), 0);      /* 15 ms: not yet a step */
+    CHECK_EQ(acc, 15000000ull);
+    CHECK_EQ(window_steps_for(&acc, 1000000000ull), 5);   /* a one-second stall: capped at 5 steps */
+    CHECK(acc <= 20000000ull);                            /* and the backlog is dropped */
+}

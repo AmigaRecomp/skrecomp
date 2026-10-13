@@ -82,9 +82,10 @@ bool scene_load_section(sk_scene *s, const char *file_name, int section, int fra
     size_t n;
     if (!disks_read(&s->disks, s->level_disk, file_name, &data, &n, e)) return false;
     sk_sections secs = {0};
-    bool ok = sections_parse(data, n, &secs, e);
+    sk_err inner = {0};
+    bool ok = sections_parse(data, n, &secs, &inner);
     free(data);
-    if (!ok) return sk_fail(e, "%s: %s", file_name, e->msg);
+    if (!ok) return sk_fail(e, "%s: %s", file_name, inner.msg);
     if (section < 0 || section >= secs.count) {
         sections_free(&secs);
         return sk_fail(e, "%s: section %d does not exist (%d sections)", file_name, section, secs.count);
@@ -125,11 +126,13 @@ bool scene_load_level(sk_scene *s, int data_index, sk_err *e) {
     int disk = rec->disk + 1;
     uint8_t *data;
     size_t n;
-    if (!disks_read_file_no(&s->disks, disk, data_index, false, &data, &n, e)) return false;
+    sk_err inner = {0};
+    if (!disks_read_file_no(&s->disks, disk, data_index, false, &data, &n, &inner))
+        return sk_fail(e, "level %d: %s", data_index, inner.msg);
     sk_level lv = {0};
-    bool ok = level_parse(data, n, &lv, e);
+    bool ok = level_parse(data, n, &lv, &inner);
     free(data);
-    if (!ok) return sk_fail(e, "level %d (disk %d file%03d): %s", data_index, disk, data_index, e->msg);
+    if (!ok) return sk_fail(e, "level %d (disk %d file%03d): %s", data_index, disk, data_index, inner.msg);
     drop_section(s);
     if (s->has_level) level_free(&s->level);
     s->level = lv;

@@ -30,7 +30,8 @@ static const uint8_t *block(const sk_adf *v, uint32_t n, sk_err *e) {
     return v->data + (size_t)n * BLOCK;
 }
 
-static bool mark_seen(uint8_t *seen, uint32_t n) {       /* false when already seen */
+static bool mark_seen(uint8_t *seen, uint32_t n) {       /* false when already seen; n < MAX_BLOCKS (block() ran first) */
+    if (n >= MAX_BLOCKS) return false;
     uint8_t bit = (uint8_t)(1u << (n & 7));
     if (seen[n >> 3] & bit) return false;
     seen[n >> 3] |= bit;
@@ -71,9 +72,9 @@ static void walk_dir(walk *w, const uint8_t *dir) {
     for (int i = 0; i < HT_SIZE && w->ok && !w->header; i++) {
         uint32_t ptr = be32(dir + 24 + 4 * i);
         while (ptr && w->ok && !w->header) {
-            if (!mark_seen(w->seen, ptr)) { w->ok = sk_fail(w->e, "block %u: cycle in the directory structure", ptr); return; }
-            const uint8_t *b = block(w->v, ptr, w->e);
+            const uint8_t *b = block(w->v, ptr, w->e);          /* range check before the bitmap is touched */
             if (!b) { w->ok = false; return; }
+            if (!mark_seen(w->seen, ptr)) { w->ok = sk_fail(w->e, "block %u: cycle in the directory structure", ptr); return; }
             if (be32(b) != T_HEADER) { w->ok = sk_fail(w->e, "block %u: expected a header block", ptr); return; }
             int32_t sec = (int32_t)be32(b + BLOCK - 4);
             if (sec == ST_USERDIR) {
@@ -100,9 +101,9 @@ static bool read_data(const sk_adf *v, uint32_t header, uint8_t **out, size_t *l
     memset(seen, 0, sizeof seen);
     uint32_t blk = header;
     while (blk) {
-        if (!mark_seen(seen, blk)) { free(buf); return sk_fail(e, "block %u: cycle in the file's extension chain", blk); }
         const uint8_t *b = block(v, blk, e);
         if (!b) { free(buf); return false; }
+        if (!mark_seen(seen, blk)) { free(buf); return sk_fail(e, "block %u: cycle in the file's extension chain", blk); }
         uint32_t count = be32(b + 8);
         if (count > HT_SIZE) { free(buf); return sk_fail(e, "block %u: data block count %u exceeds %d", blk, count, HT_SIZE); }
         for (uint32_t i = 0; i < count; i++) {
