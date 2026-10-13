@@ -243,6 +243,12 @@ void test_a_test_start_takes_the_layer_switches_on_its_left(void);
 void test_paula_plays_at_the_period_rate(void);
 void test_paula_latches_the_loop_at_the_block_end(void);
 void test_paula_short_and_bad_loops(void);
+void test_replay_starts_a_note(void);
+void test_replay_speed_volume_and_jump(void);
+void test_replay_fade_and_channel_four(void);
+void test_replay_new_note_quirk_applies_the_offset(void);
+void test_replay_clamps_to_the_module(void);
+void test_all_modules_play(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -483,6 +489,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "paula_plays_at_the_period_rate", test_paula_plays_at_the_period_rate },
     { "paula_latches_the_loop_at_the_block_end", test_paula_latches_the_loop_at_the_block_end },
     { "paula_short_and_bad_loops", test_paula_short_and_bad_loops },
+    { "replay_starts_a_note", test_replay_starts_a_note },
+    { "replay_speed_volume_and_jump", test_replay_speed_volume_and_jump },
+    { "replay_fade_and_channel_four", test_replay_fade_and_channel_four },
+    { "replay_new_note_quirk_applies_the_offset", test_replay_new_note_quirk_applies_the_offset },
+    { "replay_clamps_to_the_module", test_replay_clamps_to_the_module },
+    { "all_modules_play", test_all_modules_play },
 };
 
 int main(int argc, char **argv) {

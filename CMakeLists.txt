@@ -57,7 +57,8 @@ add_library(skcore STATIC
   src/game/obj_italy.c
   src/game/attr_country_london.c
   src/game/attr_italy.c
-  src/audio/paula.c)
+  src/audio/paula.c
+  src/audio/ptreplay.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB SDL3::SDL3)
 

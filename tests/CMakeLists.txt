@@ -39,6 +39,7 @@ add_executable(sk_tests
   test_obj_london.c
   test_obj_country.c
   test_paula.c
+  test_ptreplay.c
   test_obj_italy.c
   test_attr_italy.c
   test_attr_country_london.c)
@@ -285,7 +286,13 @@ set(SK_TEST_NAMES
   a_test_start_takes_the_layer_switches_on_its_left
   paula_plays_at_the_period_rate
   paula_latches_the_loop_at_the_block_end
-  paula_short_and_bad_loops)
+  paula_short_and_bad_loops
+  replay_starts_a_note
+  replay_speed_volume_and_jump
+  replay_fade_and_channel_four
+  replay_new_note_quirk_applies_the_offset
+  replay_clamps_to_the_module
+  all_modules_play)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
