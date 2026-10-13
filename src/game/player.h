@@ -41,7 +41,7 @@ typedef struct sk_player {
     uint8_t skidding;       /* +0x42 */
     uint8_t controllable;   /* +0x43 */
     uint8_t jump_input;     /* +0x44 */
-    uint8_t blocked;        /* +0x45 */
+    uint8_t run_chain;      /* +0x45: a state handler asks for the movement chain to run after it */
     int8_t on_rope;         /* +0x46 */
     uint8_t pushing;        /* +0x47 (the edge teeter flag; see the ledger) */
     int8_t ball_hold;       /* +0x48 */
@@ -83,6 +83,8 @@ int  ceiling_probe_at(sk_game *g, int x, int y);   /* the probe plus its side ef
 void edge_probe_step(sk_game *g);
 int  hurt_player(sk_game *g);               /* -1 hit, -2 killed, -3 ignored */
 void bounce_player(sk_game *g);
+void kill_player(sk_game *g);               /* sub_10A780: instant death (deadly tiles) */
+void freeze_death_target(sk_game *g);       /* sub_106C22: camera_target -> death_target_x/y */
 void player_physics(sk_game *g);            /* the non-ball part of 0x10A80A */
 void player_logic(sk_game *g);              /* 0x10B586: chooses player.anim */
 void update_player(sk_game *g, sk_sprite *kid);   /* 0x10A4DC: player_logic + the kid's sprite placement */
@@ -91,5 +93,6 @@ void update_player(sk_game *g, sk_sprite *kid);   /* 0x10A4DC: player_logic + th
 void dispatch_player_state(sk_game *g);     /* player_states.c */
 void player_tile_attrs(sk_game *g);         /* attrs.c */
 void select_layers(sk_game *g);             /* attrs.c */
+void camera_target(sk_game *g, int *tx, int *ty);   /* camera.c */
 
 #endif

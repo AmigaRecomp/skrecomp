@@ -10,7 +10,6 @@ static bool make_game(void) {
     size_t n = 0; sk_err e = {0};
     memset(&g_g, 0, sizeof g_g); memset(&g_lv, 0, sizeof g_lv);
     if (!load_fixture("level_play.bin", &g_d, &n) || !level_parse(g_d, n, &g_lv, &e) || !world_build(&g_g.world, &g_lv)) return false;
-    g_g.level_bottom_y = g_g.world.fg_max_y + 200;
     init_player(&g_g);
     return true;
 }

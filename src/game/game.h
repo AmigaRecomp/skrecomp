@@ -37,7 +37,7 @@ struct sk_game {
     int frame_ticks, frame_counter;     /* 0x30020E, 0x300064 */
     int camera_x, camera_y, camera_y_raw;   /* 0x3001A2, 0x3001A4, 0x3001BA */
     int shake_amplitude, push_x, look_x;    /* 0x30026A, 0x300268, 0x300242 */
-    int level_bottom_y;                 /* 0x30024C = fg_max_y + 200 */
+    int death_target_x, death_target_y; /* 0x30024A/0x30024C: the camera target frozen by freeze_death_target (sub_106C22) */
     int edge_cache;                     /* 0x3001F4: x the edge probe last ran for */
     int scroll_mode;                    /* 0x30035C; only 0 in 5a */
     uint8_t layer_flags;                /* 0x300363 */
@@ -58,7 +58,9 @@ struct sk_game {
     int level_number, level_data_index; /* 0x30022E, 0x300230 */
     uint8_t hud_redraw;                 /* bit 0 health, 1 lives, 2 score, 3 cards (0x300350..3) */
     int sfx_last, sfx_count;            /* play_sfx hook */
-    bool jingle_requested; int jingle;  /* spawn_jingle / music_request hook */
+    bool jingle_requested; int jingle;  /* spawn_jingle hook */
+    bool music_requested; int music_request;   /* music_request hook (tune number) */
+    uint8_t death_flags;                /* 0x300349: bit 0 = the death's life already taken */
     bool music_stopped;
     void (*step_probe)(sk_game *, int step);
 };

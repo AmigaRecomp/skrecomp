@@ -21,7 +21,8 @@ add_executable(sk_tests
   test_world.c
   test_collision.c
   test_player.c
-  test_sprites.c)
+  test_sprites.c
+  test_player_states.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -92,7 +93,13 @@ set(SK_TEST_NAMES
   kid_frame_decodes_from_the_chip_hunk
   kit_palette_scales_the_base_colours
   present_sprite_priority
-  player_logic_picks_walk_and_jump_frames)
+  player_logic_picks_walk_and_jump_frames
+  knockback_lands_and_grants_invulnerability
+  death_counts_a_life_and_respawns
+  death_with_no_lives_left_is_game_over
+  player_falls_out_of_an_empty_level_and_respawns
+  exit_walk_sets_the_outcome
+  ball_states_are_stubs_that_return_to_normal)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

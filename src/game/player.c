@@ -258,7 +258,7 @@ int hurt_player(sk_game *g) {                                   /* 0x10A6C4 */
     if (g->level_outcome || p->dying) return -3;
     if (p->health == 0) {
         if (p->invulnerable) return -3;
-        /* sub_106C22: a camera effect, not ported */
+        freeze_death_target(g);
         p->dying = 1;
         p->kick_phase = 0;
         p->state = 20;
@@ -300,7 +300,7 @@ void player_input_state(sk_game *g) {                           /* 0x10A576 */
     sk_player *p = &g->player;
     g->mask.built = false;
     p->controllable = 1;
-    p->blocked = 0;
+    p->run_chain = 0;
     p->no_push_up = 0;
     p->anim_hold = 0;
     p->tricking = 0;
@@ -314,7 +314,7 @@ void player_input_state(sk_game *g) {                           /* 0x10A576 */
     p->prev_y = p->y;
     player_physics(g);
     if (p->state) dispatch_player_state(g);
-    if (!p->blocked) {
+    if (p->state == 0 || p->run_chain) {                       /* tst.b $45(a6); beq skip: a handler must ask for the chain */
         crouch_slide(g);
         horizontal_move(g);
         rebuild_player_mask(g);
@@ -334,4 +334,23 @@ void player_input_state(sk_game *g) {                           /* 0x10A576 */
     /* rope_catch: 5b */
     p->idle_frames++;
     p->on_platform = 0;
+}
+
+void freeze_death_target(sk_game *g) {                          /* sub_106C22 */
+    camera_target(g, &g->death_target_x, &g->death_target_y);
+}
+
+void kill_player(sk_game *g) {                                  /* sub_10A780 */
+    sk_player *p = &g->player;
+    if (p->dying) return;
+    freeze_death_target(g);
+    p->dying = 1;
+    p->kick_phase = 0;
+    p->state = 20;
+    g->ball.inactive = 1;
+    p->timer = 0x600;
+    p->health = 0;
+    g->hud_redraw |= 1;
+    play_sfx(g, 7);
+    g->music_stopped = true;
 }

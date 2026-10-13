@@ -70,6 +70,12 @@ void test_kid_frame_decodes_from_the_chip_hunk(void);
 void test_kit_palette_scales_the_base_colours(void);
 void test_present_sprite_priority(void);
 void test_player_logic_picks_walk_and_jump_frames(void);
+void test_knockback_lands_and_grants_invulnerability(void);
+void test_death_counts_a_life_and_respawns(void);
+void test_death_with_no_lives_left_is_game_over(void);
+void test_player_falls_out_of_an_empty_level_and_respawns(void);
+void test_exit_walk_sets_the_outcome(void);
+void test_ball_states_are_stubs_that_return_to_normal(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -137,6 +143,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "kit_palette_scales_the_base_colours", test_kit_palette_scales_the_base_colours },
     { "present_sprite_priority", test_present_sprite_priority },
     { "player_logic_picks_walk_and_jump_frames", test_player_logic_picks_walk_and_jump_frames },
+    { "knockback_lands_and_grants_invulnerability", test_knockback_lands_and_grants_invulnerability },
+    { "death_counts_a_life_and_respawns", test_death_counts_a_life_and_respawns },
+    { "death_with_no_lives_left_is_game_over", test_death_with_no_lives_left_is_game_over },
+    { "player_falls_out_of_an_empty_level_and_respawns", test_player_falls_out_of_an_empty_level_and_respawns },
+    { "exit_walk_sets_the_outcome", test_exit_walk_sets_the_outcome },
+    { "ball_states_are_stubs_that_return_to_normal", test_ball_states_are_stubs_that_return_to_normal },
 };
 
 int main(int argc, char **argv) {
