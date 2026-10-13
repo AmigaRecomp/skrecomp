@@ -25,6 +25,11 @@ static const uint8_t thrown_script[] = { 0, 8, 0, 4, 0, 1, 2, 3, 4, 5, 6, 7, 0, 
 static const uint8_t thrower68_walk_script[] = { 0, 6, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };        /* 0x118DE6 */
 static const uint8_t thrower68_throw_script[] = { 0, 4, 0, 6, 12, 13, 14, 15, 16, 17, 18, 19 };             /* 0x118DF6 */
 static const uint8_t thrown68_script[] = { 0, 2, 0, 10, 0, 0, 1, 1 };                                        /* 0x118E02 */
+static const int16_t flyer_bob[33] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, -1, -1, -1, -1,
+                                      -2, -2, -2, -2, -2, -1, -1, -1, -1, 0x1000 };                  /* 0x119214 */
+static const uint8_t flyer_script[] = { 0, 4, 0, 10, 0, 1, 2, 3, 4, 5, 6, 7 };                  /* 0x119256 */
+static const uint8_t flyer_bare_script[] = { 0, 4, 0, 10, 8, 9, 10, 11, 12, 13, 14, 15 };       /* 0x119262 */
+static const uint8_t wings_script[] = { 0, 8, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7 };   /* 0x119316 */
 static const uint8_t jumper_land_script[] = { 0, 4, 0, 4, 4, 5, 6, 6, 4, 5, 6, 6 };             /* 0x11223A */
 
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
@@ -496,6 +501,102 @@ static void obj_thrower68_update(sk_game *g, sk_slot *s, int index) {         /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 70: the flyer (slot 123): bobs, chases the kid in front of it, loses its wings (type 88) ---- */
+static int t1_lo(const sk_slot *s) { return s->t1 & 0xFF; }                                    /* byte +0x17 */
+static void set_t1_lo(sk_slot *s, int v) { s->t1 = (int16_t)(((uint16_t)s->t1 & 0xFF00) | (v & 0xFF)); }
+
+static void obj_flyer_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x119006 */
+    init_object_slot(g, s, x, y - 48, s->type4);
+    s->vx = 0; s->vy = 0; s->t0 = 0; s->t1 = 0;
+    s->flags |= 4 | 8;
+    s->hits = 2;
+    const uint8_t *f = res(g, 123);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 48, 64, f, 1);                                  /* frames_48x64 */
+    sk_draw *d = slot_draw_record(g, s);
+    if (d && (int16_t)(d->x + 24 - g->player.x) < 0) s->flags |= 1;
+}
+static void obj_flyer_update(sk_game *g, sk_slot *s, int index) {             /* 0x119060 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    if (s->flags & 2) { apply_velocity(s); despawn_if_far(g, s); return; }
+    s->x0 = d->x;
+    apply_velocity_nograv(s);
+    int wrapped = 0;
+    step_animation(s, aux_d(s) ? flyer_bare_script : flyer_script, s->flags, &wrapped);
+    int b = flyer_bob[(uint16_t)s->t0 < 33 ? (uint16_t)s->t0 : 32];   /* port guard: t0 stays inside the table */
+    s->t0++;
+    if (b == 0x1000) { b = flyer_bob[0]; s->t0 = 0; }
+    s->vy = (int16_t)(b * 2);
+    bool go = true;
+    if (!(aux_c(s) & 1)) {
+        int side = s->flags, k = (int16_t)(d->x + 24 - g->player.x);
+        if (k < 0) { k = -k; side ^= 1; }
+        if ((side & 1) || k >= 110) go = false;
+        else { s->vx = 4; set_aux_c(s, aux_c(s) | 1); }
+    }
+    if (go) {
+        set_aux_c(s, aux_c(s) | 2);
+        int dx = (int16_t)(d->x - s->x);
+        if (dx < 0) dx = -dx;
+        if (dx >= 320) { d->x = s->x0; set_aux_c(s, aux_c(s) & ~2); }   /* held at 320 px from its marker */
+        int right = 1, k = (int16_t)(g->player.x - d->x - 24);
+        if (k < 0) { right = 0; k = -k; }
+        if (k <= 2) set_t1_lo(s, 0);
+        if (k >= 64) {
+            int was = s->flags & 1;
+            s->flags = (int16_t)((s->flags & ~1) | right);
+            if (was != right) {
+                set_t1_hi(s, t1_hi(s) + 1);
+                if ((int8_t)t1_hi(s) > 4) { set_t1_lo(s, 0xFF); set_t1_hi(s, 0); }
+            }
+        }
+        if (aux_c(s) & 2) {
+            int dy = (int16_t)(g->player.y - 32 - d->y - (t1_lo(s) ? 0 : 32));
+            s->vy = (int16_t)(s->vy + (dy < 0 ? -2 : 2));
+        }
+    }
+    touch_player(g, d->x, d->y, 32, 54);
+    int r = ball_hits_object(g, s, 0, 0, 48, 64, 8, 0x500);
+    if (r == -2 && s->hits == 1) {                                  /* the first hit: its wings come off */
+        set_aux_d(s, 0xFF);
+        g->objs.marker_param = s->flags & 0xFF;
+        spawn_object(g, d->x + 4, d->y, 88);
+    } else if (r >= 0) {
+        sk_slot *w = find_slot_by_type(g, 88);
+        if (w) w->t0 = 1;                                           /* port guard: the original writes to whatever a1 holds */
+    }
+    if (object_offscreen(g, d->x, d->y, 160) < 0) free_object(g, s);
+}
+
+/* ---- type 88: the flyer's wings (slot 124): follow it, fly off when it dies ---- */
+static void obj_wings_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x11926E */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->flags = (int16_t)(g->objs.marker_param & 1);
+    s->vx = 0; s->vy = 0; s->t0 = 0;
+    const uint8_t *f = res(g, 124);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 48, 39, f, 1);                                  /* sub_107DF0 */
+}
+static void obj_wings_update(sk_game *g, sk_slot *s, int index) {             /* 0x1192AA */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    int wrapped = 0;
+    step_animation(s, wings_script, 0, &wrapped);
+    if (!(s->flags & 2)) {
+        if (aux_c(s) == 0) {
+            sk_slot *f = find_slot_by_type(g, 70);
+            const sk_draw *fd = f ? slot_draw_record(g, f) : NULL;
+            if (fd) { d->x = (int16_t)(fd->x + 4); d->y = fd->y; }   /* port guard: none, it stays */
+        }
+        if (s->t0) { set_aux_c(s, 0xFF); s->vy = -16; s->flags |= 4 | 2; }
+    }
+    if (object_offscreen(g, d->x, d->y, 160) < 0) free_object(g, s);
+}
+
 void obj_italy_install(void) {
     object_init_table[36] = obj_pendulum_init;         object_update_table[36] = obj_pendulum_update;
     object_init_table[37] = obj_jumper_init;           object_update_table[37] = obj_jumper_update;
@@ -506,5 +607,7 @@ void obj_italy_install(void) {
     object_init_table[49] = obj_hopper49_init;         object_update_table[49] = obj_hopper49_update;
     object_init_table[64] = obj_thrower_init;          object_update_table[64] = obj_thrower_update;
     object_init_table[68] = obj_thrower68_init;        object_update_table[68] = obj_thrower68_update;
+    object_init_table[70] = obj_flyer_init;            object_update_table[70] = obj_flyer_update;
+    object_init_table[88] = obj_wings_init;            object_update_table[88] = obj_wings_update;
     object_init_table[100] = obj_rider_init;           object_update_table[100] = obj_rider_update;
 }

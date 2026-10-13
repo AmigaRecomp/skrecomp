@@ -216,6 +216,8 @@ void test_rock_trembles_then_drops_on_the_kid(void);
 void test_hopper_49_bounces_and_leaves(void);
 void test_thrower_64_patrols_and_throws_at_the_kid(void);
 void test_thrower_68_throws_and_waits_25(void);
+void test_flyer_70_bobs_and_chases(void);
+void test_wings_88_follow_then_fly_off(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -429,6 +431,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "hopper_49_bounces_and_leaves", test_hopper_49_bounces_and_leaves },
     { "thrower_64_patrols_and_throws_at_the_kid", test_thrower_64_patrols_and_throws_at_the_kid },
     { "thrower_68_throws_and_waits_25", test_thrower_68_throws_and_waits_25 },
+    { "flyer_70_bobs_and_chases", test_flyer_70_bobs_and_chases },
+    { "wings_88_follow_then_fly_off", test_wings_88_follow_then_fly_off },
 };
 
 int main(int argc, char **argv) {

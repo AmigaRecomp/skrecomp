@@ -227,3 +227,40 @@ void test_thrower_68_throws_and_waits_25(void) {              /* type 68 */
     CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->t0, 25); CHECK_EQ(s->frame, 0);
     drop_game();
 }
+
+void test_flyer_70_bobs_and_chases(void) {                    /* type 70 */
+    CHECK(make_game());
+    g_g.player.x = 1000;
+    sk_slot *s = spawn(200, 8 * 16, 70, 0);
+    CHECK_EQ(s->hits, 2); CHECK_EQ(s->flags & 1, 1); CHECK_EQ(s->draw->h, 64); CHECK_EQ(s->y, 8 * 16 - 48);   /* faces the kid */
+    tick(1);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->vx, 0); CHECK_EQ(s->t0, 1);   /* waits, bobbing */
+    tick(31);
+    CHECK_EQ(s->t0, 32);
+    tick(1);
+    CHECK_EQ(s->t0, 0);                                              /* the 0x1000 end: the 32-step bob wraps */
+    g_g.player.x = (int16_t)(s->draw->x + 24 + 60);
+    tick(1);
+    CHECK_EQ(aux_c(s) & 3, 3); CHECK_EQ(s->vx, 4);                   /* the kid near: it chases */
+    int x = s->draw->x;
+    tick(4);
+    CHECK(s->draw->x > x);
+    drop_game();
+}
+
+void test_wings_88_follow_then_fly_off(void) {                /* type 88 */
+    CHECK(make_game());
+    g_g.player.x = 1000;
+    sk_slot *f = spawn(200, 8 * 16, 70, 0);
+    sk_slot *w = spawn(204, 80, 88, 1);
+    CHECK_EQ(w->flags & 1, 1); CHECK_EQ(w->draw->w, 48); CHECK_EQ(w->draw->h, 39);
+    tick(1);
+    CHECK_EQ(w->draw->x, f->draw->x + 4); CHECK_EQ(w->draw->y, f->draw->y);
+    w->t0 = 1;                                                       /* type 70 killed */
+    tick(1);
+    CHECK_EQ(aux_c(w), 0xFF); CHECK(w->flags & 4); CHECK(w->flags & 2);
+    int y = w->draw->y;
+    tick(3);
+    CHECK(w->draw->y < y);                                           /* flies up */
+    drop_game();
+}
