@@ -216,7 +216,10 @@ set(SK_TEST_NAMES
   bumped_block_carries_the_kid
   platform_type_5_moves_and_reverses
   triggered_platform_type_10_starts_when_stood_on
-  sin_1024_quadrants)
+  sin_1024_quadrants
+  sinking_platform_type_26
+  stomper_type_61_bounces_the_kid
+  fade_colour_steps_toward_white)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

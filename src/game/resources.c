@@ -29,8 +29,9 @@ bool resources_load(sk_resources *r, sk_disks *d, const sk_tables *t, int data_i
         if (!secs) { resources_free(r); return false; }
         if (res->section < secs->count) r->slot[res->slot] = &secs->sec[res->section];
     }
-    for (int i = 0; i < rec->n_params && i < 4; i++) {           /* load_param_resources (0x103114) */
-        const sk_param_entry *pe = tables_param(t, rec->disk, rec->params[i]);
+    for (int i = 0; i < 4; i++) {                                 /* load_param_resources (0x103114): an 0xFF position stays empty */
+        if (rec->param_raw[i] == 0xFF) continue;
+        const sk_param_entry *pe = tables_param(t, rec->disk, rec->param_raw[i]);
         if (!pe) continue;
         const sk_sections *secs = file_sections(r, d, rec->disk + 1, pe->file, e);
         if (!secs) { resources_free(r); return false; }

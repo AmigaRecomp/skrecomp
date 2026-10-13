@@ -104,6 +104,8 @@ struct sk_game {
     uint8_t msg_visible;
     sk_sprite *ball_sprite;             /* where ball_sprites (step 23) writes; NULL = not drawn */
     sk_platform platforms[SK_PLATFORMS]; int platform_count;   /* 0x3028D6 / 0x30022C */
+    uint8_t flash_timer;                /* 0x300364: the screen flash, 16 frames */
+    int flash_table;                    /* 0x30004C: 0 = the fade at 0x3012BA, 1 = 0x30169A */
     int8_t kick_result;                 /* 0x300338 */
     int32_t trick8_bias;                /* 0x30029C */
     int throw_x, throw_y;               /* 0x3002E4/E6: where the recalled ball appears */

@@ -16,6 +16,7 @@ typedef enum { SK_OUTCOME_RUNNING, SK_OUTCOME_NEXT_LEVEL, SK_OUTCOME_GAME_OVER }
 void game_new_game(sk_game *g);                  /* lives 3, score 0, level_number 1 */
 bool game_setup_level(sk_game *g, const sk_level *lv, int data_index);   /* builds the world; false = out of memory */
 void game_close(sk_game *g);                     /* frees the world */
+uint16_t fade_colour(uint16_t from, uint16_t to, int step);   /* build_fade_tables (0x104D74 / sub_104E40): step 0..15 */
 void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid);   /* the VBL work + the frame loop's steps; sets level_end */
 void run_curtain(sk_game *g);
 int  curtain_rows(const sk_game *g);             /* play-area rows hidden at the top (and the bottom) */

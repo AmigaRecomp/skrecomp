@@ -8,6 +8,7 @@
 #include "game/obj_helpers.h"
 #include "game/obj_london.h"
 #include "game/platforms.h"
+#include "game/player.h"
 #include "game/resources.h"
 
 static const uint16_t platform_margins[16] = {                 /* 0x1177D6 (the same at 0x117E9E): (x, y) by angle / 32 */
@@ -163,7 +164,109 @@ static void obj_platform_trigger_update(sk_game *g, sk_slot *s, int index) {   /
     d->dflags |= 4;
 }
 
+/* ---- type 26: the platform that sinks under the kid (COUNTRY2; 0x117EBE / 0x117F66) ---- */
+static void obj_sinking_init(sk_game *g, sk_slot *s, int x, int y) {
+    x += 8;
+    init_object_slot(g, s, x, y, s->type4);
+    s->timer = 0;
+    int index = -1;
+    sk_platform *pf = alloc_platform(g, &index);
+    s->platform = index;
+    s->flags = (int16_t)(index < 0 ? 0xFF : (index * 32) >> 8);
+    const sk_section *sec = g->res ? g->res->param[2].sec : NULL;   /* move.w #$80,d0: always entry 2 */
+    if (!pf || !sec) { if (pf) free_platform(g, s); free_object(g, s); return; }
+    const uint8_t *b = g->res->param[2].bytes;
+    pf->px = (int32_t)((uint32_t)(uint16_t)(x + (int8_t)b[2]) << 16);
+    pf->py = (int32_t)((uint32_t)(uint16_t)(y + (int8_t)b[3]) << 16);
+    pf->half_w = b[0]; pf->half_h = b[1];
+    s->anim = b[3];
+    s->y0 = hi(pf->py);                                            /* the rest height */
+    pf->stand_dy = b[5];
+    s->t0 = 2;
+    set_draw_size_at(g, s, 2 * pf->half_w, 2 * pf->half_h, sec->data);
+    sk_draw *d = slot_draw_record(g, s);
+    if (d) { d->frames_len = sec->len; pf->pframe = (size_t)(4 * (uint16_t)d->plane_bytes) < sec->len ? d->frames + 4 * (uint16_t)d->plane_bytes : NULL; }
+}
+static void obj_sinking_update(sk_game *g, sk_slot *s, int index) {
+    (void)index;
+    sk_platform *pf = slot_platform(g, s);
+    sk_draw *d = slot_draw_record(g, s);
+    if (!pf || !d) return;
+    int d4 = (int16_t)(s->t1 - s->t0), depth = (int16_t)(hi(pf->py) - s->y0), frame = 0, lift = 1;
+    if (depth < 0) { if (d4 < 0) d4 = (g->frame_ticks & 7) ? 0 : 1; }
+    else if (depth >= 32) { frame = 2; lift = 8; }
+    else if (depth >= 16) { frame = 1; lift = 4; }
+    set_object_frame(s, frame);
+    pf->py = with_hi(pf->py, hi(pf->py) + d4);
+    int r = platform_carry(g, pf, 0, d4);
+    s->t1 = r ? 3 : 0;
+    d->x = (int16_t)(hi(pf->px) - pf->half_w);
+    d->y = (int16_t)(hi(pf->py) - lift);
+    if (object_offscreen(g, s->x, s->y, 160) < 0) {
+        g->mask.dirty = true; g->bw.mask_dirty = true;
+        free_platform(g, s);
+        free_object(g, s);
+    }
+}
+
+/* ---- type 61: the stomper (slot 89; debris slot 98) ---- */
+static const uint8_t stomper_walk_script[] = { 0, 6, 0, 8, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };   /* 0x113F1E */
+static const uint8_t stomper_stomp_script[] = { 0, 11, 0, 3, 0, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0 };   /* 0x113F2E */
+static void obj_stomper_init(sk_game *g, sk_slot *s, int x, int y) {          /* 0x113D80 */
+    init_object_slot(g, s, x, y - 48, s->type4);
+    s->vx = 2; s->vy = 0; s->flags |= 8; s->hits = 2; s->t0 = 0;
+    const uint8_t *f = g->res ? resource_slot(g->res, 89, NULL) : NULL;
+    if (!f) { free_object(g, s); return; }
+    frames_64x64(g, s, f, 1);
+}
+static void obj_stomper_update(sk_game *g, sk_slot *s, int index) {           /* 0x113DBA */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    sk_player *p = &g->player;
+    apply_velocity(s);
+    if (s->flags & 2) { despawn_if_far(g, s); return; }
+    bool stomp = aux_c(s) == 1;
+    if (!stomp) {
+        int wrapped = 0;
+        step_animation(s, stomper_walk_script, s->flags, &wrapped);
+        int dist = d->x - s->x;
+        if (dist < 0) dist = -dist;
+        if ((uint16_t)dist >= 200 || ground_ahead(g, s, s->flags)) s->flags ^= 1;
+        if (s->t0) s->t0--;
+        else {
+            int dy = (int16_t)(p->y + 40 - d->y), dx = (int16_t)(d->x + 32 - p->x);
+            if (dx < 0) dx = -dx;
+            if (dy >= 0 && dy < 0x44 && dx < 0x5A) {
+                s->anim_tick = 0; s->anim_index = 0;
+                s->vx = 0; set_aux_c(s, 1); stomp = true;
+            }
+        }
+    }
+    if (stomp) {
+        int wrapped = 0, changed = step_animation(s, stomper_stomp_script, 0, &wrapped);
+        if (changed && s->anim_index == 7) {                       /* the stamp: the kid is thrown, the screen flashes */
+            bounce_player(g);
+            g->flash_timer = 16;
+            g->flash_table = 0;
+        }
+        if (wrapped) { s->anim_tick = 0; s->anim_index = 0; s->vx = 2; set_aux_c(s, 0); s->t0 = 25; }
+    }
+    touch_player(g, d->x, d->y, 64, 64);
+    if (ball_hits_object(g, s, 0, 0, 64, 64, 15, 0x500) >= 0) {
+        sk_objects *o = &g->objs;
+        const uint8_t *f = g->res ? resource_slot(g->res, 98, NULL) : NULL;
+        o->child_frames = f; o->child_w = 32; o->child_h = 12; o->child_vx = 2; o->child_vy = -12;
+        spawn_object(g, d->x + 16, d->y, 116);
+        o->child_vx = -2; o->child_vy = -14;
+        if (f) o->child_frames = f + 0xF0;
+        spawn_object(g, d->x + 16, d->y + 32, 116);
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_london_install(void) {
+    object_init_table[26] = obj_sinking_init;          object_update_table[26] = obj_sinking_update;
+    object_init_table[61] = obj_stomper_init;          object_update_table[61] = obj_stomper_update;
     object_init_table[5] = obj_platform_init;          object_update_table[5] = obj_platform_update;
     object_init_table[10] = obj_platform_trigger_init; object_update_table[10] = obj_platform_trigger_update;
 }

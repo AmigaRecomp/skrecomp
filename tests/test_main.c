@@ -179,6 +179,9 @@ void test_bumped_block_carries_the_kid(void);
 void test_platform_type_5_moves_and_reverses(void);
 void test_triggered_platform_type_10_starts_when_stood_on(void);
 void test_sin_1024_quadrants(void);
+void test_sinking_platform_type_26(void);
+void test_stomper_type_61_bounces_the_kid(void);
+void test_fade_colour_steps_toward_white(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -355,6 +358,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "platform_type_5_moves_and_reverses", test_platform_type_5_moves_and_reverses },
     { "triggered_platform_type_10_starts_when_stood_on", test_triggered_platform_type_10_starts_when_stood_on },
     { "sin_1024_quadrants", test_sin_1024_quadrants },
+    { "sinking_platform_type_26", test_sinking_platform_type_26 },
+    { "stomper_type_61_bounces_the_kid", test_stomper_type_61_bounces_the_kid },
+    { "fade_colour_steps_toward_white", test_fade_colour_steps_toward_white },
 };
 
 int main(int argc, char **argv) {

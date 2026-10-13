@@ -79,3 +79,41 @@ void test_sin_1024_quadrants(void) {
     CHECK_EQ(sin_1024(0), 0); CHECK_EQ(sin_1024(256), 256); CHECK_EQ(sin_1024(512), 0); CHECK_EQ(sin_1024(768), -256);
     CHECK_EQ(cos_1024(0), 256); CHECK_EQ(sin_1024(128), 181); CHECK_EQ(sin_1024(257), sin_1024(255));
 }
+
+void test_sinking_platform_type_26(void) {
+    CHECK(make_game());
+    g_res.param[2].sec = &g_psec;                                    /* position 2 is hard-wired (move.w #$80,d0) */
+    static const uint8_t bytes[6] = { 16, 12, 0, 8, 0, 0 };          /* COUNTRY2's entry */
+    memcpy(g_res.param[2].bytes, bytes, 6);
+    sk_slot *s = spawn(200, 100, 26, 0);
+    sk_platform *pf = slot_platform(&g_g, s);
+    CHECK(pf != NULL); CHECK_EQ(pf->py >> 16, 108); CHECK_EQ(s->y0, 108); CHECK_EQ(s->t0, 2); CHECK_EQ(pf->half_h, 12);
+    g_g.player.jumping = 0; g_g.player.falling = 0; g_g.player.x = 208;
+    s->t1 = 3;                                                       /* stood on */
+    for (int k = 0; k < 20; k++) { g_g.player.y = (int16_t)((pf->py >> 16) + 1 - 41); tick(1); }   /* he stays on it */
+    CHECK_EQ(pf->py >> 16, 108 + 20); CHECK_EQ(s->frame, 1); CHECK_EQ(s->draw->y, 108 + 20 - 4);
+    g_g.player.x = 1000;
+    tick(15);
+    CHECK(pf->py >> 16 >= 106 && pf->py >> 16 <= 108);              /* back at rest, 2 a frame */
+    for (int k = 0; k < 40; k++) { tick(1); CHECK(pf->py >> 16 >= 106 && pf->py >> 16 <= 108); }   /* hovering within 2 px */
+    drop_game();
+}
+
+void test_stomper_type_61_bounces_the_kid(void) {
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 61, 0);
+    CHECK_EQ(s->hits, 2); CHECK_EQ(s->vx, 2); CHECK_EQ(s->draw->w, 64); CHECK_EQ(s->draw->y, 11 * 16 - 48);
+    g_g.player.x = (int16_t)(s->draw->x + 32 - 85); g_g.player.y = 12 * 16 - 41; g_g.player.invulnerable = 0;   /* in range, out of reach */
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->vx, 0);
+    int i = 0;
+    while (g_g.player.state != 72 && i++ < 60) tick(1);
+    CHECK_EQ(g_g.player.state, 72); CHECK_EQ(g_g.flash_timer, 16);
+    drop_game();
+}
+
+void test_fade_colour_steps_toward_white(void) {
+    CHECK_EQ(fade_colour(0x000, 0xFFF, 0), 0x000);
+    CHECK_EQ(fade_colour(0x000, 0xFFF, 8), 0x777);                  /* 8 steps of 15/16 */
+    CHECK_EQ(fade_colour(0x123, 0xFFF, 15), 0xEEE);
+}

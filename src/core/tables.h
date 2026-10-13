@@ -27,6 +27,7 @@ typedef struct {
     uint8_t n_res, res[32];     /* indices into that disk's resource table, in load order */
     uint8_t music;              /* music file number */
     uint8_t n_params, params[4];
+    uint8_t param_raw[4];       /* the four positions as stored (0xFF = none): load_param_resources keeps positions */
     uint8_t n_extra, extra[3];
 } sk_level_record;
 

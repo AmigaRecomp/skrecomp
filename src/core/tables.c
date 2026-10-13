@@ -6,6 +6,7 @@
 static void parse_record(const uint8_t *raw, sk_level_record *r) {
     memset(r, 0, sizeof *r);
     r->disk = raw[2];
+    for (int i = 7; i < 11; i++) r->param_raw[i - 7] = raw[i];
     for (int i = 7; i < 11; i++)
         if (raw[i] != 0xFF) r->params[r->n_params++] = raw[i];
     for (int i = 11; i < 43 && raw[i] != 0xFF; i++)

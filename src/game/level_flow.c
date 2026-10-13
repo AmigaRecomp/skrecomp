@@ -140,6 +140,14 @@ void run_curtain(sk_game *g) {                                  /* 0x10471A */
 
 int curtain_rows(const sk_game *g) { return g->curtain_top > 0 ? g->curtain_top : 0; }
 
+uint16_t fade_colour(uint16_t from, uint16_t to, int step) {     /* sub_104E40: one of the 16 steps */
+    uint16_t d0 = from & 0xF00, d1 = from & 0xF0, d2 = (uint16_t)((from & 0xF) << 4);
+    uint16_t d3 = (uint16_t)((uint16_t)((to & 0xF00) - d0) >> 4), d4 = (uint16_t)((uint16_t)((to & 0xF0) - d1) >> 4);
+    uint16_t d5 = (uint16_t)((to & 0xF) - (from & 0xF));
+    for (int k = 0; k < step; k++) { d0 = (uint16_t)(d0 + d3); d1 = (uint16_t)(d1 + d4); d2 = (uint16_t)(d2 + d5); }
+    return (uint16_t)((d0 & 0xF00) | (d1 & 0xF0) | ((d2 & 0xF0) >> 4));
+}
+
 void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     if (g->message_wait) {                                       /* step 31 (sub_11C816): the game waits for fire */
         g->input_state = input;
@@ -154,6 +162,7 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     step(g, 1); g->frame_ticks++;
     step(g, 2);
     if (g->powerup_timer && --g->powerup_timer == 0) g->player.powerup = 0;
+    if (g->flash_timer) g->flash_timer--;                       /* step 6 (sub_104C78): the app shows the fade step */
     step(g, 3);
     if (g->shake_amplitude && g->scroll_mode != 2 && (g->frame_ticks & 3) == 0) {
         g->shake_amplitude = -g->shake_amplitude;
