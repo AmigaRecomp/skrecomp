@@ -30,7 +30,8 @@ add_executable(sk_tests
   test_play.c
   test_resources.c
   test_ball.c
-  test_tricks.c)
+  test_tricks.c
+  test_obj_helpers.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -150,7 +151,13 @@ set(SK_TEST_NAMES
   tricks_set_the_table_velocities
   volley_right_and_left
   spring_off_the_ball
-  kick_charge_table)
+  kick_charge_table
+  ball_hits_object_counts_hits_and_kills
+  ball_overlap_ignores_a_resting_ball
+  child_spawn_with_full_slots_is_skipped
+  spawn_child_mirrors_for_a_right_facing_parent
+  ground_ahead_at_the_pit_edge
+  frames_32x30_sizes)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

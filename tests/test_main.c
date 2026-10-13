@@ -119,6 +119,12 @@ void test_tricks_set_the_table_velocities(void);
 void test_volley_right_and_left(void);
 void test_spring_off_the_ball(void);
 void test_kick_charge_table(void);
+void test_ball_hits_object_counts_hits_and_kills(void);
+void test_ball_overlap_ignores_a_resting_ball(void);
+void test_child_spawn_with_full_slots_is_skipped(void);
+void test_spawn_child_mirrors_for_a_right_facing_parent(void);
+void test_ground_ahead_at_the_pit_edge(void);
+void test_frames_32x30_sizes(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -235,6 +241,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "volley_right_and_left", test_volley_right_and_left },
     { "spring_off_the_ball", test_spring_off_the_ball },
     { "kick_charge_table", test_kick_charge_table },
+    { "ball_hits_object_counts_hits_and_kills", test_ball_hits_object_counts_hits_and_kills },
+    { "ball_overlap_ignores_a_resting_ball", test_ball_overlap_ignores_a_resting_ball },
+    { "child_spawn_with_full_slots_is_skipped", test_child_spawn_with_full_slots_is_skipped },
+    { "spawn_child_mirrors_for_a_right_facing_parent", test_spawn_child_mirrors_for_a_right_facing_parent },
+    { "ground_ahead_at_the_pit_edge", test_ground_ahead_at_the_pit_edge },
+    { "frames_32x30_sizes", test_frames_32x30_sizes },
 };
 
 int main(int argc, char **argv) {

@@ -230,7 +230,7 @@ void draw_all_objects(sk_game *g, sk_fb *fb, int cam_x, int cam_y) {   /* 0x1082
 
 int touch_player(sk_game *g, int x, int y, int half_w, int half_h) {   /* 0x10E354 */
     sk_player *p = &g->player;
-    if (g->untouchable) return 0;
+    if (g->untouchable || g->player_hidden) return 0;
     int dx = p->x - 8 - x;
     if (dx < 0) { dx = -dx; half_w = 16; }
     int py = p->y, reach = 0x26;

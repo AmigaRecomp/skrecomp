@@ -37,7 +37,7 @@ struct sk_game {
     sk_objects objs;
     sk_attrs attrs;
     int object_count;                   /* 0x300228 */
-    bool untouchable;                   /* bytes 0x30033A / 0x300382: touch_player ignores the kid */
+    bool untouchable;                   /* byte 0x30033A: touch_player ignores the kid */
     uint8_t input_state;                /* the five SK_IN_ bits (0x300387) */
     int frame_ticks, frame_counter;     /* 0x30020E, 0x300064 */
     int camera_x, camera_y, camera_y_raw;   /* 0x3001A2, 0x3001A4, 0x3001BA */
@@ -71,6 +71,9 @@ struct sk_game {
     bool jingle_requested; int jingle;  /* spawn_jingle hook */
     bool music_requested; int music_request;   /* music_request hook (tune number) */
     uint8_t kill_kind;                  /* 0x30037F: 1 pick-up kick, 2 volley, 3 overhead (kill statistics) */
+    uint8_t kills[4];                   /* 0x300373 / 0x300375 / 0x300374 by kill_kind 1..3 */
+    uint32_t score_value;               /* 0x300050: the score the type-113 popup shows */
+    bool player_hidden;                 /* 0x300382: set by the attribute handler at 0x11BE3E (not in England 1/2); ball_overlap and touch_player skip */
     int8_t kick_result;                 /* 0x300338 */
     int32_t trick8_bias;                /* 0x30029C */
     int throw_x, throw_y;               /* 0x3002E4/E6: where the recalled ball appears */
