@@ -55,3 +55,13 @@ void test_paula_short_and_bad_loops(void) {                          /* Review F
     paula_render(&p, out, 48000);
     CHECK(1);
 }
+
+void test_paula_without_a_rate_is_silent(void) {                     /* a zeroed model (never initialised) */
+    static sk_paula p;
+    memset(&p, 0, sizeof p);
+    p.ch[0].on = true; p.ch[0].vol = 64;
+    int16_t out[2 * 16];
+    memset(out, 0x55, sizeof out);
+    paula_render(&p, out, 16);
+    for (int i = 0; i < 32; i++) CHECK_EQ(out[i], 0);
+}

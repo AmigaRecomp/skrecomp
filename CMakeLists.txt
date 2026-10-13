@@ -59,7 +59,8 @@ add_library(skcore STATIC
   src/game/attr_italy.c
   src/audio/paula.c
   src/audio/ptreplay.c
-  src/audio/sound.c)
+  src/audio/sound.c
+  src/app/audio_out.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB SDL3::SDL3)
 

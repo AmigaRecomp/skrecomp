@@ -39,6 +39,7 @@ static int sample(sk_paula_ch *c, uint64_t step) {
 }
 
 void paula_render(sk_paula *p, int16_t *out, int frames) {
+    if (p->rate <= 0) { memset(out, 0, (size_t)frames * 4); return; }   /* never initialised: silence */
     uint64_t step[4];
     for (int i = 0; i < 4; i++) {
         unsigned per = p->ch[i].per < 113 ? 113 : p->ch[i].per;   /* the DMA's fastest fetch */

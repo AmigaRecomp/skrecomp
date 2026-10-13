@@ -82,7 +82,7 @@ void test_play_step_reports_a_failed_load(void) {               /* 5a #9 */
     CHECK(make_play());
     g_p.scene.level_index = 99;                                   /* the next level must be read from disk: there is none */
     g_p.game.level_outcome = 0x81; g_p.game.level_end = true;
-    play_step(&g_p, 0);
+    for (int i = 0; i < 70 && !g_p.load_failed; i++) play_step(&g_p, 0);   /* after the 64-frame fade */
     CHECK(g_p.load_failed); CHECK(g_p.load_err.msg[0] != 0);
     int frames = g_p.game.frame_counter;
     play_step(&g_p, 0);
@@ -231,5 +231,40 @@ void test_a_test_start_takes_the_layer_switches_on_its_left(void) {   /* ROM-bac
     sk_args b = { .roms = roms, .level = 6, .scale = 1, .section = -1, .has_start = true, .start_x = 150, .start_y = 64 };
     CHECK(play_open(&p, &b, &e));
     CHECK_EQ(p.game.layer_flags, 0);                                 /* before it: behind */
+    play_close(&p);
+}
+
+void test_play_runs_without_audio(void) {                           /* ROM-backed, Review Focus 5: no device, the sound still steps */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 0, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    CHECK(p.audio == NULL);
+    CHECK(p.snd.slot[0] != NULL);                                    /* England 1's module loaded */
+    for (int i = 0; i < 400; i++) play_step(&p, 0);
+    CHECK(p.snd.pt.playing);                                         /* KICK OFF: the jingle, then the level tune */
+    CHECK(p.snd.pt.mod == p.snd.slot[0]);
+    long energy = 0;
+    for (int k = 0; k < 2 * 960; k += 8) energy += p.audio_buf[k] < 0 ? -p.audio_buf[k] : p.audio_buf[k];
+    CHECK(energy > 0);
+    play_close(&p);
+}
+
+void test_music_survives_a_level_change(void) {                     /* ROM-backed, Review Focus 4 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 0, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    for (int i = 0; i < 400; i++) play_step(&p, 0);
+    p.game.level_outcome = 0x81; p.game.level_end = true;           /* the level is won */
+    int frames = 0;
+    while (p.scene.level_index == 0 && frames++ < 400) play_step(&p, 0);
+    CHECK(p.scene.level_index != 0);
+    CHECK(frames >= 64);                                             /* the 64-frame fade first (0x1040F2) */
+    CHECK(p.snd.slot[0] != NULL);
+    for (int i = 0; i < 300; i++) play_step(&p, 0);                  /* plays the new level's module (ASan: no freed one) */
+    CHECK(p.snd.pt.mod == NULL || p.snd.pt.mod == p.snd.slot[0] || p.snd.pt.mod == p.snd.jingle);
     play_close(&p);
 }

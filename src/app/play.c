@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include "app/audio_out.h"
 #include <stdlib.h>
 #include <string.h>
 #include "game/player.h"
@@ -46,6 +48,11 @@ bool play_start_level(sk_play *p, int pos, int data_index, sk_err *e) {
         p->game.res = &p->res;
     }
     if (!game_setup_level(&p->game, &p->scene.level, data_index)) return sk_fail(e, "out of memory");
+    p->game.snd = &p->snd;
+    sk_err se = {0};
+    if (!sound_load_level(&p->snd, &p->scene.disks, &p->scene.tables, data_index, &se))   /* load_level_resources: the music and effect samples */
+        fprintf(stderr, "soccerkid: no sound for level %d: %s\n", data_index, se.msg);
+    if (data_index == 12 || data_index == 0x29) sound_music(&p->snd, SK_MUSIC_LEVEL, 0);   /* 0x103708: no KICK OFF, the tune at once */
     if (p->has_start && p->start_level == data_index) {                             /* a test start: kept for every restart of this level */
         p->game.world.start_x = p->start_x;
         p->game.world.start_y = p->start_y;
@@ -67,6 +74,7 @@ bool play_start_level(sk_play *p, int pos, int data_index, sk_err *e) {
 bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     memset(p, 0, sizeof *p);
     if (!scene_open(&p->scene, a, e)) return false;
+    sound_init(&p->snd, &p->scene.sk, 48000);
     p->game.sk = &p->scene.sk;
     p->game.tables = &p->scene.tables;
     p->script = a->script;
@@ -107,8 +115,24 @@ static uint8_t script_input(sk_play *p) {
     return p->script_input;
 }
 
+static void sound_step(sk_play *p) {                                /* the VBL's sound part, then the device */
+    sound_frame(&p->snd, p->audio_buf, 960);
+    if (p->audio) audio_out_push(p->audio, p->audio_buf, 960);
+}
+
 void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->load_failed) return;
+    p->game.snd = &p->snd;
+    if (p->fade_wait > 0) {                                         /* fade_music_out blocks the game for 64 frames */
+        sound_step(p);
+        if (--p->fade_wait > 0) return;
+        sk_err e = {0};
+        int next = play_level_next(&p->scene.tables, p->level_pos);
+        if (next < 0) next = play_level_next(&p->scene.tables, -1);       /* the end: start over (ruling) */
+        if (next >= 0) p->game.level_number = next;
+        if (!play_start_level(p, next, p->scene.level_index, &e)) { p->load_failed = true; p->load_err = e; }
+        return;
+    }
     uint8_t in = p->script ? script_input(p) : keyboard_input;
     p->game.ball_sprite = &p->sprites.spr[1];
     game_frame_step(&p->game, in, &p->sprites.spr[0]);
@@ -118,13 +142,10 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
     p->sprites.front = lf == 1 ? 0 : 1;                          /* block 0 holds the ball unless layer_flags is 1 */
     sk_err e = {0};
     switch (game_outcome(&p->game)) {
-    case SK_OUTCOME_NEXT_LEVEL: {
-        int next = play_level_next(&p->scene.tables, p->level_pos);
-        if (next < 0) next = play_level_next(&p->scene.tables, -1);       /* the end: start over (ruling) */
-        if (next >= 0) p->game.level_number = next;
-        if (!play_start_level(p, next, p->scene.level_index, &e)) { p->load_failed = true; p->load_err = e; }
+    case SK_OUTCOME_NEXT_LEVEL:
+        sound_fade_out(&p->snd);
+        p->fade_wait = 64;
         break;
-    }
     case SK_OUTCOME_GAME_OVER:
         if (++p->game_over_frames >= GAME_OVER_FRAMES) {
             game_new_game(&p->game);
@@ -134,6 +155,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
         break;
     default: break;
     }
+    sound_step(p);
 }
 
 void play_draw(sk_play *p) {
@@ -173,6 +195,7 @@ void play_present(sk_play *p, uint32_t *out) {
 }
 
 void play_close(sk_play *p) {
+    sound_free(&p->snd);
     resources_free(&p->res);
     game_close(&p->game);
     scene_close(&p->scene);

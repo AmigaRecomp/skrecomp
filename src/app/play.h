@@ -8,6 +8,7 @@
 #include "app/scene.h"
 #include "game/game.h"
 #include "game/resources.h"
+#include "audio/sound.h"
 #include "gfx/sprites.h"
 
 typedef struct sk_play {
@@ -24,6 +25,10 @@ typedef struct sk_play {
     bool script_done;
     int game_over_frames;
     bool load_failed;               /* a level failed to load: the run stops (load_err says why) */
+    sk_sound snd;                   /* the sound driver (one VBL of it per step) */
+    struct sk_audio_out *audio;     /* the device, NULL headless */
+    int16_t audio_buf[2 * 960];     /* the step's 1/50 s at 48 kHz */
+    int fade_wait;                  /* frames of fade_music_out left before the next level loads (0x1040F2) */
     sk_err load_err;
 } sk_play;
 

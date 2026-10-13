@@ -300,7 +300,10 @@ set(SK_TEST_NAMES
   music_slot_swaps_once
   fade_keeps_the_music_playing
   level_music_and_effects_load
-  kick_off_plays_the_jingle_then_the_level_tune)
+  kick_off_plays_the_jingle_then_the_level_tune
+  play_runs_without_audio
+  music_survives_a_level_change
+  paula_without_a_rate_is_silent)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

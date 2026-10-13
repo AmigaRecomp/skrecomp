@@ -15,6 +15,7 @@ typedef struct {
     SDL_Texture *tex;
     uint32_t *pixels;           /* SK_SCREEN_W * SK_SCREEN_H */
     int frames_presented;
+    struct sk_audio_out *audio;  /* play mode: M mutes it */
 } sk_window;
 
 bool window_open(sk_window *w, int scale, sk_err *e);

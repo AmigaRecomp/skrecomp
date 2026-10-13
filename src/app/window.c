@@ -1,3 +1,4 @@
+#include "app/audio_out.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "app/window.h"
@@ -84,6 +85,7 @@ static bool poll_events(sk_window *w, sk_scene *s) {
         if (ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat) {
             switch (ev.key.key) {
             case SDLK_ESCAPE: return false;
+            case SDLK_M: if (w->audio) audio_out_mute(w->audio, !w->audio->muted); break;
             case SDLK_PAGEUP: if (s) change_level(s, -1); break;
             case SDLK_PAGEDOWN: if (s) change_level(s, 1); break;
             case SDLK_LEFTBRACKET: if (s) change_section(s, -1); break;
@@ -138,6 +140,8 @@ int window_run_viewer(sk_window *w, sk_scene *s, int exit_after) {
 }
 
 int window_run(sk_window *w, sk_play *p, int exit_after) {
+    static sk_audio_out audio;
+    if (audio_out_open(&audio, 48000)) { p->audio = &audio; w->audio = &audio; }   /* no device: silent */
     uint64_t last = SDL_GetTicksNS(), acc = 0;
     bool running = true;
     while (running) {
@@ -152,6 +156,8 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
         if (exit_after > 0 && w->frames_presented >= exit_after) break;
         if (steps == 0) SDL_Delay(1);
     }
+    p->audio = NULL; w->audio = NULL;
+    audio_out_close(&audio);
     return 0;
 }
 
