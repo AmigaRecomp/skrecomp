@@ -66,6 +66,10 @@ void test_player_jump_integrator(void);
 void test_player_falls_off_a_ledge_and_may_late_jump(void);
 void test_player_is_stopped_by_a_wall(void);
 void test_hurt_player_knockback_and_death(void);
+void test_kid_frame_decodes_from_the_chip_hunk(void);
+void test_kit_palette_scales_the_base_colours(void);
+void test_present_sprite_priority(void);
+void test_player_logic_picks_walk_and_jump_frames(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -129,6 +133,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "player_falls_off_a_ledge_and_may_late_jump", test_player_falls_off_a_ledge_and_may_late_jump },
     { "player_is_stopped_by_a_wall", test_player_is_stopped_by_a_wall },
     { "hurt_player_knockback_and_death", test_hurt_player_knockback_and_death },
+    { "kid_frame_decodes_from_the_chip_hunk", test_kid_frame_decodes_from_the_chip_hunk },
+    { "kit_palette_scales_the_base_colours", test_kit_palette_scales_the_base_colours },
+    { "present_sprite_priority", test_present_sprite_priority },
+    { "player_logic_picks_walk_and_jump_frames", test_player_logic_picks_walk_and_jump_frames },
 };
 
 int main(int argc, char **argv) {

@@ -185,7 +185,7 @@ void scene_draw(sk_scene *s) {
 
 void scene_present(const sk_scene *s, uint32_t *out) {
     sk_line_colours sky = { s->level.sky, s->level.sky_len };
-    present_screen(&s->fb, &s->palette, &sky, out);
+    present_screen(&s->fb, &s->palette, &sky, NULL, out);
 }
 
 void scene_close(sk_scene *s) {

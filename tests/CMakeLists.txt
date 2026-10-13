@@ -20,7 +20,8 @@ add_executable(sk_tests
   test_window.c
   test_world.c
   test_collision.c
-  test_player.c)
+  test_player.c
+  test_sprites.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -87,7 +88,11 @@ set(SK_TEST_NAMES
   player_jump_integrator
   player_falls_off_a_ledge_and_may_late_jump
   player_is_stopped_by_a_wall
-  hurt_player_knockback_and_death)
+  hurt_player_knockback_and_death
+  kid_frame_decodes_from_the_chip_hunk
+  kit_palette_scales_the_base_colours
+  present_sprite_priority
+  player_logic_picks_walk_and_jump_frames)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

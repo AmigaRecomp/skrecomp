@@ -116,3 +116,24 @@ void test_hurt_player_knockback_and_death(void) {
     CHECK_EQ(hurt_player(&g_g), -3);                            /* dying: ignored */
     drop_game();
 }
+
+void test_player_logic_picks_walk_and_jump_frames(void) {
+    CHECK(make_game());
+    frames(20, 0);
+    player_logic(&g_g);
+    CHECK_EQ(g_g.player.anim, 0x11);                             /* standing, facing right */
+    frames(10, SK_IN_RIGHT); player_logic(&g_g);
+    CHECK(g_g.player.anim <= 5);                                 /* the walk cycle 0..5 (6..11 facing left) */
+    frames(1, SK_IN_UP); player_logic(&g_g);
+    CHECK(g_g.player.anim >= 0x1C && g_g.player.anim <= 0x1E);  /* jumping frames by vy, facing right */
+    frames(30, 0); frames(1, SK_IN_DOWN); player_logic(&g_g);
+    CHECK_EQ(g_g.player.anim, 0x0F);                             /* crouch, facing right */
+    static sk_sprite kid;
+    g_g.player.x = 100; g_g.player.y = 120; g_g.view.cam_x = 40; g_g.view.cam_y = 10;
+    update_player(&g_g, &kid);                                   /* no sk image: the frame table reads as zeros */
+    CHECK_EQ(kid.x, 100 - 40 - 1); CHECK_EQ(kid.y, 120 - 6 - 10); CHECK(kid.visible);
+    g_g.player.invulnerable = 101; update_player(&g_g, &kid); CHECK(!kid.visible);   /* odd: flicker frame */
+    g_g.player.invulnerable = 100; update_player(&g_g, &kid); CHECK(kid.visible);
+    g_g.player.exit_walk = 1; update_player(&g_g, &kid); CHECK(!kid.visible);
+    drop_game();
+}

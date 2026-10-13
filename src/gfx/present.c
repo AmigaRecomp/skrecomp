@@ -33,10 +33,26 @@ void present_rows(const sk_fb *fb, const sk_palette *pal, const sk_line_colours 
     }
 }
 
-void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_line_colours *sky, uint32_t *out) {
+void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_line_colours *sky, const sk_sprite_layer *spr, uint32_t *out) {
     for (size_t i = 0; i < (size_t)SK_SCREEN_W * SK_SCREEN_H; i++) out[i] = pal->xrgb[0];
     static uint32_t window[SK_VIEW_W * SK_VIEW_H];
     present_rows(fb, pal, sky, SK_VIEW_X, 0, SK_VIEW_W, SK_VIEW_H, window);
+    for (int i = 0; spr && i < 2; i++) {
+        const sk_sprite *sp = &spr->spr[i];
+        if (!sp->visible) continue;
+        for (int r = 0; r < SK_SPR_H; r++) {
+            int wy = sp->y + r;
+            if (wy < 0 || wy >= SK_VIEW_H) continue;
+            for (int cx = 0; cx < SK_SPR_W; cx++) {
+                int wx = sp->x - SK_VIEW_X + cx;
+                if (wx < 0 || wx >= SK_VIEW_W) continue;
+                uint8_t v = sp->px[r * SK_SPR_W + cx];
+                if (!v) continue;
+                if (!sp->in_front && (fb->px[(size_t)wy * (size_t)fb->w + (size_t)(wx + SK_VIEW_X)] & 15)) continue;
+                window[(size_t)wy * SK_VIEW_W + (size_t)wx] = pal->xrgb[SK_SPR_COLOUR_BASE + v];
+            }
+        }
+    }
     for (int y = 0; y < SK_VIEW_H; y++) {
         uint32_t *dst = out + (size_t)(SK_PLAY_Y + y) * SK_SCREEN_W + SK_PLAY_X;
         const uint32_t *src = window + (size_t)y * SK_VIEW_W;

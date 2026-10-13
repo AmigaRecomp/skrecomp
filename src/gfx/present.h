@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "gfx/framebuffer.h"
 #include "gfx/palette.h"
+#include "gfx/sprites.h"
 
 /* The level's sky table: (COLOR17, COLOR18) word pairs, one pair per display line; the last pair holds. */
 typedef struct { const uint16_t *words; int len; } sk_line_colours;
@@ -16,7 +17,8 @@ void present_rows(const sk_fb *fb, const sk_palette *pal, const sk_line_colours 
                   int src_x, int src_y, int w, int h, uint32_t *out);
 
 /* The whole 320x256 frame: colour 0 everywhere, the play window from buffer columns SK_VIEW_X.. at
-   (SK_PLAY_X, SK_PLAY_Y); the HUD area is left colour 0 by the engine core. */
-void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_line_colours *sky, uint32_t *out);
+   (SK_PLAY_X, SK_PLAY_Y); the HUD area is left colour 0 by the engine core. spr (may be NULL): the hardware
+   sprites, each over playfield 2 and in front of playfield 1 only when its in_front flag is set. */
+void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_line_colours *sky, const sk_sprite_layer *spr, uint32_t *out);
 
 #endif

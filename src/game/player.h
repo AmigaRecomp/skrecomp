@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "gfx/sprites.h"
 
 typedef struct sk_game sk_game;
 
@@ -21,8 +22,8 @@ typedef struct sk_player {
     int16_t speed;          /* +0x1A quarter pixels per frame */
     int16_t facing;         /* +0x1C 1 right, -1 left */
     int16_t state;          /* +0x1E state * 4 */
-    int16_t walk_step;      /* +0x20 */
-    int16_t walk_acc;       /* +0x22 */
+    int16_t walk_acc;       /* +0x20: walk-cycle accumulator (+= speed, wraps at 64) */
+    int16_t walk_step;      /* +0x22: walk-cycle frame 0..5 (2 while standing) */
     int16_t input;          /* +0x24 */
     int16_t prev_input;     /* +0x26 */
     int16_t idle_frames;    /* +0x2A */
@@ -83,6 +84,8 @@ void edge_probe_step(sk_game *g);
 int  hurt_player(sk_game *g);               /* -1 hit, -2 killed, -3 ignored */
 void bounce_player(sk_game *g);
 void player_physics(sk_game *g);            /* the non-ball part of 0x10A80A */
+void player_logic(sk_game *g);              /* 0x10B586: chooses player.anim */
+void update_player(sk_game *g, sk_sprite *kid);   /* 0x10A4DC: player_logic + the kid's sprite placement */
 
 /* Hooks defined by later modules (no-ops in stubs.c until then). */
 void dispatch_player_state(sk_game *g);     /* player_states.c */

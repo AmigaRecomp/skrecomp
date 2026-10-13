@@ -75,7 +75,7 @@ void test_present_screen_places_the_play_window(void) {
     fb_clear(&fb, 0x01);                           /* everything playfield-1 colour 1 */
     uint32_t *out = calloc(SK_SCREEN_W * SK_SCREEN_H, sizeof *out);
     memset(out, 0x55, SK_SCREEN_W * SK_SCREEN_H * sizeof *out);
-    present_screen(&fb, &p, &none, out);
+    present_screen(&fb, &p, &none, NULL, out);
     CHECK_EQ(out[0], 0);                                                   /* left border */
     CHECK_EQ(out[SK_PLAY_X - 1], 0);
     CHECK_EQ(out[SK_PLAY_X], 0xFF0000);                                    /* first play pixel */
@@ -85,5 +85,30 @@ void test_present_screen_places_the_play_window(void) {
     CHECK_EQ(out[SK_VIEW_H * SK_SCREEN_W + SK_PLAY_X], 0);                 /* below the play area */
     CHECK_EQ(out[(SK_SCREEN_H - 1) * SK_SCREEN_W + SK_SCREEN_W - 1], 0);
     free(out);
+    fb_free(&fb);
+}
+
+void test_present_sprite_priority(void) {
+    sk_fb fb; CHECK(fb_init(&fb, SK_FB_W, SK_FB_H));
+    fb_clear(&fb, 0);
+    fb.px[SK_VIEW_X + 10] = 0x03;                                /* playfield 1 pixel at window (10, 0) */
+    fb.px[SK_VIEW_X + 11] = 0x20;                                /* playfield 2 only at (11, 0) */
+    sk_palette pal = {0};
+    for (int i = 0; i < 256; i++) pal.xrgb[i] = 0x100u * (uint32_t)i;
+    static sk_sprite_layer L;
+    memset(&L, 0, sizeof L);
+    L.spr[0].visible = true; L.spr[0].x = SK_VIEW_X + 10; L.spr[0].y = 0;
+    L.spr[0].px[0] = 5; L.spr[0].px[1] = 5;                     /* covers window x 10 and 11 */
+    static uint32_t out[SK_SCREEN_W * SK_SCREEN_H];
+    sk_line_colours none = { NULL, 0 };
+    present_screen(&fb, &pal, &none, &L, out);
+    CHECK_EQ(out[SK_PLAY_X + 10], pal.xrgb[3]);                  /* behind playfield 1 */
+    CHECK_EQ(out[SK_PLAY_X + 11], pal.xrgb[48 + 5]);             /* over playfield 2 */
+    L.spr[0].in_front = true;
+    present_screen(&fb, &pal, &none, &L, out);
+    CHECK_EQ(out[SK_PLAY_X + 10], pal.xrgb[48 + 5]);
+    L.spr[0].x = SK_VIEW_X - 63; L.spr[0].y = SK_VIEW_H - 1;     /* clipped at the edges: no crash */
+    present_screen(&fb, &pal, &none, &L, out);
+    CHECK_EQ(out[SK_PLAY_X + 0 + (SK_PLAY_Y + SK_VIEW_H - 1) * SK_SCREEN_W], pal.xrgb[SK_PF2_COLOUR_BASE]);   /* only transparent pixels reach the window */
     fb_free(&fb);
 }
