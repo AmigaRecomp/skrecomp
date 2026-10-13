@@ -38,7 +38,7 @@ void player_logic(sk_game *g) {
     if (p->falling && p->vy <= -14) { p->anim = (int16_t)(left ? 0x21 : 0x1E); return; }
     if (p->crouching) { p->anim = (int16_t)(left ? 0x10 : 0x0F); return; }
     if (p->skidding) { advance_kick_phase(p); p->anim = (int16_t)(left ? 0x0E : 0x0D); return; }
-    if (p->pushing) {                                            /* teetering at an edge */
+    if (p->teeter) {                                             /* teetering at an edge */
         if (p->idle_frames == 57) p->idle_frames = 25;
         int a = left ? 0x24 : 0x22;
         if ((p->idle_frames - 25) & 0x10) a++;

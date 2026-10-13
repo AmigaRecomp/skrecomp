@@ -43,7 +43,7 @@ typedef struct sk_player {
     uint8_t jump_input;     /* +0x44 */
     uint8_t run_chain;      /* +0x45: a state handler asks for the movement chain to run after it */
     int8_t on_rope;         /* +0x46 */
-    uint8_t pushing;        /* +0x47 (the edge teeter flag; see the ledger) */
+    uint8_t teeter;         /* +0x47: no ground within 15 rows ahead of the feet after 25 idle frames (edge_probe) */
     int8_t ball_hold;       /* +0x48 */
     uint8_t no_push_up;     /* +0x49 */
     uint8_t dying;          /* +0x4A */

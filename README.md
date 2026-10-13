@@ -22,9 +22,11 @@ Point the program at a directory holding the five disk images, either as `.adf` 
 `SKDisk0` to `SKDisk4`, not by file name.
 
 ```sh
-build/soccerkid --roms ../SourceROMS --level 0                        # level viewer in a window
-build/soccerkid --roms ../SourceROMS --level 0 --screenshot out.png   # headless render, no window
-build/soccerkid --roms ../SourceROMS --level 17 --section file036:0   # show a graphics set's frames
+build/soccerkid --roms ../SourceROMS --level 0                        # play level 0 in a window
+build/soccerkid --roms ../SourceROMS --level 0 --frames 300 --script R150,RU20,R130 --screenshot out.png
+                                                                      # play 300 frames headless from a script, then a PNG
+build/soccerkid --roms ../SourceROMS --level 0 --viewer               # the level viewer (scrolls, no gameplay)
+build/soccerkid --roms ../SourceROMS --level 17 --viewer --section file036:0   # show a graphics set's frames
 build/soccerkid --help                                                # every option
 ```
 
@@ -33,13 +35,22 @@ fileNNN:S[:WxH]` shows the frames of a graphics-set section from the level's dis
 size is estimated from the data unless given); `--cam X,Y` sets the camera; `--no-backdrop`
 and `--no-frames` reduce the picture to one layer.
 
-Keys in the viewer: arrows scroll, PageUp/PageDown change level, `[` and `]` change the
-graphics-set section shown, `F` toggles fullscreen, Escape quits. The window shows the
-320x256 PAL frame with the game's 288x200 play area; the HUD panel is not drawn yet.
+Playing: arrows or WASD move, up jumps, down crouches (down while running slides), Space,
+Left Ctrl or X is fire, `F` toggles fullscreen, Escape quits. The game runs at the original's
+50 frames per second with the original's movement, camera, collision and level flow
+(`../re/docs/notes/gameplay.md`, `player.md`); the kid is drawn as the hardware sprite pair the
+game uses, in the level's kit colours. Falling into a pit leaves the kid below the screen until
+something kills him: the deadly tiles, the ball, the enemies and the HUD arrive with the next
+sub-project, which fills the object and attribute tables this one only plumbs. A level's exit
+tile walks the kid off the right edge into the next level; game over restarts the level.
 
-What the engine core draws follows `../re/docs/notes/display.md`: playfield 1 (foreground
-tiles) over playfield 2 (backdrop tiles, parallax), per-line sky colours, bob frames with
-masks. Object behaviour, the ball, HUD, menus and sound come with the next sub-projects.
+`--script` drives the kid without a keyboard: tokens `<keys><frames>` joined by commas, keys
+`U D L R F` or `.` for none (`R150,RU20,R130` = run right, jump, run on). With `--frames N` and
+`--screenshot` no window opens.
+
+Keys in the viewer (`--viewer`): arrows scroll, PageUp/PageDown change level, `[` and `]`
+change the graphics-set section shown. The window shows the 320x256 PAL frame with the game's
+288x200 play area; the HUD panel is not drawn yet.
 
 ## Test
 

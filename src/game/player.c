@@ -248,10 +248,10 @@ void ceiling_check(sk_game *g) {                                /* 0x10AF0E */
 
 void edge_probe_step(sk_game *g) {                              /* edge_probe 0x10B24E */
     sk_player *p = &g->player;
-    if (p->idle_frames < 25) { g->edge_cache = 0; p->pushing = 0; return; }
+    if (p->idle_frames < 25) { g->edge_cache = 0; p->teeter = 0; return; }
     if (p->x == g->edge_cache) return;
     g->edge_cache = p->x;
-    if (!probe_edge(&g->mask, p->x, p->y, p->facing)) p->pushing = 0xFF;
+    if (!probe_edge(&g->mask, p->x, p->y, p->facing)) p->teeter = 0xFF;
 }
 
 int hurt_player(sk_game *g) {                                   /* 0x10A6C4 */
