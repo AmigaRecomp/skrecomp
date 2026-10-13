@@ -30,6 +30,7 @@ typedef struct sk_view {
 struct sk_game {
     const sk_image *sk;                 /* sk.pak image for the data tables; NULL in fixture tests */
     const sk_tables *tables;
+    const struct sk_resources *res;     /* slot_table for this level; NULL in fixture tests */
     sk_world world;
     sk_mask mask;
     sk_view view;

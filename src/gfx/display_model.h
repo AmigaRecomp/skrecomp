@@ -30,6 +30,7 @@
 #define SK_SPR_W 64             /* FMODE 64-pixel sprites: a kid frame is 0x320 bytes = 16 + 48*16 + 16 (VERIFIED) */
 #define SK_SPR_H 48
 #define SK_SPR_FRAME 0x320      /* one sprite of the attached pair; the pair = 0x640 */
+#define SK_BALL_SPR_H 16        /* the ball: a 16-line attached pair, partner at + 16 * 16 + 32 = 0x120 */
 #define SK_SPR_COLOUR_BASE 48   /* attached pair in bank 1: value v shows colour 48 + v (VERIFIED display.md) */
 #define SK_KID_FRAMES_ADDR 0x401FE8   /* chip hunk: sprite_data_ptr (0x401FD8, 8-aligned) + 16 */
 #define SK_PLAYER_ANIM_TABLE 0x2005EC /* 74 x (u32 frame offset, i16 dx, i16 dy) */

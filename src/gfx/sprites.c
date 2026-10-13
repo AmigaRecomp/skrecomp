@@ -1,11 +1,14 @@
 #include <string.h>
 #include "gfx/sprites.h"
 
-bool sprite_decode_pair(const sk_image *sk, uint32_t frame_addr, sk_sprite *out) {
-    const uint8_t *a = image_ptr(sk, frame_addr, 2 * SK_SPR_FRAME);
+bool sprite_decode_pair(const sk_image *sk, uint32_t frame_addr, int height, sk_sprite *out) {
+    if (height < 1 || height > SK_SPR_H) return false;
+    uint32_t frame = (uint32_t)height * 16 + 32;                 /* control words, rows, terminator */
+    const uint8_t *a = image_ptr(sk, frame_addr, 2 * frame);
     if (!a) return false;
-    const uint8_t *b = a + SK_SPR_FRAME;
-    for (int r = 0; r < SK_SPR_H; r++) {
+    const uint8_t *b = a + frame;
+    memset(out->px, 0, sizeof out->px);
+    for (int r = 0; r < height; r++) {
         const uint8_t *ra = a + 16 + r * 16, *rb = b + 16 + r * 16;
         for (int x = 0; x < SK_SPR_W; x++) {
             int byte = x >> 3, shift = 7 - (x & 7);

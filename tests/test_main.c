@@ -106,6 +106,8 @@ void test_play_real_level0_screenshot(void);
 void test_camera_holds_its_height_during_a_jump(void);
 void test_wall_probe_scans_from_above_the_hit_to_row_39(void);
 void test_ceiling_probe_narrows_the_window_to_the_first_row(void);
+void test_resources_real_home1(void);
+void test_ball_frame_decodes(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -209,6 +211,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "camera_holds_its_height_during_a_jump", test_camera_holds_its_height_during_a_jump },
     { "wall_probe_scans_from_above_the_hit_to_row_39", test_wall_probe_scans_from_above_the_hit_to_row_39 },
     { "ceiling_probe_narrows_the_window_to_the_first_row", test_ceiling_probe_narrows_the_window_to_the_first_row },
+    { "resources_real_home1", test_resources_real_home1 },
+    { "ball_frame_decodes", test_ball_frame_decodes },
 };
 
 int main(int argc, char **argv) {

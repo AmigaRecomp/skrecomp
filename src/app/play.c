@@ -38,6 +38,11 @@ bool script_parse_step(const char **s, uint8_t *input, int *frames, sk_err *e) {
 bool play_start_level(sk_play *p, int pos, int data_index, sk_err *e) {
     if (pos >= 0) data_index = p->scene.tables.sequence[pos];
     if (!(p->scene.has_level && p->scene.level_index == data_index) && !scene_load_level(&p->scene, data_index, e)) return false;   /* the parsed level is pristine: a restart rebuilds the world from it */
+    if (p->game.tables) {                                           /* the level's graphics sets by slot */
+        resources_free(&p->res);
+        if (!resources_load(&p->res, &p->scene.disks, p->game.tables, data_index, e)) return false;
+        p->game.res = &p->res;
+    }
     if (!game_setup_level(&p->game, &p->scene.level, data_index)) return sk_fail(e, "out of memory");
     if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit);
     p->level_pos = pos;
@@ -117,6 +122,7 @@ void play_present(sk_play *p, uint32_t *out) {
 }
 
 void play_close(sk_play *p) {
+    resources_free(&p->res);
     game_close(&p->game);
     scene_close(&p->scene);
 }

@@ -7,12 +7,14 @@
 #include "app/args.h"
 #include "app/scene.h"
 #include "game/game.h"
+#include "game/resources.h"
 #include "gfx/sprites.h"
 
 typedef struct sk_play {
     sk_scene scene;
     sk_game game;
     sk_sprite_layer sprites;
+    sk_resources res;
     int level_pos;                  /* position in level_sequence, -1 when the level was given by data index */
     const char *script;             /* --script, NULL = keyboard */
     const char *script_cursor;

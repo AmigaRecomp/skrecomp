@@ -22,12 +22,12 @@ void test_kid_frame_decodes_from_the_chip_hunk(void) {          /* ROM-backed */
     uint32_t off = image_u32(&img, SK_PLAYER_ANIM_TABLE + 8 * 0x11);
     static sk_sprite s;
     memset(&s, 0, sizeof s);
-    CHECK(sprite_decode_pair(&img, SK_KID_FRAMES_ADDR + off, &s));
+    CHECK(sprite_decode_pair(&img, SK_KID_FRAMES_ADDR + off, SK_SPR_H, &s));
     int first = -1, last = -1;
     for (int y = 0; y < SK_SPR_H; y++) for (int x = 0; x < SK_SPR_W; x++) if (s.px[y * SK_SPR_W + x]) { if (first < 0) first = y; last = y; }
     CHECK_EQ(first, 10); CHECK_EQ(last, 47);                     /* the standing frame: hair at row 10, boots at 47 */
     CHECK_EQ(s.px[11 * SK_SPR_W + 28], 4);                        /* "4455555545" at row 11 starts at x 28 */
-    CHECK(!sprite_decode_pair(&img, 0x9FFFFFF0, &s));
+    CHECK(!sprite_decode_pair(&img, 0x9FFFFFF0, SK_SPR_H, &s));
     image_free(&img); disks_close(&d);
 }
 

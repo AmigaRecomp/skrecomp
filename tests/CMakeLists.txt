@@ -27,7 +27,8 @@ add_executable(sk_tests
   test_camera.c
   test_attrs.c
   test_level_flow.c
-  test_play.c)
+  test_play.c
+  test_resources.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -134,7 +135,9 @@ set(SK_TEST_NAMES
   play_real_level0_screenshot
   camera_holds_its_height_during_a_jump
   wall_probe_scans_from_above_the_hit_to_row_39
-  ceiling_probe_narrows_the_window_to_the_first_row)
+  ceiling_probe_narrows_the_window_to_the_first_row
+  resources_real_home1
+  ball_frame_decodes)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

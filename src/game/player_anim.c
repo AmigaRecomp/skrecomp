@@ -83,7 +83,7 @@ void update_player(sk_game *g, sk_sprite *kid) {
     kid->y = sy;                     /* VSTART = sy + 0x2D and the open window starts at line 0x2D */
     kid->in_front = false;
     if (g->sk) {
-        if (!sprite_decode_pair(g->sk, SK_KID_FRAMES_ADDR + offset, kid)) return;
+        if (!sprite_decode_pair(g->sk, SK_KID_FRAMES_ADDR + offset, SK_SPR_H, kid)) return;
     }
     kid->visible = true;
 }
