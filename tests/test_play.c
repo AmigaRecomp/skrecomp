@@ -143,3 +143,18 @@ void test_london1_kid_rides_a_platform(void) {                     /* ROM-backed
     CHECK(rode);
     play_close(&p);
 }
+
+void test_dark_kit_keeps_colour_49(void) {                         /* ROM-backed: kits 4..7 leave colour 49 as it was */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 0, .scale = 1, .section = -1, .frames = 0 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    play_draw(&p);
+    uint32_t c49 = p.scene.palette.xrgb[49];
+    CHECK(c49 != 0);
+    p.game.kit_current = 5;                                         /* a tunnel's dark shade */
+    play_draw(&p);
+    CHECK_EQ(p.scene.palette.xrgb[49], c49);
+    play_close(&p);
+}

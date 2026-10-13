@@ -241,7 +241,8 @@ set(SK_TEST_NAMES
   ball_on_clears_when_the_ball_leaves
   a_rising_ball_passes_through_a_platform
   country_london_slots_cover_the_frames
-  london1_kid_rides_a_platform)
+  london1_kid_rides_a_platform
+  dark_kit_keeps_colour_49)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

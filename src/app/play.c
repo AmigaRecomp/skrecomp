@@ -111,7 +111,10 @@ void play_draw(sk_play *p) {
     sk_fb *fb = &p->scene.fb;
     const sk_level *lv = &p->scene.level;
     fb_clear(fb, 0);
+    uint32_t sprite_colours[16];                                  /* the copper keeps colours 48..63 between writes: kits 4..7 skip 49 */
+    memcpy(sprite_colours, &p->scene.palette.xrgb[48], sizeof sprite_colours);
     palette_from_tilesets(&p->scene.palette, &lv->tiles_a, &lv->tiles_b);   /* the playfield colours, restored after a flash */
+    memcpy(&p->scene.palette.xrgb[48], sprite_colours, sizeof sprite_colours);
     if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit_current, p->game.kit_extra);   /* the shade attributes */
     if (p->game.flash_timer && p->game.flash_timer < 16) {       /* sub_104C78: the fade table step (toward white, 0x200ED6) */
         for (int k = 1; k < 16; k++)

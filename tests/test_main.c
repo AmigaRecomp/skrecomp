@@ -202,6 +202,7 @@ void test_ball_on_clears_when_the_ball_leaves(void);
 void test_a_rising_ball_passes_through_a_platform(void);
 void test_country_london_slots_cover_the_frames(void);
 void test_london1_kid_rides_a_platform(void);
+void test_dark_kit_keeps_colour_49(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -401,6 +402,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "a_rising_ball_passes_through_a_platform", test_a_rising_ball_passes_through_a_platform },
     { "country_london_slots_cover_the_frames", test_country_london_slots_cover_the_frames },
     { "london1_kid_rides_a_platform", test_london1_kid_rides_a_platform },
+    { "dark_kit_keeps_colour_49", test_dark_kit_keeps_colour_49 },
 };
 
 int main(int argc, char **argv) {
