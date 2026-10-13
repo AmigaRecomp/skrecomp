@@ -264,3 +264,24 @@ void test_wings_88_follow_then_fly_off(void) {                /* type 88 */
     CHECK(w->draw->y < y);                                           /* flies up */
     drop_game();
 }
+
+void test_frog_31_hops_its_pattern_and_spits(void) {          /* type 31, child 111 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 31, 0);
+    CHECK_EQ(s->vy, -10); CHECK_EQ(s->t0, 10); CHECK_EQ(s->t1, 1); CHECK_EQ(s->aux, 8); CHECK_EQ(s->hits, 2);
+    CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 21);
+    int i = 0;
+    while (s->aux == 8 && i++ < 100) tick(1);
+    CHECK_EQ(s->aux, 16);                                            /* one hop, then the third entry: (4, -18, 1, 0) */
+    CHECK_EQ(s->vx, 4); CHECK_EQ(s->vy, -18); CHECK_EQ(s->t0, 18); CHECK_EQ(s->t1, 1); CHECK_EQ(s->flags & 1, 0);
+    i = 0;
+    while (count_type(111) == 0 && i++ < 100) tick(1);
+    CHECK_EQ(count_type(111), 1);                                    /* spits at the top of a high hop */
+    for (i = 0; i < 16; i++) if ((g_g.objs.slot[i].type4 & 0x1FF) == 111 * 4 && g_g.objs.slot[i].x >= 0) {
+        CHECK_EQ(g_g.objs.slot[i].vx, 8); CHECK_EQ(g_g.objs.slot[i].vy, -2); CHECK(g_g.objs.slot[i].flags & 4);
+    }
+    i = 0;
+    while (s->aux != 0 && i++ < 600) tick(1);
+    CHECK_EQ(s->aux, 0);                                             /* the -1 end wraps to entry 0 */
+    drop_game();
+}

@@ -30,6 +30,12 @@ static const int16_t flyer_bob[33] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1,
 static const uint8_t flyer_script[] = { 0, 4, 0, 10, 0, 1, 2, 3, 4, 5, 6, 7 };                  /* 0x119256 */
 static const uint8_t flyer_bare_script[] = { 0, 4, 0, 10, 8, 9, 10, 11, 12, 13, 14, 15 };       /* 0x119262 */
 static const uint8_t wings_script[] = { 0, 8, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7 };   /* 0x119316 */
+static const int16_t frog_hops[25] = { 0, -10, 2, 1,  0, -10, 2, 0,  4, -18, 1, 0,  0, -10, 2, 0,
+                                      0, -10, 2, 1,  4, -18, 1, 1,  -1 };                          /* 0x11114C: vx, vy, hops, facing */
+static const uint8_t frog_rise_script[] = { 0, 2, 0, 4, 0, 1, 6, 7 };                           /* 0x11117E */
+static const uint8_t frog_top_script[] = { 0, 2, 0, 4, 2, 3, 8, 9 };                            /* 0x111186 */
+static const uint8_t frog_fall_script[] = { 0, 2, 0, 4, 4, 5, 10, 11 };                         /* 0x11118E */
+static const uint8_t frog_spit_script[] = { 0, 2, 0, 4, 0, 0, 0, 0 };                           /* 0x111196 */
 static const uint8_t jumper_land_script[] = { 0, 4, 0, 4, 4, 5, 6, 6, 4, 5, 6, 6 };             /* 0x11223A */
 
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
@@ -597,7 +603,84 @@ static void obj_wings_update(sk_game *g, sk_slot *s, int index) {             /*
     if (object_offscreen(g, d->x, d->y, 160) < 0) free_object(g, s);
 }
 
+/* ---- type 31: the frog (slot 31): hops a fixed pattern, spits (type 111, slot 32) at the top of a hop ---- */
+static void obj_frog_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x110FCE */
+    init_object_slot(g, s, x, y - 5, s->type4);
+    s->vx = 0; s->vy = -10; s->t0 = 10; s->t1 = 1;
+    s->aux = 8;                                                     /* move.w #8,$c(a6): the pattern offset */
+    s->flags |= 8 | 4;
+    s->hits = 2;
+    const uint8_t *f = res(g, 31);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 21, f, 1);                                  /* sub_107AE2 */
+}
+static void obj_frog_update(sk_game *g, sk_slot *s, int index) {              /* 0x11101A */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (g->ball_kicked_flag) ball_kill_check(g, s, 12, 0x200);
+    if (s->flags & 2) { despawn_if_far(g, s); return; }
+    int v = s->vy;
+    const uint8_t *script;
+    if (v == 0 && (uint16_t)s->t0 >= 16) {                          /* the top of a high hop: spit */
+        g->objs.child_frames = res(g, 32);
+        g->objs.child_script = frog_spit_script;
+        int x = d->x;
+        g->objs.child_vx = 8;
+        if (s->flags & 1) { g->objs.child_vx = (int16_t)(8 | 0x8000); x += 16; }
+        g->objs.child_vy = -2;
+        g->objs.child_w = 16; g->objs.child_h = 10;
+        spawn_object(g, x, d->y, 111);
+        script = frog_fall_script;
+    } else if (v < 0 || (v == 0 && (int16_t)(s->t0 - 16) < 0)) {   /* bpl on the last compare's sign */
+        v = -v;
+        script = frog_rise_script;
+    } else script = frog_fall_script;
+    if (v <= 2) script = frog_top_script;
+    step_animation_simple(s, script, s->flags);
+    if (!(s->t0 > s->vy)) {                                         /* back at the launch speed: the next hop */
+        s->vy = (int16_t)-s->t0;
+        if (--s->t1 == 0) {
+            s->aux = (int16_t)(s->aux + 8);
+            int o = (uint16_t)s->aux / 2;
+            if (o >= 24 || frog_hops[o] < 0) { o = 0; s->aux = 0; }
+            s->vx = frog_hops[o];
+            s->vy = frog_hops[o + 1];
+            s->t0 = (int16_t)-frog_hops[o + 1];
+            s->t1 = frog_hops[o + 2];
+            s->flags &= ~1;
+            if (frog_hops[o + 3]) s->flags |= 1;
+        }
+    }
+    touch_player(g, d->x, d->y, 32, 20);
+    ball_hits_object(g, s, 0, 0, 32, 30, 12, 0x200);
+    despawn_if_far(g, s);
+}
+
+/* ---- type 111: a thrown blob (the child block), falls under gravity ---- */
+static void obj_blob_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x10FE84 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->type4 |= (int16_t)0x8000;                                   /* skip this frame's update */
+    if (g->objs.child_vx & 0x8000) { g->objs.child_vx = (int16_t)(g->objs.child_vx & 0x7FFF); s->flags |= 1; }   /* bclr on the block */
+    s->vx = g->objs.child_vx;
+    s->vy = g->objs.child_vy;
+    if (s->vy) s->flags |= 4;
+    s->script = g->objs.child_script;
+    set_draw_size_at(g, s, g->objs.child_w, g->objs.child_h, g->objs.child_frames);
+}
+static void obj_blob_update(sk_game *g, sk_slot *s, int index) {              /* 0x10FEDC */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (s->script && d->frames) step_animation_simple(s, s->script, s->flags);
+    touch_player(g, d->x, d->y, d->w, d->h);
+    free_if_far(g, s);
+}
+
 void obj_italy_install(void) {
+    object_init_table[31] = obj_frog_init;             object_update_table[31] = obj_frog_update;
     object_init_table[36] = obj_pendulum_init;         object_update_table[36] = obj_pendulum_update;
     object_init_table[37] = obj_jumper_init;           object_update_table[37] = obj_jumper_update;
     object_init_table[38] = obj_swing_platform_init;   object_update_table[38] = obj_swing_platform_update;
@@ -610,4 +693,5 @@ void obj_italy_install(void) {
     object_init_table[70] = obj_flyer_init;            object_update_table[70] = obj_flyer_update;
     object_init_table[88] = obj_wings_init;            object_update_table[88] = obj_wings_update;
     object_init_table[100] = obj_rider_init;           object_update_table[100] = obj_rider_update;
+    object_init_table[111] = obj_blob_init;            object_update_table[111] = obj_blob_update;
 }

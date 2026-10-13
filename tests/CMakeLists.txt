@@ -258,7 +258,8 @@ set(SK_TEST_NAMES
   thrower_64_patrols_and_throws_at_the_kid
   thrower_68_throws_and_waits_25
   flyer_70_bobs_and_chases
-  wings_88_follow_then_fly_off)
+  wings_88_follow_then_fly_off
+  frog_31_hops_its_pattern_and_spits)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

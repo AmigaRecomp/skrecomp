@@ -84,7 +84,8 @@ void test_spawn_child_mirrors_for_a_right_facing_parent(void) {
     sk_slot *p = object_at(100, 100, 16, 16);
     p->flags |= 1;                                                       /* facing right */
     CHECK(spawn_child(&g_g, p, 100, 100, 111, 4, frames, frames, 16, 8, 4, -16) != NULL);
-    CHECK_EQ(g_g.objs.child_vx, (int16_t)0x8004); CHECK_EQ(g_g.objs.child_w, 16); CHECK_EQ(g_g.objs.child_vy, -16);
+    CHECK_EQ(g_g.objs.child_vx, 4); CHECK_EQ(g_g.objs.child_w, 16); CHECK_EQ(g_g.objs.child_vy, -16);   /* type 111 took bit 15 (bclr) */
+    CHECK_EQ(g_g.objs.last_slot->flags & 1, 1); CHECK_EQ(g_g.objs.last_slot->vx, 4);                    /* as its facing */
     CHECK_EQ(g_g.objs.last_slot->x, 104);                                /* x - 4 + 8 */
     drop_game();
 }
