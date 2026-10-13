@@ -163,3 +163,33 @@ void test_bouncer_hops_then_leaves(void) {                    /* type 44 */
     CHECK(s->x < 0);                                                 /* and freed, its draw 200 px outside the view */
     drop_game();
 }
+
+void test_rock_trembles_then_drops_on_the_kid(void) {         /* type 48 */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 3 * 16, 48, 0);
+    CHECK_EQ(s->x, 152); CHECK_EQ(s->y, 3 * 16 - 24); CHECK_EQ(s->draw->w, 32);
+    g_g.player.x = 400;
+    g_g.frame_ticks = 3;                                             /* the next frame is phase 0 */
+    tick(1);
+    CHECK_EQ(s->draw->x, 153); CHECK_EQ(aux_c(s), 0);              /* trembles: +1, 0, -1, 0 */
+    tick(3);
+    CHECK_EQ(s->draw->x, 152);
+    g_g.player.x = (int16_t)(s->draw->x + 16 + 10);
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK(s->flags & 4); CHECK(s->flags & 2);
+    int y = s->draw->y;
+    tick(5);
+    CHECK(s->draw->y > y);                                           /* falls */
+    drop_game();
+}
+
+void test_hopper_49_bounces_and_leaves(void) {                /* type 49 */
+    CHECK(make_game());
+    g_g.camera_x = 400;
+    sk_slot *s = spawn(600, 11 * 16, 49, 0);
+    CHECK_EQ(s->vx, 4); CHECK_EQ(s->vy, -4); CHECK(s->flags & 12);
+    int i = 0, bounces = 0;
+    for (; i < 400 && !(s->flags & 2); i++) { tick(1); bounces += s->vy == -4; }
+    CHECK(bounces >= 2); CHECK(s->flags & 2);
+    drop_game();
+}

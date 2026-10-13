@@ -16,6 +16,9 @@ static const uint8_t pendulum_frame_neg[71] = {                                 
 static const uint8_t jumper_fly_script[] = { 0, 4, 0, 2, 7, 8, 9, 10, 0, 1, 2, 3 };              /* 0x11222E */
 static const uint8_t strider_walk_script[] = { 0, 4, 0, 4, 0, 1, 2, 3, 5, 6, 7, 8 };          /* 0x112768 */
 static const uint8_t bouncer_script[] = { 0, 4, 0, 4, 0, 1, 2, 3, 3, 2, 1, 0 };               /* 0x112876 */
+static const uint8_t rock_script[] = { 0, 4, 0, 6, 0, 1, 2, 3, 0, 1, 2, 3 };                   /* 0x112FFE */
+static const int16_t rock_tremble[4] = { 1, 0, -1, 0 };                                       /* 0x11300A */
+static const uint8_t hopper49_script[] = { 0, 4, 0, 2, 0, 1, 2, 3, 3, 2, 1, 0 };              /* 0x1130AA */
 static const uint8_t jumper_land_script[] = { 0, 4, 0, 4, 4, 5, 6, 6, 4, 5, 6, 6 };             /* 0x11223A */
 
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
@@ -343,11 +346,68 @@ static void obj_bouncer_update(sk_game *g, sk_slot *s, int index) {           /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 48: the loose rock (slot 128): trembles, drops when the kid passes under ---- */
+static void obj_rock_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x112F5A */
+    init_object_slot(g, s, x - 8, y - 24, s->type4);
+    s->vy = 0; s->vx = 0;
+    const uint8_t *f = res(g, 128);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
+}
+static void obj_rock_update(sk_game *g, sk_slot *s, int index) {              /* 0x112F84 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (aux_c(s) == 0) {
+        d->x = (int16_t)(d->x + rock_tremble[g->frame_ticks & 3]);
+        if ((int16_t)(d->y + 32 - g->player.y) >= 0) { despawn_if_far(g, s); return; }
+        int dx = (int16_t)(d->x + 16 - g->player.x);
+        if (dx < 0) dx = -dx;
+        if (dx >= 32) { despawn_if_far(g, s); return; }
+        s->flags |= 4 | 2;
+        set_aux_c(s, 1);
+    }
+    int wrapped = 0;
+    step_animation(s, rock_script, 0, &wrapped);
+    touch_player(g, d->x, d->y, 32, 32);
+    despawn_if_far(g, s);
+}
+
+/* ---- type 49: the hopper (slot 92): bounces along, out of play 380 px from its marker ---- */
+static void obj_hopper49_init(sk_game *g, sk_slot *s, int x, int y) {         /* 0x113012 */
+    init_object_slot(g, s, x, y - 16, s->type4);
+    s->vx = 4; s->vy = -4;
+    s->flags |= 8 | 4;
+    const uint8_t *f = res(g, 92);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
+}
+static void obj_hopper49_update(sk_game *g, sk_slot *s, int index) {          /* 0x11304A */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    int wrapped = 0;
+    step_animation(s, hopper49_script, s->flags, &wrapped);
+    if (!(s->flags & 2)) {
+        int rows = probe_rows_below(g, s, 16, 0);
+        if (rows < 0) { d->y = (int16_t)(d->y + rows); s->vy = -4; }
+        int dx = (int16_t)(d->x - s->x);
+        if (dx < 0) dx = -dx;
+        if (dx >= 0x17C) s->flags |= 2;
+        touch_player(g, d->x + 2, d->y + 2, 28, 28);
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_italy_install(void) {
     object_init_table[36] = obj_pendulum_init;         object_update_table[36] = obj_pendulum_update;
     object_init_table[37] = obj_jumper_init;           object_update_table[37] = obj_jumper_update;
     object_init_table[38] = obj_swing_platform_init;   object_update_table[38] = obj_swing_platform_update;
     object_init_table[43] = obj_strider_init;          object_update_table[43] = obj_strider_update;
     object_init_table[44] = obj_bouncer_init;          object_update_table[44] = obj_bouncer_update;
+    object_init_table[48] = obj_rock_init;             object_update_table[48] = obj_rock_update;
+    object_init_table[49] = obj_hopper49_init;         object_update_table[49] = obj_hopper49_update;
     object_init_table[100] = obj_rider_init;           object_update_table[100] = obj_rider_update;
 }

@@ -212,6 +212,8 @@ void test_swing_platform_hangs_on_its_chain(void);
 void test_strider_walks_turns_and_leaps(void);
 void test_thrown_rider_falls_after_50(void);
 void test_bouncer_hops_then_leaves(void);
+void test_rock_trembles_then_drops_on_the_kid(void);
+void test_hopper_49_bounces_and_leaves(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -421,6 +423,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "strider_walks_turns_and_leaps", test_strider_walks_turns_and_leaps },
     { "thrown_rider_falls_after_50", test_thrown_rider_falls_after_50 },
     { "bouncer_hops_then_leaves", test_bouncer_hops_then_leaves },
+    { "rock_trembles_then_drops_on_the_kid", test_rock_trembles_then_drops_on_the_kid },
+    { "hopper_49_bounces_and_leaves", test_hopper_49_bounces_and_leaves },
 };
 
 int main(int argc, char **argv) {
