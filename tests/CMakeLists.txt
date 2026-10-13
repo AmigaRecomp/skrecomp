@@ -24,7 +24,8 @@ add_executable(sk_tests
   test_sprites.c
   test_player_states.c
   test_objects.c
-  test_camera.c)
+  test_camera.c
+  test_attrs.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -112,7 +113,11 @@ set(SK_TEST_NAMES
   camera_clamps_and_follows
   push_x_forces_the_camera
   crossing_a_column_scans_the_new_column_and_three_beyond
-  camera_scans_stay_inside_a_tiny_level)
+  camera_scans_stay_inside_a_tiny_level
+  exit_attribute_starts_the_exit_walk
+  checkpoint_moves_the_respawn_and_fires_once
+  layer_switch_changes_the_priority_word
+  tile_queue_kinds_step_as_the_table_says)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

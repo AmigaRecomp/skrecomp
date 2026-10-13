@@ -9,6 +9,7 @@
 #include "core/tables.h"
 #include "game/collision.h"
 #include "game/input.h"
+#include "game/attrs.h"
 #include "game/objects.h"
 #include "game/player.h"
 #include "game/world.h"
@@ -35,6 +36,7 @@ struct sk_game {
     sk_player player;
     sk_ball ball;
     sk_objects objs;
+    sk_attrs attrs;
     int object_count;                   /* 0x300228 */
     bool untouchable;                   /* bytes 0x30033A / 0x300382: touch_player ignores the kid */
     uint8_t input_state;                /* the five SK_IN_ bits (0x300387) */
@@ -52,7 +54,8 @@ struct sk_game {
     uint8_t layer_flags_record;         /* 0x300380: level record byte 3 */
     uint16_t bplcon2_value;             /* 0x30028A */
     uint8_t layer_zone;                 /* 0x30038E */
-    int kit;                            /* 0x300264: level record byte 4 */
+    int kit;                            /* 0x300264: level record byte 4 (the respawn kit) */
+    int kit_current;                    /* 0x300262: the kit the sprite colours show */
     uint32_t level_timer;               /* 0x3002BA, BCD */
     int timer_tick, timer_rate;         /* 0x3002C2, 0x3002C4 */
     uint8_t timer_flags;                /* 0x300354: bit 7 running, bit 0 changed */

@@ -87,6 +87,10 @@ void test_camera_clamps_and_follows(void);
 void test_push_x_forces_the_camera(void);
 void test_crossing_a_column_scans_the_new_column_and_three_beyond(void);
 void test_camera_scans_stay_inside_a_tiny_level(void);
+void test_exit_attribute_starts_the_exit_walk(void);
+void test_checkpoint_moves_the_respawn_and_fires_once(void);
+void test_layer_switch_changes_the_priority_word(void);
+void test_tile_queue_kinds_step_as_the_table_says(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -171,6 +175,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "push_x_forces_the_camera", test_push_x_forces_the_camera },
     { "crossing_a_column_scans_the_new_column_and_three_beyond", test_crossing_a_column_scans_the_new_column_and_three_beyond },
     { "camera_scans_stay_inside_a_tiny_level", test_camera_scans_stay_inside_a_tiny_level },
+    { "exit_attribute_starts_the_exit_walk", test_exit_attribute_starts_the_exit_walk },
+    { "checkpoint_moves_the_respawn_and_fires_once", test_checkpoint_moves_the_respawn_and_fires_once },
+    { "layer_switch_changes_the_priority_word", test_layer_switch_changes_the_priority_word },
+    { "tile_queue_kinds_step_as_the_table_says", test_tile_queue_kinds_step_as_the_table_says },
 };
 
 int main(int argc, char **argv) {
