@@ -42,8 +42,10 @@ add_executable(sk_tests
   test_ptreplay.c
   test_sound.c
   test_obj_italy.c
+  test_obj_russia.c
   test_attr_italy.c
-  test_attr_country_london.c)
+  test_attr_country_london.c
+  test_obj_russia.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -307,7 +309,10 @@ set(SK_TEST_NAMES
   music_start_leaves_the_effect_channel
   freeing_level_effects_stops_channel_four
   audio_queue_keeps_its_latency
-  game_over_fades_the_music)
+  game_over_fades_the_music
+  mine_35_explodes_once_set_off
+  sled_65_speeds_downhill_and_is_kicked_off
+  icicle_66_drops_waits_and_resets)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

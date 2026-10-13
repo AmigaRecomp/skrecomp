@@ -55,6 +55,7 @@ add_library(skcore STATIC
   src/game/obj_london.c
   src/game/obj_country.c
   src/game/obj_italy.c
+  src/game/obj_russia.c
   src/game/attr_country_london.c
   src/game/attr_italy.c
   src/audio/paula.c

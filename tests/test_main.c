@@ -263,6 +263,9 @@ void test_music_start_leaves_the_effect_channel(void);
 void test_freeing_level_effects_stops_channel_four(void);
 void test_audio_queue_keeps_its_latency(void);
 void test_game_over_fades_the_music(void);
+void test_mine_35_explodes_once_set_off(void);
+void test_sled_65_speeds_downhill_and_is_kicked_off(void);
+void test_icicle_66_drops_waits_and_resets(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -523,6 +526,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "freeing_level_effects_stops_channel_four", test_freeing_level_effects_stops_channel_four },
     { "audio_queue_keeps_its_latency", test_audio_queue_keeps_its_latency },
     { "game_over_fades_the_music", test_game_over_fades_the_music },
+    { "mine_35_explodes_once_set_off", test_mine_35_explodes_once_set_off },
+    { "sled_65_speeds_downhill_and_is_kicked_off", test_sled_65_speeds_downhill_and_is_kicked_off },
+    { "icicle_66_drops_waits_and_resets", test_icicle_66_drops_waits_and_resets },
 };
 
 int main(int argc, char **argv) {
