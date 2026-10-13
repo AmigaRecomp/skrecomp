@@ -4,6 +4,7 @@
 #include "game/objects.h"
 #include "formats/bobs.h"
 #include "game/obj_england.h"
+#include "game/obj_country.h"
 #include "game/obj_london.h"
 
 sk_obj_init_fn object_init_table[128];
@@ -21,6 +22,7 @@ void objects_reset(sk_game *g) {                                /* clear_object_
     g->object_count = 0;
     obj_england_install();
     obj_london_install();
+    obj_country_install();
     for (int i = 0; i < 128; i++) {
         if (!object_init_table[i]) object_init_table[i] = obj_stub_init;
         if (!object_update_table[i]) object_update_table[i] = obj_stub_update;

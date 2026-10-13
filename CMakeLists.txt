@@ -53,6 +53,7 @@ add_library(skcore STATIC
   src/game/hud.c
   src/game/platforms.c
   src/game/obj_london.c
+  src/game/obj_country.c
   src/game/attr_country_london.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB SDL3::SDL3)

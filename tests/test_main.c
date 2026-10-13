@@ -182,6 +182,14 @@ void test_sin_1024_quadrants(void);
 void test_sinking_platform_type_26(void);
 void test_stomper_type_61_bounces_the_kid(void);
 void test_fade_colour_steps_toward_white(void);
+void test_goose_turns_at_its_range(void);
+void test_hopper_hops_and_turns(void);
+void test_farmer_walks_and_takes_two_hits(void);
+void test_flytrap_swallows_the_ball(void);
+void test_mole_throws_a_clod(void);
+void test_leaper_jumps_from_below(void);
+void test_flies_use_a_fixed_record(void);
+void test_country_london_markers_spawn_real_types(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -361,6 +369,14 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sinking_platform_type_26", test_sinking_platform_type_26 },
     { "stomper_type_61_bounces_the_kid", test_stomper_type_61_bounces_the_kid },
     { "fade_colour_steps_toward_white", test_fade_colour_steps_toward_white },
+    { "goose_turns_at_its_range", test_goose_turns_at_its_range },
+    { "hopper_hops_and_turns", test_hopper_hops_and_turns },
+    { "farmer_walks_and_takes_two_hits", test_farmer_walks_and_takes_two_hits },
+    { "flytrap_swallows_the_ball", test_flytrap_swallows_the_ball },
+    { "mole_throws_a_clod", test_mole_throws_a_clod },
+    { "leaper_jumps_from_below", test_leaper_jumps_from_below },
+    { "flies_use_a_fixed_record", test_flies_use_a_fixed_record },
+    { "country_london_markers_spawn_real_types", test_country_london_markers_spawn_real_types },
 };
 
 int main(int argc, char **argv) {

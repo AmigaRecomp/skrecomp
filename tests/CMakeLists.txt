@@ -36,7 +36,8 @@ add_executable(sk_tests
   test_attr_england.c
   test_hud.c
   test_platforms.c
-  test_obj_london.c)
+  test_obj_london.c
+  test_obj_country.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -219,7 +220,15 @@ set(SK_TEST_NAMES
   sin_1024_quadrants
   sinking_platform_type_26
   stomper_type_61_bounces_the_kid
-  fade_colour_steps_toward_white)
+  fade_colour_steps_toward_white
+  goose_turns_at_its_range
+  hopper_hops_and_turns
+  farmer_walks_and_takes_two_hits
+  flytrap_swallows_the_ball
+  mole_throws_a_clod
+  leaper_jumps_from_below
+  flies_use_a_fixed_record
+  country_london_markers_spawn_real_types)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
