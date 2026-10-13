@@ -137,3 +137,23 @@ void test_sprout_11_grows_and_rests(void) {                         /* type 11: 
     CHECK_EQ(s->aux, 2); CHECK_EQ(s->flags_b, 0x1F);                /* every second cycle: the longer pause, t1 */
     drop_game();
 }
+
+void test_shell_20_fires_every_100_frames(void) {                   /* type 20 */
+    CHECK(make_game());
+    sk_slot *s = spawn(160, 11 * 16, 20, 1);                         /* faces left */
+    CHECK_EQ(s->flags & 1, 0); CHECK_EQ(s->x, 167); CHECK_EQ(s->vx, 8); CHECK(s->draw->dflags & 4);
+    tick(1);
+    CHECK_EQ(count_type(115), 1); CHECK_EQ(aux_c(s), 1);            /* the muzzle flash */
+    tick(15);
+    CHECK_EQ(aux_c(s), 2); CHECK_EQ(s->draw->dflags & 4, 0);         /* flying */
+    int x = s->draw->x;
+    tick(4);
+    CHECK(s->draw->x < x);
+    int i = 0;
+    while (aux_c(s) != 3 && i++ < 200) tick(1);
+    CHECK_EQ(aux_c(s), 3);                                           /* off the view (or into a wall) */
+    i = 0;
+    while (aux_c(s) != 1 && i++ < 200) tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->draw->x, s->x);               /* reloaded at 100: fires again */
+    drop_game();
+}

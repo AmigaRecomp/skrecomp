@@ -24,6 +24,10 @@ static const uint8_t walker78_script[] = { 0, 5, 0, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8
 
 static const uint8_t sprout_script[] = { 0, 10, 0, 3, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 97, 0, 230, 2, 112, 0, 16, 57, 0, 48 };   /* 0x10EFC4 */
 
+static const uint8_t shell_flash_script[] = { 0, 8, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };   /* 0x1103EA */
+static const uint8_t shell_fly_script[] = { 0, 4, 0, 3, 0, 1, 2, 3, 4, 5, 6, 7 };              /* 0x1103FE */
+static const uint8_t shell_burst_script[] = { 0, 5, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };       /* 0x11040A */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -386,8 +390,68 @@ static void obj_sprout_update(sk_game *g, sk_slot *s, int index) {            /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 20: the cannon shell (slot 18; the flash from slot 19, the burst from slot 20: type 115) ---- */
+static void obj_shell_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x110242 */
+    init_object_slot(g, s, x + 7, y + 2, s->type4);
+    if (!(g->objs.marker_param & 1)) { s->flags |= 1; s->x = (int16_t)(s->x - 14); }
+    s->vx = 8; s->vy = 0;
+    const uint8_t *f = res(g, 18);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 11, f, 1);                                  /* sub_107A16 */
+    slot_draw_record(g, s)->dflags |= 4;
+}
+static void obj_shell_update(sk_game *g, sk_slot *s, int index) {             /* 0x110286 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    s->t0++;
+    sk_objects *o = &g->objs;
+    switch (aux_c(s)) {
+    case 0:                                                         /* fire: the muzzle flash */
+        d->dflags |= 4;
+        o->child_frames = res(g, 19); o->child_script = shell_flash_script;
+        o->child_w = 16; o->child_h = 16;
+        o->child_vx = (s->flags & 1) ? 0 : (int16_t)0x8000;
+        o->child_vy = 0;
+        spawn_object(g, d->x, d->y - 3, 115);
+        set_aux_c(s, 1);
+        /* fall through */
+    case 1:
+        if ((uint16_t)s->t0 < 16) break;
+        d->dflags &= (uint8_t)~4;
+        set_aux_c(s, 2);
+        /* fall through */
+    case 2:
+        apply_velocity(s);
+        step_animation_simple(s, shell_fly_script, s->flags);
+        if (object_offscreen(g, d->x, d->y, 64) >= 0) {
+            if (!wall_ahead(g, s, s->flags)) { touch_player(g, d->x, d->y, 20, 10); break; }
+            o->child_frames = res(g, 20); o->child_script = shell_burst_script;   /* into a wall: the burst */
+            o->child_w = 16; o->child_h = 32;
+            o->child_vx = 0;
+            int bx = d->x + 15;
+            if (!(s->flags & 1)) { bx -= 14; o->child_vx = (int16_t)0x8000; }
+            o->child_vy = 0;
+            spawn_object(g, bx, d->y - 10, 115);
+        }
+        set_aux_c(s, 3);
+        /* fall through */
+    case 3:
+        d->dflags |= 4;
+        if ((uint16_t)s->t0 < 100) break;
+        s->t0 = 0;
+        set_aux_c(s, 0);
+        d->x = s->x;
+        reset_animation(s);
+        break;
+    default: break;
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
+    object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;

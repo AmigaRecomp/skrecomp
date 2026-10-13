@@ -269,6 +269,7 @@ void test_icicle_66_drops_waits_and_resets(void);
 void test_burrower_72_rises_hops_out_and_walks(void);
 void test_walkers_74_78_patrol(void);
 void test_sprout_11_grows_and_rests(void);
+void test_shell_20_fires_every_100_frames(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -535,6 +536,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "burrower_72_rises_hops_out_and_walks", test_burrower_72_rises_hops_out_and_walks },
     { "walkers_74_78_patrol", test_walkers_74_78_patrol },
     { "sprout_11_grows_and_rests", test_sprout_11_grows_and_rests },
+    { "shell_20_fires_every_100_frames", test_shell_20_fires_every_100_frames },
 };
 
 int main(int argc, char **argv) {
