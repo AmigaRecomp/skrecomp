@@ -267,6 +267,7 @@ void test_mine_35_explodes_once_set_off(void);
 void test_sled_65_speeds_downhill_and_is_kicked_off(void);
 void test_icicle_66_drops_waits_and_resets(void);
 void test_burrower_72_rises_hops_out_and_walks(void);
+void test_walkers_74_78_patrol(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -531,6 +532,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sled_65_speeds_downhill_and_is_kicked_off", test_sled_65_speeds_downhill_and_is_kicked_off },
     { "icicle_66_drops_waits_and_resets", test_icicle_66_drops_waits_and_resets },
     { "burrower_72_rises_hops_out_and_walks", test_burrower_72_rises_hops_out_and_walks },
+    { "walkers_74_78_patrol", test_walkers_74_78_patrol },
 };
 
 int main(int argc, char **argv) {

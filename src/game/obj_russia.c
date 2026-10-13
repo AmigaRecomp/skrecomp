@@ -19,6 +19,9 @@ static const uint8_t burrow_hop_script[] = { 0, 2, 0, 6, 3, 4, 5, 6 };          
 static const uint8_t burrow_dig_script[] = { 0, 4, 0, 4, 4, 5, 6, 7, 4, 5, 6, 7 };               /* 0x119700 */
 static const uint8_t burrow_up_script[] = { 0, 4, 0, 4, 8, 9, 10, 11, 8, 9, 10, 11 };            /* 0x11970C */
 
+static const uint8_t walker74_script[] = { 0, 4, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7 };              /* 0x119DB6 */
+static const uint8_t walker78_script[] = { 0, 5, 0, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };        /* 0x119B6E */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -296,9 +299,59 @@ far:
     if (point_offscreen(g, d->x, d->y, 160, 640) < 0) free_object(g, s);
 }
 
+/* ---- type 74: the big walker (slot 127, 64x64) ---- */
+static void obj_walker74_init(sk_game *g, sk_slot *s, int x, int y) {         /* 0x119D16 */
+    init_object_slot(g, s, x, y - 48, s->type4);
+    s->vx = 2; s->vy = 0; s->hits = 3;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 127);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 64, 64, f, 1);                                  /* frames_64x64 */
+}
+static void obj_walker74_update(sk_game *g, sk_slot *s, int index) {          /* 0x119D50 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (!(s->flags & 2)) {
+        int wrapped = 0;
+        step_animation(s, walker74_script, s->flags, &wrapped);
+        if (ground_ahead(g, s, s->flags)) s->flags ^= 1;
+        touch_player(g, d->x, d->y, 64, 64);
+        ball_hits_object(g, s, 0, 0, 64, 64, 8, 0x500);
+    }
+    despawn_if_far(g, s);
+}
+
+/* ---- type 78: the second walker (slots 116, 117 when knocked down) ---- */
+static void obj_walker78_init(sk_game *g, sk_slot *s, int x, int y) {         /* 0x119AA4 */
+    init_object_slot(g, s, x, y - 34, s->type4);
+    s->vx = 4; s->vy = 0; s->hits = 2;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 116);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 64, 50, f, 1);                                  /* sub_107F88 */
+}
+static void obj_walker78_update(sk_game *g, sk_slot *s, int index) {          /* 0x119ADE */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (!(s->flags & 2)) {
+        int wrapped = 0;
+        step_animation(s, walker78_script, s->flags, &wrapped);
+        if ((uint16_t)iabs((int16_t)(d->x - s->x)) >= 0xB4 || ground_ahead(g, s, s->flags)) s->flags ^= 1;
+        touch_player(g, d->x + 10, d->y, 64, 40);
+        if (ball_hits_object(g, s, 0, 10, 64, 40, 0, 0x400) >= 0) size_frames(g, d, 64, 64, res(g, 117));
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;
+    object_init_table[74] = obj_walker74_init;         object_update_table[74] = obj_walker74_update;
+    object_init_table[78] = obj_walker78_init;         object_update_table[78] = obj_walker78_update;
     object_init_table[72] = obj_burrower_init;         object_update_table[72] = obj_burrower_update;
 }

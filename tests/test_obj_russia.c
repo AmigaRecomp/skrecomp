@@ -107,3 +107,16 @@ void test_burrower_72_rises_hops_out_and_walks(void) {              /* type 72 *
     CHECK_EQ(aux_c(s), 3); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 16);   /* walking */
     drop_game();
 }
+
+void test_walkers_74_78_patrol(void) {                              /* types 74 and 78 */
+    CHECK(make_game());
+    g_g.camera_x = 0;
+    sk_slot *a = spawn(160, 12 * 16, 74, 0);
+    CHECK_EQ(a->vx, 2); CHECK_EQ(a->hits, 3); CHECK_EQ(a->draw->w, 64); CHECK_EQ(a->y, 12 * 16 - 48);
+    sk_slot *b = spawn(200, 12 * 16, 78, 0);
+    CHECK_EQ(b->vx, 4); CHECK_EQ(b->hits, 2); CHECK_EQ(b->draw->w, 64); CHECK_EQ(b->draw->h, 50); CHECK_EQ(b->y, 12 * 16 - 34);
+    int i = 0;
+    while (!(b->flags & 1) && i++ < 200) tick(1);
+    CHECK(b->flags & 1); CHECK(b->x - b->draw->x >= 180 || i < 200);   /* turned at 180 px (or an edge) */
+    drop_game();
+}
