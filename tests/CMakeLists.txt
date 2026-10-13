@@ -242,7 +242,10 @@ set(SK_TEST_NAMES
   a_rising_ball_passes_through_a_platform
   country_london_slots_cover_the_frames
   london1_kid_rides_a_platform
-  dark_kit_keeps_colour_49)
+  dark_kit_keeps_colour_49
+  tile_animation_groups_step
+  animated_cells_draw_the_next_tile
+  home1_cards_and_signs_animate)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

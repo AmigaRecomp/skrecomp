@@ -37,6 +37,7 @@ bool world_build(sk_world *w, const sk_level *lv) {
     w->tile = malloc(n * sizeof *w->tile);
     w->state = calloc(n ? n : 1, 1);
     if (!w->live || !w->tile || !w->state) { world_free(w); return false; }
+    if (lv->map.states) memcpy(w->state, lv->map.states, n);       /* the level's animated cells */
     w->start_x = 16;                                        /* find_start_position: 16, 16 - 24 when no tile 0x1FF */
     w->start_y = 16 - 24;
     bool found = false;

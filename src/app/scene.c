@@ -64,6 +64,20 @@ void scene_draw_backdrop(const sk_level *lv, sk_fb *fb, int bg_x, int bg_y) {
     if (lv->backdrop.grid) draw_grid(fb, &lv->tiles_b, lv->backdrop.width, lv->backdrop.height, bg_x + SK_BUFFER_WORLD_X, bg_y, SK_GROUP_TILES_B, bg_index, lv);
 }
 
+typedef struct { const uint16_t *indices; const uint8_t *states; const uint16_t *anim; int w, count; } anim_grid;
+
+static int fg_anim_index(const void *ctx, int x, int y) {        /* blit_fg_strips: the image + tile_anim[cell_state] */
+    const anim_grid *gr = ctx;
+    int i = y * gr->w + x, idx = gr->indices[i] & SK_INDEX_MASK, s = gr->states[i];
+    int a = idx + (gr->anim[s] >> 7);
+    return a < gr->count ? a : idx;
+}
+
+void scene_draw_tiles_anim(const sk_level *lv, sk_fb *fb, const uint16_t *indices, const uint8_t *states, const uint16_t *anim, int cam_x, int cam_y) {
+    anim_grid gr = { indices, states, anim, lv->map.width, lv->tiles_a.count };
+    draw_grid(fb, &lv->tiles_a, lv->map.width, lv->map.height, cam_x + SK_BUFFER_WORLD_X, cam_y, SK_GROUP_TILES_A, fg_anim_index, &gr);
+}
+
 void scene_draw_tiles(const sk_level *lv, sk_fb *fb, const uint16_t *indices, int cam_x, int cam_y) {
     index_grid gr = { indices, lv->map.width };
     draw_grid(fb, &lv->tiles_a, lv->map.width, lv->map.height, cam_x + SK_BUFFER_WORLD_X, cam_y, SK_GROUP_TILES_A, fg_index, &gr);

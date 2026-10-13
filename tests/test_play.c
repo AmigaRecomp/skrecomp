@@ -158,3 +158,19 @@ void test_dark_kit_keeps_colour_49(void) {                         /* ROM-backed
     CHECK_EQ(p.scene.palette.xrgb[49], c49);
     play_close(&p);
 }
+
+void test_home1_cards_and_signs_animate(void) {                    /* ROM-backed: the level's cell states */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 0, .scale = 1, .section = -1, .frames = 0 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    int cards = 0, signs = 0;
+    for (int i = 0; i < p.game.world.w * p.game.world.h; i++) { cards += p.game.world.state[i] == 11; signs += p.game.world.state[i] == 19; }
+    CHECK_EQ(cards, 5); CHECK_EQ(signs, 2);
+    uint16_t first = p.game.tile_anim[11];
+    int changes = 0;
+    for (int i = 0; i < 48; i++) { play_step(&p, 0); if (p.game.tile_anim[11] != first) { changes++; first = p.game.tile_anim[11]; } }
+    CHECK(changes >= 10);                                            /* a card turns every 4 frames */
+    play_close(&p);
+}

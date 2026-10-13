@@ -106,6 +106,8 @@ struct sk_game {
     sk_platform platforms[SK_PLATFORMS]; int platform_count;   /* 0x3028D6 / 0x30022C */
     uint8_t flash_timer;                /* 0x300364: the screen flash, 16 frames */
     uint8_t splash_done;                /* 0x300365: attribute 55 fired (cleared on a respawn) */
+    uint16_t tile_anim[256];            /* 0x301AFE: the frame offset (0x80 a tile) for each cell_state value */
+    int anim_phase, anim_wait[8];       /* 0x3001F6, 0x3001FA.. */
     int flash_table;                    /* 0x30004C: 0 = the fade at 0x3012BA, 1 = 0x30169A */
     int8_t kick_result;                 /* 0x300338 */
     int32_t trick8_bias;                /* 0x30029C */

@@ -127,7 +127,7 @@ void play_draw(sk_play *p) {
     p->game.view.bg_x = bg_x;
     p->game.view.bg_y = bg_y;
     if (p->scene.backdrop) scene_draw_backdrop(lv, fb, bg_x, bg_y);
-    scene_draw_tiles(lv, fb, p->game.world.tile, p->game.camera_x, p->game.camera_y);
+    scene_draw_tiles_anim(lv, fb, p->game.world.tile, p->game.world.state, p->game.tile_anim, p->game.camera_x, p->game.camera_y);
     draw_all_objects(&p->game, fb, p->game.camera_x + SK_BUFFER_WORLD_X, p->game.camera_y);
     const sk_game *g = &p->game;
     if (g->msg_visible && g->msg_w > 0) {                        /* the message box: centred on the view (show_message_box) */

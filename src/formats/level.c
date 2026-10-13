@@ -14,6 +14,8 @@ static bool parse_map(const uint8_t *c, size_t n, sk_tilemap *m, sk_err *e) {
     m->cells = malloc((size_t)w * h * sizeof *m->cells);
     if (!m->cells) return sk_fail(e, "out of memory");
     for (size_t i = 0; i < (size_t)w * h; i++) m->cells[i] = be16(c + 8 + SK_MAP_GAP + i * 2);
+    m->states = calloc((size_t)w * h, 1);                       /* cell_state (0x302B9E) is the gap itself: the cells' animation states */
+    if (m->states) memcpy(m->states, c + 8, (size_t)w * h < SK_MAP_GAP ? (size_t)w * h : SK_MAP_GAP);
     m->width = (uint16_t)w;
     m->height = (uint16_t)h;
     return true;
@@ -108,6 +110,7 @@ bool level_parse(const uint8_t *data, size_t len, sk_level *lv, sk_err *e) {
 
 void level_free(sk_level *lv) {
     free(lv->map.cells);
+    free(lv->map.states);
     free(lv->backdrop.grid);
     free(lv->tiles_a.tiles); free(lv->tiles_a.tails);
     free(lv->tiles_b.tiles); free(lv->tiles_b.tails);

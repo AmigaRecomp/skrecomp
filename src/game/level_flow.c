@@ -140,6 +140,32 @@ void run_curtain(sk_game *g) {                                  /* 0x10471A */
 
 int curtain_rows(const sk_game *g) { return g->curtain_top > 0 ? g->curtain_top : 0; }
 
+static void anim_group(sk_game *g, int grp) {                    /* sub_1095CE */
+    uint16_t *t = g->tile_anim;
+    t[1 + 16 * grp] ^= 0x80;                                     /* bchg #7 on the low bytes: two-frame toggles */
+    t[129 + 16 * grp] ^= 0x80;
+    uint16_t cap = 0x100;
+    for (int k = 0; k < 14; k++) {                               /* entry k: k + 3 frames, its mirror runs backwards */
+        uint16_t *e = &t[2 + 16 * grp + k];
+        *e = (uint16_t)(*e + 0x80);
+        if ((int16_t)*e > (int16_t)cap) *e = 0;
+        t[130 + 16 * grp + k] = (uint16_t)(cap - *e);
+        cap = (uint16_t)(cap + 0x80);
+    }
+}
+
+void tile_anim_step(sk_game *g) {                                /* sub_1094EA */
+    g->anim_phase += 4;
+    int ph = g->anim_phase & 0xC;
+    for (int k = 0; k < 2; k++) {
+        int grp = (ph >> 1) + k;                                 /* phase 0: groups 0 1, 4: 2 3, 8: 4 5, 12: 6 7 */
+        if (grp == 0) { anim_group(g, 0); continue; }
+        if (--g->anim_wait[grp] >= 0) continue;
+        g->anim_wait[grp] = grp;
+        anim_group(g, grp);
+    }
+}
+
 uint16_t fade_colour(uint16_t from, uint16_t to, int step) {     /* sub_104E40: one of the 16 steps */
     uint16_t d0 = from & 0xF00, d1 = from & 0xF0, d2 = (uint16_t)((from & 0xF) << 4);
     uint16_t d3 = (uint16_t)((uint16_t)((to & 0xF00) - d0) >> 4), d4 = (uint16_t)((uint16_t)((to & 0xF0) - d1) >> 4);
@@ -175,6 +201,7 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     step(g, 14); process_tile_queue(g);
     step(g, 15); edge_scan_rows(g);
     step(g, 16); edge_scan_columns(g);
+    step(g, 19); tile_anim_step(g);                              /* blit_fg_strips' first call */
     step(g, 21);                                                 /* draw_all_objects: the app draws after the step */
     step(g, 23); if (g->ball_sprite) ball_sprites(g, g->ball_sprite);
     step(g, 24); hud_update(g);

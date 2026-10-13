@@ -16,7 +16,7 @@
 #define SK_MAP_GAP 0x4000          /* bytes between the map header and its words: the game reads the grid in place at
                                      live_map (0x306B9E) = level_map (0x302B96) + 8 + 0x4000 */
 
-typedef struct { uint16_t width, height; uint16_t *cells; } sk_tilemap;
+typedef struct { uint16_t width, height; uint16_t *cells; uint8_t *states; } sk_tilemap;   /* states: the 0x4000-byte gap = cell_state's start */
 typedef struct { uint16_t values[5]; uint16_t width, height; uint8_t *grid; } sk_backdrop;
 typedef struct {
     uint16_t colours[16];           /* 12-bit words; colours[0] = 0 */

@@ -2,6 +2,9 @@
 #include <string.h>
 #include "check.h"
 #include "fixture.h"
+#include "app/scene.h"
+#include "gfx/display_model.h"
+#include "gfx/framebuffer.h"
 #include "game/game.h"
 #include "game/level_flow.h"
 #include "game/objects.h"
@@ -24,7 +27,7 @@ void test_frame_step_runs_the_steps_in_the_notes_order(void) {
     g_g.step_probe = probe; g_n = 0;
     static sk_sprite kid;
     game_frame_step(&g_g, 0, &kid);
-    int expect[] = { 1, 2, 3, 8, 10, 11, 13, 14, 15, 16, 21, 23, 24, 25, 26, 27, 29, 32 };   /* the steps the port runs, gameplay.md table */
+    int expect[] = { 1, 2, 3, 8, 10, 11, 13, 14, 15, 16, 19, 21, 23, 24, 25, 26, 27, 29, 32 };   /* the steps the port runs, gameplay.md table */
     CHECK_EQ(g_n, (int)(sizeof expect / sizeof *expect));
     for (int i = 0; i < g_n && i < (int)(sizeof expect / sizeof *expect); i++) CHECK_EQ(g_order[i], expect[i]);
     CHECK_EQ(g_g.frame_ticks, 1); CHECK_EQ(g_g.frame_counter, 1);
@@ -97,5 +100,40 @@ void test_timer_restarts_after_a_respawn(void) {                /* 5a #6: the ji
     CHECK(!(g_g.timer_flags & 0x80));
     for (int i = 0; i < 400 && !(g_g.timer_flags & 0x80); i++) game_frame_step(&g_g, 0, &kid);
     CHECK(g_g.timer_flags & 0x80);
+    drop_game();
+}
+
+void test_tile_animation_groups_step(void) {                    /* sub_1094EA / sub_1095CE */
+    CHECK(make_game());
+    memset(g_g.tile_anim, 0, sizeof g_g.tile_anim);
+    g_g.anim_phase = 0; memset(g_g.anim_wait, 0, sizeof g_g.anim_wait);
+    uint16_t seen2[13];
+    for (int i = 0; i < 13; i++) { seen2[i] = g_g.tile_anim[2]; tile_anim_step(&g_g); }
+    CHECK_EQ(seen2[0], 0);
+    CHECK_EQ(seen2[4], 0x80); CHECK_EQ(seen2[8], 0x100); CHECK_EQ(seen2[12], 0);   /* group 0 every 4th frame (phase 0 first at the 4th), 3 frames */
+    CHECK_EQ(g_g.tile_anim[128 + 2], (uint16_t)(0x100 - g_g.tile_anim[2]));      /* the reversed half */
+    memset(g_g.tile_anim, 0, sizeof g_g.tile_anim); g_g.anim_phase = 0; memset(g_g.anim_wait, 0, sizeof g_g.anim_wait);
+    int changes = 0; uint16_t prev = 0;
+    for (int i = 0; i < 64; i++) { tile_anim_step(&g_g); if (g_g.tile_anim[16 + 3] != prev) { changes++; prev = g_g.tile_anim[16 + 3]; } }
+    CHECK_EQ(changes, 8);                                            /* group 1 every 8 frames */
+    drop_game();
+}
+
+void test_animated_cells_draw_the_next_tile(void) {
+    CHECK(make_game());
+    static sk_fb fb; CHECK(fb_init(&fb, SK_FB_W, SK_FB_H));
+    uint16_t tiles[40 * 16] = {0}; uint8_t states[40 * 16] = {0};
+    tiles[2 * 40 + 3] = 0x1FE;                                       /* an empty image; its next frame 0x1FF is the striped start tile */
+    states[2 * 40 + 3] = 2;
+    uint16_t anim[256] = {0};
+    int x = 3 * 16 + 16 + 4;                                         /* buffer column of world x 52 (+16): a lit stripe pixel of 0x1FF */
+    fb_clear(&fb, 0);
+    scene_draw_tiles_anim(&g_lv, &fb, tiles, states, anim, 0, 0);
+    CHECK_EQ(fb.px[(2 * 16 + 2) * fb.w + x] & 15, 0);              /* frame 0: the empty tile */
+    anim[2] = 0x80;
+    fb_clear(&fb, 0);
+    scene_draw_tiles_anim(&g_lv, &fb, tiles, states, anim, 0, 0);
+    CHECK(fb.px[(2 * 16 + 2) * fb.w + x] & 15);                    /* frame 1: the next tile */
+    fb_free(&fb);
     drop_game();
 }
