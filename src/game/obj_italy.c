@@ -15,6 +15,7 @@ static const uint8_t pendulum_frame_neg[71] = {                                 
     6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 };
 static const uint8_t jumper_fly_script[] = { 0, 4, 0, 2, 7, 8, 9, 10, 0, 1, 2, 3 };              /* 0x11222E */
 static const uint8_t strider_walk_script[] = { 0, 4, 0, 4, 0, 1, 2, 3, 5, 6, 7, 8 };          /* 0x112768 */
+static const uint8_t bouncer_script[] = { 0, 4, 0, 4, 0, 1, 2, 3, 3, 2, 1, 0 };               /* 0x112876 */
 static const uint8_t jumper_land_script[] = { 0, 4, 0, 4, 4, 5, 6, 6, 4, 5, 6, 6 };             /* 0x11223A */
 
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
@@ -317,10 +318,36 @@ static void obj_rider_update(sk_game *g, sk_slot *s, int index) {             /*
     /* object_offscreen's result is dropped: the original never frees it */
 }
 
+/* ---- type 44: the bouncer (slot 52): hops along the ground, out of play 400 px from its marker ---- */
+static void obj_bouncer_init(sk_game *g, sk_slot *s, int x, int y) {          /* 0x1127E4 */
+    init_object_slot(g, s, x, y - 16, s->type4);
+    s->vx = 6; s->vy = 0;
+    s->flags |= 8 | 4;
+    const uint8_t *f = res(g, 52);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
+}
+static void obj_bouncer_update(sk_game *g, sk_slot *s, int index) {           /* 0x11281A */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    step_animation_simple(s, bouncer_script, s->flags);
+    if (!(s->flags & 2)) {
+        if (s->vy >= 0 && probe_rows_below(g, s, 12, 0) < 0) s->vy = -4;
+        int dx = (int16_t)(s->x - d->x);
+        if (dx < 0) dx = -dx;
+        if (dx >= 400) s->flags |= 2;
+        touch_player(g, d->x, d->y, 32, 32);
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_italy_install(void) {
     object_init_table[36] = obj_pendulum_init;         object_update_table[36] = obj_pendulum_update;
     object_init_table[37] = obj_jumper_init;           object_update_table[37] = obj_jumper_update;
     object_init_table[38] = obj_swing_platform_init;   object_update_table[38] = obj_swing_platform_update;
     object_init_table[43] = obj_strider_init;          object_update_table[43] = obj_strider_update;
+    object_init_table[44] = obj_bouncer_init;          object_update_table[44] = obj_bouncer_update;
     object_init_table[100] = obj_rider_init;           object_update_table[100] = obj_rider_update;
 }

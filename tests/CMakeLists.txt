@@ -251,7 +251,8 @@ set(SK_TEST_NAMES
   jumper_lands_waits_and_jumps_again
   swing_platform_hangs_on_its_chain
   strider_walks_turns_and_leaps
-  thrown_rider_falls_after_50)
+  thrown_rider_falls_after_50
+  bouncer_hops_then_leaves)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -150,3 +150,16 @@ void test_thrown_rider_falls_after_50(void) {                 /* type 100 */
     CHECK(s->x >= 0);                                                /* the original never frees it (the offscreen result is dropped) */
     drop_game();
 }
+
+void test_bouncer_hops_then_leaves(void) {                    /* type 44 */
+    CHECK(make_game());
+    g_g.camera_x = 400;                                              /* its marker in view */
+    sk_slot *s = spawn(600, 11 * 16, 44, 0);
+    CHECK_EQ(s->vx, 6); CHECK(s->flags & 4); CHECK(s->flags & 8); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->y, 11 * 16 - 16);
+    int i = 0, bounces = 0;
+    for (; i < 300 && !(s->flags & 2); i++) { tick(1); bounces += s->vy == -4; }
+    CHECK(bounces >= 2);                                             /* bounced off the ground */
+    CHECK(s->flags & 2);                                             /* 400 px from its marker: out of play */
+    CHECK(s->x < 0);                                                 /* and freed, its draw 200 px outside the view */
+    drop_game();
+}
