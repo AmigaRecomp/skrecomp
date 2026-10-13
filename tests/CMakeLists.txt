@@ -190,7 +190,13 @@ set(SK_TEST_NAMES
   hud_health_icons
   hud_card_slots_and_collect
   message_box_draws_the_text
-  hud_palette_is_the_game_palette)
+  hud_palette_is_the_game_palette
+  timer_restarts_after_a_respawn
+  deferred_free_does_not_blank_a_reused_record
+  alloc_draw_record_refuses_past_16
+  probe_surroundings_pushes_the_kid
+  play_step_reports_a_failed_load
+  respawn_reapplies_the_kit_palette)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

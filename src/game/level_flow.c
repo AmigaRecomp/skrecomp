@@ -63,7 +63,6 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     g->timer_tick = 0;
     g->timer_rate = TIMER_RATE;
     g->level_timer = timer;
-    g->timer_flags |= 0x80;                                      /* ruling: the jingle object starts it in the original */
     g->timeout_armed = false;
     g->curtain_flags = 4;                                        /* open request */
     g->curtain_step = 0x62;

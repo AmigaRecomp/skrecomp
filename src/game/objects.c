@@ -25,7 +25,13 @@ void objects_reset(sk_game *g) {                                /* clear_object_
 }
 
 void objects_flush_deferred(sk_game *g) {
-    for (int i = 0; i < g->objs.n_deferred; i++) if (g->objs.deferred[i]) g->objs.deferred[i]->used = false;
+    for (int i = 0; i < g->objs.n_deferred; i++) {
+        sk_draw *d = g->objs.deferred[i];
+        if (!d) continue;
+        bool live = false;                                       /* re-allocated since: it belongs to a new object */
+        for (int k = 0; k < g->objs.draw_count; k++) live |= g->objs.ptrs[k] == d;
+        if (!live) d->used = false;
+    }
     g->objs.n_deferred = 0;
 }
 
@@ -37,6 +43,7 @@ sk_slot *find_free_slot(sk_game *g) {                           /* 0x10D852 */
 
 static sk_draw *alloc_draw_record(sk_game *g, sk_slot *s) {     /* 0x10D7F6 */
     sk_objects *o = &g->objs;
+    if (o->draw_count >= 16) { s->draw_index = -1; return NULL; }   /* the port's bound: the original runs off the list */
     sk_draw *d = o->ptrs[o->draw_count];
     s->draw_index = (int16_t)(d - o->dyn);
     o->draw_count++;
@@ -76,10 +83,10 @@ static void init_common(sk_game *g, sk_slot *s, int x, int y, int type4) {
 }
 
 void init_object_slot(sk_game *g, sk_slot *s, int x, int y, int type4) {            /* 0x10D5D6 */
-    s->draw = alloc_draw_record(g, s); s->draw->used = true; init_common(g, s, x, y, type4);
+    s->draw = alloc_draw_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4);
 }
 void init_object_slot_nodraw(sk_game *g, sk_slot *s, int x, int y, int type4) {     /* 0x10D620 */
-    s->draw = alloc_draw_record(g, s); s->draw->used = true; init_common(g, s, x, y, type4);   /* the original draws the whole dynamic list */
+    s->draw = alloc_draw_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4);   /* the original draws the whole dynamic list */
 }
 void init_object_slot_fixed(sk_game *g, sk_slot *s, int x, int y, int type4) {      /* 0x10D666 */
     s->draw = alloc_fixed_record(g, s); if (s->draw) s->draw->used = true; init_common(g, s, x, y, type4);

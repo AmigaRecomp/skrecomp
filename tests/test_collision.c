@@ -127,3 +127,14 @@ void test_ceiling_probe_narrows_the_window_to_the_first_row(void) {
     for (int mx = 27; mx <= 32; mx++) solid_column(&m, mx, y - 4, y + 4);      /* now the left half runs through all ten rows */
     CHECK_EQ(probe_ceiling(&m, x, y, -1, false) & SK_CEIL_BUMP, SK_CEIL_BUMP);
 }
+
+void test_probe_surroundings_pushes_the_kid(void) {             /* 5a #8 */
+    CHECK(setup());
+    sk_mask m = {0};
+    int x = 20 * 16 - 6, y = 9 * 16;                             /* his right probe (x + 8) inside the wall (column 20, rows 8..11) */
+    mask_rebuild(&m, &g_w, x, y);
+    int16_t px = (int16_t)x, speed = 10;
+    int f = probe_surroundings(&m, x, y, 1, false, &px, &speed);
+    CHECK(f & 0x40); CHECK(px < x); CHECK_EQ(speed, 0);
+    teardown();
+}

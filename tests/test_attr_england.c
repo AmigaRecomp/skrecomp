@@ -156,3 +156,15 @@ void test_ball_target_counts_hits(void) {                      /* attribute 67 a
     CHECK_EQ(g_g.ball_target[0], 0xFF);                           /* done */
     drop_game();
 }
+
+void test_respawn_reapplies_the_kit_palette(void) {             /* 5a #11 */
+    CHECK(make_game());
+    g_g.kit = 2;                                                  /* the checkpoint's kit (0x300264) */
+    g_g.player.x = 4 * 16 + 30;
+    run(9, 0, 4, 11);                                             /* a dark shade */
+    CHECK(g_g.kit_current != 2);
+    g_g.kit_extra = 7;
+    init_player(&g_g);
+    CHECK_EQ(g_g.kit_current, 2); CHECK_EQ(g_g.kit_extra, 2);
+    drop_game();
+}

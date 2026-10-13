@@ -79,6 +79,7 @@ static uint8_t script_input(sk_play *p) {
 }
 
 void play_step(sk_play *p, uint8_t keyboard_input) {
+    if (p->load_failed) return;
     uint8_t in = p->script ? script_input(p) : keyboard_input;
     game_frame_step(&p->game, in, &p->sprites.spr[0]);
     p->sprites.spr[0].in_front = (p->game.layer_flags & 1) != 0;   /* select_layers: bit 0 puts the kid's pair in front of playfield 1 */
@@ -88,14 +89,14 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
         int next = play_level_next(&p->scene.tables, p->level_pos);
         if (next < 0) next = play_level_next(&p->scene.tables, -1);       /* the end: start over (ruling) */
         if (next >= 0) p->game.level_number = next;
-        play_start_level(p, next, p->scene.level_index, &e);
+        if (!play_start_level(p, next, p->scene.level_index, &e)) { p->load_failed = true; p->load_err = e; }
         break;
     }
     case SK_OUTCOME_GAME_OVER:
         if (++p->game_over_frames >= GAME_OVER_FRAMES) {
             game_new_game(&p->game);
             if (p->level_pos >= 0) p->game.level_number = p->level_pos;
-            play_start_level(p, p->level_pos, p->scene.level_index, &e);
+            if (!play_start_level(p, p->level_pos, p->scene.level_index, &e)) { p->load_failed = true; p->load_err = e; }
         }
         break;
     default: break;

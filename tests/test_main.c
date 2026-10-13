@@ -155,6 +155,12 @@ void test_hud_health_icons(void);
 void test_hud_card_slots_and_collect(void);
 void test_message_box_draws_the_text(void);
 void test_hud_palette_is_the_game_palette(void);
+void test_timer_restarts_after_a_respawn(void);
+void test_deferred_free_does_not_blank_a_reused_record(void);
+void test_alloc_draw_record_refuses_past_16(void);
+void test_probe_surroundings_pushes_the_kid(void);
+void test_play_step_reports_a_failed_load(void);
+void test_respawn_reapplies_the_kit_palette(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -307,6 +313,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "hud_card_slots_and_collect", test_hud_card_slots_and_collect },
     { "message_box_draws_the_text", test_message_box_draws_the_text },
     { "hud_palette_is_the_game_palette", test_hud_palette_is_the_game_palette },
+    { "timer_restarts_after_a_respawn", test_timer_restarts_after_a_respawn },
+    { "deferred_free_does_not_blank_a_reused_record", test_deferred_free_does_not_blank_a_reused_record },
+    { "alloc_draw_record_refuses_past_16", test_alloc_draw_record_refuses_past_16 },
+    { "probe_surroundings_pushes_the_kid", test_probe_surroundings_pushes_the_kid },
+    { "play_step_reports_a_failed_load", test_play_step_reports_a_failed_load },
+    { "respawn_reapplies_the_kit_palette", test_respawn_reapplies_the_kit_palette },
 };
 
 int main(int argc, char **argv) {

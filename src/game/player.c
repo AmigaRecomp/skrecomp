@@ -39,6 +39,7 @@ void init_player(sk_game *g) {
     p->health = 2;                                              /* 3 when byte 0x300366 is set: not in 5a */
     g->hud_redraw |= 1;
     g->timer_flags = 1;
+    g->kit_current = g->kit_extra = g->kit;                     /* set_kit_colours / set_kit_extra_colours with 0x300264 (0x10BCC8) */
     if (g->level_data_index != 12 && !(g->game_flags & 1)) spawn_jingle(g, 0);
 }
 

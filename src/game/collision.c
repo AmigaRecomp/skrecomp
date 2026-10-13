@@ -138,12 +138,10 @@ bool probe_edge(const sk_mask *m, int x, int y, int facing) {
     return bit(m, mx, my + 7 + 7);
 }
 
-int probe_surroundings(const sk_mask *m, int x, int y, int facing, bool sliding) {
+int probe_surroundings(const sk_mask *m, int x, int y, int facing, bool sliding, int16_t *player_x, int16_t *speed) {   /* 0x10ADBC */
     int flags = 0;
-    int16_t px = (int16_t)x, speed = 0;
-    if (probe_wall(m, x - 8, y, -1, facing, sliding, &px, &speed)) flags |= 0x40;
-    px = (int16_t)x;
-    if (probe_wall(m, x + 8, y, 0, facing, sliding, &px, &speed)) flags |= 0x40;
+    if (probe_wall(m, x - 8, y, -1, facing, sliding, player_x, speed)) flags |= 0x40;   /* both from the entry x */
+    if (probe_wall(m, x + 8, y, 0, facing, sliding, player_x, speed)) flags |= 0x40;
     if (probe_ceiling(m, x, y, facing, sliding) & SK_CEIL_BUMP) flags |= 0x80;
     return flags;
 }

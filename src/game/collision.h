@@ -37,6 +37,6 @@ int  probe_wall(const sk_mask *m, int probe_x, int y, int dir, int facing, bool 
 #define SK_CEIL_SLIDE_BLOCKED 2     /* while sliding: something above the kid */
 int  probe_ceiling(const sk_mask *m, int x, int y, int facing, bool sliding);   /* ceiling_probe */
 bool probe_edge(const sk_mask *m, int x, int y, int facing);                  /* edge_probe: ground within 15 rows ahead of the feet */
-int  probe_surroundings(const sk_mask *m, int x, int y, int facing, bool sliding);   /* bit 6 wall either side, bit 7 ceiling */
+int  probe_surroundings(const sk_mask *m, int x, int y, int facing, bool sliding, int16_t *player_x, int16_t *speed);   /* bit 6 wall either side, bit 7 ceiling; the walls push player_x and stop speed */
 
 #endif

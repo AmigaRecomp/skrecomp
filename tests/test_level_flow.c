@@ -76,7 +76,7 @@ void test_level_setup_and_outcome(void) {
     CHECK(make_game());
     CHECK_EQ(g_g.player.lives, 3); CHECK_EQ(g_g.player.score, 0); CHECK_EQ(g_g.level_number, 1);
     CHECK_EQ(g_g.level_outcome, 0); CHECK_EQ(g_g.timer_rate, 0x5DC); CHECK_EQ(g_g.level_timer, 0x45); CHECK_EQ(g_g.cam_ease, 4);
-    CHECK(g_g.timer_flags & 0x80); CHECK_EQ(g_g.player.top_speed, 16); CHECK(g_g.view.full_redraw);
+    CHECK(!(g_g.timer_flags & 0x80)); CHECK_EQ(g_g.player.top_speed, 16); CHECK(g_g.view.full_redraw);   /* KICK OFF starts the clock */
     CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_RUNNING);
     g_g.level_outcome = 0x81; g_g.level_end = true;
     CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_NEXT_LEVEL);
@@ -84,5 +84,18 @@ void test_level_setup_and_outcome(void) {
     CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_GAME_OVER);
     CHECK(game_setup_level(&g_g, &g_lv, 0));                     /* a second setup frees the first world */
     CHECK_EQ(g_g.player.state, 68); CHECK_EQ(g_g.player.lives, 3);   /* KICK OFF holds the kid (type 105) */
+    drop_game();
+}
+
+void test_timer_restarts_after_a_respawn(void) {                /* 5a #6: the jingle object starts the clock */
+    CHECK(make_game());
+    static sk_sprite kid;
+    CHECK(!(g_g.timer_flags & 0x80));
+    for (int i = 0; i < 400 && !(g_g.timer_flags & 0x80); i++) game_frame_step(&g_g, 0, &kid);
+    CHECK(g_g.timer_flags & 0x80); CHECK_EQ(g_g.player.state, 0);
+    init_player(&g_g);                                           /* a respawn */
+    CHECK(!(g_g.timer_flags & 0x80));
+    for (int i = 0; i < 400 && !(g_g.timer_flags & 0x80); i++) game_frame_step(&g_g, 0, &kid);
+    CHECK(g_g.timer_flags & 0x80);
     drop_game();
 }

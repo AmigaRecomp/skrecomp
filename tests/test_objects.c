@@ -126,3 +126,26 @@ void test_draw_all_objects_blits_fixture_frames(void) {
     CHECK_EQ(fb.px[10 * SK_FB_W + 20], 0);                       /* hidden */
     fb_free(&fb); free(fd); drop_game();
 }
+
+void test_deferred_free_does_not_blank_a_reused_record(void) {  /* 5a #7 */
+    CHECK(make_game());
+    sk_slot *a = find_free_slot(&g_g);
+    init_object_slot(&g_g, a, 100, 100, 4);
+    sk_draw *d = a->draw;
+    free_object_deferred(&g_g, a);
+    sk_slot *b = find_free_slot(&g_g);
+    init_object_slot(&g_g, b, 120, 100, 4);
+    CHECK(b->draw == d);                                         /* the record is reused at once */
+    objects_flush_deferred(&g_g);
+    CHECK(b->draw->used);
+    drop_game();
+}
+
+void test_alloc_draw_record_refuses_past_16(void) {             /* 5a #10 */
+    CHECK(make_game());
+    for (int i = 0; i < 16; i++) init_object_slot(&g_g, &g_g.objs.slot[i], 10 * i, 50, 4);
+    CHECK_EQ(g_g.objs.draw_count, 16);
+    init_object_slot(&g_g, &g_g.objs.slot[0], 0, 50, 4);         /* a seventeenth record */
+    CHECK_EQ(g_g.objs.draw_count, 16); CHECK(g_g.objs.slot[0].draw == NULL); CHECK_EQ(g_g.objs.slot[0].draw_index, -1);
+    drop_game();
+}

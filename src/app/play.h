@@ -22,6 +22,8 @@ typedef struct sk_play {
     int script_left;
     bool script_done;
     int game_over_frames;
+    bool load_failed;               /* a level failed to load: the run stops (load_err says why) */
+    sk_err load_err;
 } sk_play;
 
 bool play_open(sk_play *p, const sk_args *a, sk_err *e);

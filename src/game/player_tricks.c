@@ -241,8 +241,8 @@ static void trick8_held(sk_game *g) {             /* 0x10C4E8: standing on the b
         p->x = (int16_t)(bx(g) + 8); p->y = (int16_t)(by(g) - 39);
         g->mask.built = false;
         rebuild_player_mask(g);
-        p->probe_flags = (uint8_t)probe_surroundings(&g->mask, p->x, p->y, p->facing, p->sliding != 0);
-        p->x = sx; p->y = sy;
+        p->probe_flags = (uint8_t)probe_surroundings(&g->mask, p->x, p->y, p->facing, p->sliding != 0, &p->x, &p->speed);
+        p->x = sx; p->y = sy;                                      /* x and y were saved round the probe: only the speed change stays */
         if (p->probe_flags) goto tick;
     }
     {
@@ -255,11 +255,10 @@ static void trick8_held(sk_game *g) {             /* 0x10C4E8: standing on the b
     if (p->input & SK_IN_RIGHT) { g->trick8_bias = 0xC000; d0 = 16; }
     if (p->input & SK_IN_LEFT) { g->trick8_bias = (int32_t)0xFFFF4000; d0 = -16; }
     {                                             /* sub_10AE14: walls on either side of x + d0 */
-        int16_t px = (int16_t)(p->x + d0), speed = 0;
+        int px = p->x + d0;                                        /* wall_probe moves the kid and stops him (0x10AE14) */
         int f = 0;
-        if (probe_wall(&g->mask, px - 8, p->y, -1, p->facing, p->sliding != 0, &px, &speed)) f |= 0x40;
-        px = (int16_t)(p->x + d0);
-        if (probe_wall(&g->mask, px + 8, p->y, 0, p->facing, p->sliding != 0, &px, &speed)) f |= 0x40;
+        if (probe_wall(&g->mask, px - 8, p->y, -1, p->facing, p->sliding != 0, &p->x, &p->speed)) f |= 0x40;
+        if (probe_wall(&g->mask, px + 8, p->y, 0, p->facing, p->sliding != 0, &p->x, &p->speed)) f |= 0x40;
         p->probe_flags = (uint8_t)f;
         if (f) g->trick8_bias = 0;
     }
@@ -574,7 +573,7 @@ void player_state_ball_spring(sk_game *g) {       /* 0x10CB82, state 36 */
         } else {
             g->mask.built = false;
             rebuild_player_mask(g);
-            p->probe_flags = (uint8_t)probe_surroundings(&g->mask, p->x, p->y, p->facing, p->sliding != 0);
+            p->probe_flags = (uint8_t)probe_surroundings(&g->mask, p->x, p->y, p->facing, p->sliding != 0, &p->x, &p->speed);
             if (p->probe_flags & 0x80) { p->timer = 0; p->state = 0; }
         }
         return;

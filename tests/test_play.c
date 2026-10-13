@@ -77,3 +77,15 @@ void test_play_real_level0_screenshot(void) {                      /* ROM-backed
     }
     play_close(&p);
 }
+
+void test_play_step_reports_a_failed_load(void) {               /* 5a #9 */
+    CHECK(make_play());
+    g_p.scene.level_index = 99;                                   /* the next level must be read from disk: there is none */
+    g_p.game.level_outcome = 0x81; g_p.game.level_end = true;
+    play_step(&g_p, 0);
+    CHECK(g_p.load_failed); CHECK(g_p.load_err.msg[0] != 0);
+    int frames = g_p.game.frame_counter;
+    play_step(&g_p, 0);
+    CHECK_EQ(g_p.game.frame_counter, frames);                     /* stopped: no retry every frame */
+    drop_play();
+}
