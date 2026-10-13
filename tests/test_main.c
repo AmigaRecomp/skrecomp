@@ -287,6 +287,8 @@ void test_edge_row_scan_covers_27_cells(void);
 void test_russia_markers_spawn_real_types(void);
 void test_russia_slots_cover_the_frames(void);
 void test_russia_run_without_a_crash(void);
+void test_kid_occluder_reference_is_sx_minus_16(void);
+void test_cannon_without_a_fixed_record(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -571,6 +573,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "russia_markers_spawn_real_types", test_russia_markers_spawn_real_types },
     { "russia_slots_cover_the_frames", test_russia_slots_cover_the_frames },
     { "russia_run_without_a_crash", test_russia_run_without_a_crash },
+    { "kid_occluder_reference_is_sx_minus_16", test_kid_occluder_reference_is_sx_minus_16 },
+    { "cannon_without_a_fixed_record", test_cannon_without_a_fixed_record },
 };
 
 int main(int argc, char **argv) {

@@ -430,3 +430,35 @@ void test_russia_slots_cover_the_frames(void) {                 /* ROM-backed, R
     CHECK(seen >= 20);
     tables_free(&t); image_free(&img); disks_close(&d);
 }
+
+void test_kid_occluder_reference_is_sx_minus_16(void) {             /* 0x10A51A +16, 0x10A534 -32: d0 = sx - 16 at occlude_player */
+    CHECK(make_game());
+    static sk_sprite kid;
+    sk_player *p = &g_g.player;
+    p->state = 64; p->x = 300; p->y = 12 * 16 - 41;                  /* game over: the logic leaves him where he is */
+    g_g.camera_x = g_g.view.cam_x = 100; g_g.camera_y = g_g.view.cam_y = 0;
+    update_player(&g_g, &kid);
+    int x = p->x;
+    g_g.occl[0].used = true; g_g.occl[0].mask = NULL; g_g.occl[0].h = 200;
+    g_g.occl[0].y = -50;
+    g_g.occl[0].x = (int16_t)(x - 16 - 32);                          /* d3 = -32: the edge of the -32..+64 window */
+    memset(kid.px, 7, sizeof kid.px);
+    update_player(&g_g, &kid);
+    CHECK_EQ(kid.px[0], 0);                                          /* blanked */
+    g_g.occl[0].x = (int16_t)(x - 16 - 33);                          /* one more: outside */
+    memset(kid.px, 7, sizeof kid.px);
+    update_player(&g_g, &kid);
+    CHECK_EQ(kid.px[0], 7);
+    drop_game();
+}
+
+void test_cannon_without_a_fixed_record(void) {                     /* the 8 objects_a records in use */
+    CHECK(make_game());
+    for (int i = 0; i < 8; i++) { g_g.objs.fixed[i].x = 1; g_g.objs.fixed[i].y = 1; }
+    sk_slot *s = spawn(160, 10 * 16, 52, 1);                         /* facing right: the init moves its record */
+    CHECK(s != NULL);
+    g_g.camera_x = 3000;
+    tick(1);
+    CHECK(s->x < 0);                                                 /* still frees itself off the view */
+    drop_game();
+}

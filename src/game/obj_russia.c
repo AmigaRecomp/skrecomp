@@ -659,14 +659,14 @@ static void obj_cannon_init(sk_game *g, sk_slot *s, int x, int y) {           /*
     if (!need(g, s, f)) return;
     frames_wh(g, s, 16, 13, f, 1);                                  /* sub_1078C2 */
     set_frame2(s, 0, 8, s->flags);
-    if (s->flags & 1) s->draw->x = (int16_t)(s->draw->x - 1);
+    sk_draw *d = slot_draw_record(g, s);
+    if (d && (s->flags & 1)) d->x = (int16_t)(d->x - 1);       /* port guard: no fixed record left */
 }
 static void obj_cannon_update(sk_game *g, sk_slot *s, int index) {            /* 0x11340C */
     (void)index;
     sk_draw *d = slot_draw_record(g, s);
-    if (!d) return;
-    bool run = true;
-    if (!aux_c(s)) { if (--s->t0) run = false; else set_aux_c(s, 1); }
+    bool run = d != NULL;                                           /* port guard: without a record it only waits to leave the view */
+    if (run && !aux_c(s)) { if (--s->t0) run = false; else set_aux_c(s, 1); }
     if (run) {
         int wrapped = 0;
         int changed = step_animation(s, cannon_script, s->flags, &wrapped);
@@ -692,7 +692,7 @@ static void obj_cannon_shot_init(sk_game *g, sk_slot *s, int x, int y) {      /*
 static void obj_cannon_shot_update(sk_game *g, sk_slot *s, int index) {       /* 0x1134DE */
     (void)index;
     sk_draw *d = slot_draw_record(g, s);
-    if (!d) return;
+    if (!d) { if (object_offscreen(g, s->x, s->y, 64) < 0) free_fixed_object(g, s); return; }   /* port guard */
     int dx = (uint16_t)s->vx >> 1;                                  /* sub_10E07C */
     d->x = (int16_t)(d->x + ((s->flags & 1) ? dx : -dx));
     int wrapped = 0;
@@ -711,7 +711,7 @@ static void obj_cannon_flash_init(sk_game *g, sk_slot *s, int x, int y) {     /*
 static void obj_cannon_flash_update(sk_game *g, sk_slot *s, int index) {      /* 0x113562 */
     (void)index;
     sk_draw *d = slot_draw_record(g, s);
-    if (!d) return;
+    if (!d) { free_fixed_object(g, s); return; }                    /* port guard: nothing to show */
     int wrapped = 0;
     step_animation(s, cannon_flash_script, s->flags, &wrapped);
     if (wrapped || object_offscreen(g, d->x, d->y, 64) < 0) free_fixed_object(g, s);

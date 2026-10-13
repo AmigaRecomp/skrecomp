@@ -85,6 +85,6 @@ void update_player(sk_game *g, sk_sprite *kid) {
     if (g->sk) {
         if (!sprite_decode_pair(g->sk, SK_KID_FRAMES_ADDR + offset, SK_SPR_H, kid)) return;
     }
-    occlude_sprite(g, kid, sx + g->camera_x, sy + g->camera_y, SK_SPR_H);   /* 0x10A570 */
+    occlude_sprite(g, kid, sx - 16 + g->camera_x, sy + g->camera_y, SK_SPR_H);   /* 0x10A570: d0 = sx + 16 (0x10A51A) - 32 (0x10A534) */
     kid->visible = true;
 }
