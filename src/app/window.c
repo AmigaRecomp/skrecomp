@@ -19,9 +19,12 @@ void window_step_camera(sk_scene *s, int dx, int dy, int step) {
 }
 
 bool window_open(sk_window *w, int scale, sk_err *e) {
+    SDL_SetHint(SDL_HINT_FORCE_RAISEWINDOW, "1");                /* started from a terminal: take the focus */
+    SDL_SetHint(SDL_HINT_WINDOW_ACTIVATE_WHEN_RAISED, "1");
     if (!SDL_Init(SDL_INIT_VIDEO)) return sk_fail(e, "SDL: %s", SDL_GetError());
     w->win = SDL_CreateWindow("Soccer Kid", SK_SCREEN_W * scale, SK_SCREEN_H * scale, SDL_WINDOW_RESIZABLE);
     if (!w->win) return sk_fail(e, "SDL window: %s", SDL_GetError());
+    SDL_RaiseWindow(w->win);
     w->ren = SDL_CreateRenderer(w->win, NULL);
     if (!w->ren) return sk_fail(e, "SDL renderer: %s", SDL_GetError());
     SDL_SetRenderVSync(w->ren, 1);
