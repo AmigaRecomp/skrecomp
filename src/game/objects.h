@@ -4,6 +4,7 @@
 #define SK_GAME_OBJECTS_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include "gfx/framebuffer.h"
 
@@ -12,6 +13,7 @@ typedef struct sk_game sk_game;
 typedef struct sk_draw {
     int16_t x, y, sx, sy, w, h, blit_size, plane_bytes, frame_bytes;
     const uint8_t *frames, *frame;
+    size_t frames_len;             /* bytes from frames to the end of its section; 0 = unknown (not checked) */
     uint8_t prio, dflags;          /* dflags: bit 0 clipped blitter, 1 flash, 2 hidden, 4 screen-relative, 6 playfield 2 */
     bool used;                     /* bit 6 of the record's first byte: set by the slot initialisers, cleared on free */
 } sk_draw;

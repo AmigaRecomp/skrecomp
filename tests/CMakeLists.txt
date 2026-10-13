@@ -197,7 +197,10 @@ set(SK_TEST_NAMES
   probe_surroundings_pushes_the_kid
   play_step_reports_a_failed_load
   respawn_reapplies_the_kit_palette
-  play_home1_kick_scores)
+  play_home1_kick_scores
+  a_reused_record_gets_fresh_draw_flags
+  score_popup_blinks_out
+  missing_or_short_frames_draw_nothing)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

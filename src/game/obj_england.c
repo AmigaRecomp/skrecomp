@@ -110,7 +110,7 @@ static void obj_bonus_popup_update(sk_game *g, sk_slot *s, int index) {        /
     (void)index;
     sk_draw *d = D(g, s);
     if (g->frame_ticks & 1) return;
-    if (d->frames) d->frame = d->frames + (uint16_t)s->flags;        /* the flags word is the frame offset here */
+    if (d->frames) d->frame = d->frames + (uint16_t)s->flags;        /* the flags word is the frame offset here (15 frames, inside the chip bitmap) */
     s->flags = (int16_t)(s->flags + d->frame_bytes);
     if (++s->aux == 15) free_object(g, s);
 }
@@ -259,7 +259,7 @@ static void obj_score_popup_update(sk_game *g, sk_slot *s, int index) {        /
     sk_draw *d = D(g, s);
     apply_velocity_nograv(s);
     if (s->vy && !(g->frame_ticks & 1)) s->vy++;
-    if ((uint16_t)s->t0 < 15) d->prio ^= 4;                          /* eori.w #4 on +0x1A: blinks out */
+    if ((uint16_t)s->t0 < 15) d->dflags ^= 4;                        /* eori.w #4,$1a(a0): the hidden bit of byte 0x1B */
     if (--s->t0 < 0) { free_object(g, s); return; }
     free_if_far(g, s);
 }
@@ -400,7 +400,7 @@ static void obj_jingle_init(sk_game *g, sk_slot *s, int x, int y) {            /
     build_banner(g, which);
     frames_wh(g, s, 160, 13, g->banner, 1);                         /* sub_108098 */
     sk_draw *d = D(g, s);
-    d->dflags |= 4 | 8 | 0x10;                                      /* hidden until the first update; screen-relative (ruling) */
+    d->dflags |= 4 | 8;                                             /* hidden until the first update; bit 3 with bit 0: screen-relative */
     if (which == 0) { g->player.state = 68; g->player.invulnerable = 150; }
     s->t1 = (int16_t)which;
 }
@@ -485,7 +485,7 @@ static void obj_workman_update(sk_game *g, sk_slot *s, int index) {            /
         break;
     case 1:                                                         /* the wind-up: then the punch */
         if (--s->t0 != 0) break;
-        set_draw_size(d, 48, 64, res(g, 56));
+        size_frames(g, d, 48, 64, res(g, 56));
         set_frame2(s, 12, 13, s->flags);
         {
             int x = d->x, y = d->y + 10;
@@ -516,14 +516,14 @@ static void obj_workman_update(sk_game *g, sk_slot *s, int index) {            /
         if (dx < 0) { dx = -dx; ahead ^= 1; }
         if (!ahead || dx >= 0x5A) break;
         s->vx = 0; set_aux_c(s, 1); s->t0 = 8;
-        set_draw_size(d, 64, 64, res(g, 64));
+        size_frames(g, d, 64, 64, res(g, 64));
         set_frame2(s, 0, 1, s->flags);
         break;
     }
     }
     touch(g, d->x, d->y, 0x30, 0x40);
     if (ball_hits_object_quiet(g, s, 0, 0, 0x30, 0x40, 0, 0x500) >= 0) {   /* knocked out */
-        set_draw_size(d, 48, 47, res(g, 57));
+        size_frames(g, d, 48, 47, res(g, 57));
         s->flags |= 6; s->vx = 0; s->vy = -4;
         d->dflags &= ~2;
         g->score_value = 0x500;
@@ -633,7 +633,7 @@ static void obj_cyclist_update(sk_game *g, sk_slot *s, int index) {            /
         if (--s->t0 == 0) {
             s->flags ^= 1; s->vx = 4;
             d->x = (int16_t)(d->x - 8); d->y = (int16_t)(d->y + 2);
-            set_draw_size(d, 64, 56, res(g, 93));
+            size_frames(g, d, 64, 56, res(g, 93));
             set_frame2(s, 0, 8, s->flags);
             set_aux_c(s, 0);
         }
@@ -644,7 +644,7 @@ static void obj_cyclist_update(sk_game *g, sk_slot *s, int index) {            /
         if (dist < 0) dist = -dist;
         if ((uint16_t)dist >= 200 || ground_ahead(g, s, s->flags)) {
             set_aux_c(s, 1);
-            set_draw_size(d, 32, 58, res(g, 94));
+            size_frames(g, d, 32, 58, res(g, 94));
             set_frame2(s, 0, 1, s->flags);
             s->t0 = 4; s->vx = 0;
             d->x = (int16_t)(d->x + 8); d->y = (int16_t)(d->y - 2);
@@ -653,7 +653,7 @@ static void obj_cyclist_update(sk_game *g, sk_slot *s, int index) {            /
     touch(g, d->x, d->y + 4, 0x30, 0x34);
     if (ball_hits_object(g, s, 0, 0, 0x40, 0x38, 0, 0x300) >= 0) {
         const uint8_t *f = res(g, 95);
-        set_draw_size(d, 48, 36, f);
+        size_frames(g, d, 48, 36, f);
         sk_objects *o = &g->objs;
         o->child_frames = f ? f + 0x438 : NULL; o->child_w = 48; o->child_h = 36; o->child_vx = 0; o->child_vy = -6;
         spawn_object(g, d->x, d->y, 116);

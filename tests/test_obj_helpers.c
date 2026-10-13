@@ -107,7 +107,7 @@ void test_frames_32x30_sizes(void) {
     s->x = 33; s->y = 44;
     frames_32x30(&g_g, s, frames, 7);
     CHECK_EQ(s->draw->blit_size, 0x783); CHECK_EQ(s->draw->plane_bytes, 0x78); CHECK_EQ(s->draw->frame_bytes, 0x258);
-    CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 30); CHECK_EQ(s->draw->prio, 7);
+    CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 30); CHECK_EQ(s->draw->prio, 0); CHECK_EQ(s->draw->dflags, 7);   /* the word store: byte 0x1A 0, flags 7 */
     CHECK_EQ(s->draw->x, 33); CHECK_EQ(s->draw->y, 44); CHECK(s->draw->frame == frames);
     frames_16x16(&g_g, s, frames, 0);
     CHECK_EQ(s->draw->blit_size, 0x402); CHECK_EQ(s->draw->frame_bytes, 0xA0);

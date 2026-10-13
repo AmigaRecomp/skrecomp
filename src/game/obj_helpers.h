@@ -28,6 +28,8 @@ void apply_velocity_nograv(sk_slot *s);                         /* 0x10E090 */
 void free_if_far(sk_game *g, sk_slot *s);                       /* 0x10E290: the draw position 160 px out */
 void set_frame2(sk_slot *s, int left, int right, int facing);   /* set_object_frame with d2 = facing */
 void set_draw_size_at(sk_game *g, sk_slot *s, int w, int h, const uint8_t *frames);   /* 0x10816E: prio 1 */
+size_t frames_room(const sk_game *g, const uint8_t *p);       /* bytes left in the resource section p points into, 0 unknown */
+void size_frames(sk_game *g, sk_draw *d, int w, int h, const uint8_t *frames);   /* set_draw_size with the bound */
 int  player_overlap(const sk_game *g, int x, int y, int w, int h);   /* 0x10E3A8: -1 overlapping, no hurt */
 static inline int aux_c(const sk_slot *s) { return (uint16_t)s->aux >> 8; }        /* byte +0xC */
 static inline int aux_d(const sk_slot *s) { return s->aux & 0xFF; }                /* byte +0xD */

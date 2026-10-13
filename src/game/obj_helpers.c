@@ -1,6 +1,7 @@
 #include "game/obj_helpers.h"
 #include "game/ball.h"
 #include "game/game.h"
+#include "game/resources.h"
 
 static int16_t hi(int32_t v) { return (int16_t)(v >> 16); }
 static int32_t neg_hi(int32_t v) {               /* neg.w on the high word only */
@@ -195,9 +196,11 @@ void frames_wh(sk_game *g, sk_slot *s, int w, int h, const uint8_t *frames, int 
     sk_draw *d = slot_draw_record(g, s);
     if (!d) return;
     set_draw_size(d, w, h, frames);
+    d->frames_len = frames_room(g, frames);
     d->x = s->x;
     d->y = s->y;
-    d->prio = (uint8_t)prio;
+    d->prio = (uint8_t)((unsigned)prio >> 8);                     /* move.w d0,$1a(a0): byte 0x1A, then the flags byte 0x1B */
+    d->dflags = (uint8_t)prio;
 }
 
 sk_slot *spawn_child(sk_game *g, const sk_slot *parent, int x, int y, int type, int off, const uint8_t *frames,
@@ -244,9 +247,25 @@ void set_draw_size_at(sk_game *g, sk_slot *s, int w, int h, const uint8_t *frame
     sk_draw *d = slot_draw_record(g, s);
     if (!d) return;
     set_draw_size(d, w, h, frames);
+    d->frames_len = frames_room(g, frames);
     d->x = s->x;
     d->y = s->y;
-    d->prio = 1;
+    d->prio = 0;                                                    /* move.w #1,$1a(a0) */
+    d->dflags = 1;
+}
+
+size_t frames_room(const sk_game *g, const uint8_t *p) {
+    if (!p || !g->res) return 0;
+    for (int i = 0; i < SK_SLOTS; i++) {
+        const sk_section *sec = g->res->slot[i];
+        if (sec && sec->data && p >= sec->data && p < sec->data + sec->len) return (size_t)(sec->data + sec->len - p);
+    }
+    return 0;
+}
+
+void size_frames(sk_game *g, sk_draw *d, int w, int h, const uint8_t *frames) {
+    set_draw_size(d, w, h, frames);
+    d->frames_len = frames_room(g, frames);
 }
 
 int player_overlap(const sk_game *g, int x, int y, int w, int h) {   /* 0x10E3A8 */

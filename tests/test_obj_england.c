@@ -56,7 +56,7 @@ void test_bird_init_and_flight(void) {                         /* types 12 and 2
     sk_slot *s = spawn(200, 60, 12, 0x55);
     CHECK(s != NULL);
     CHECK_EQ(s->t0, 10); CHECK_EQ(s->t1, 0x40); CHECK_EQ(s->hits, 1); CHECK_EQ(s->vx, 10); CHECK_EQ(s->aux, 25);
-    CHECK(s->flags & 8); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 30); CHECK_EQ(s->frame, 0); CHECK_EQ(s->draw->prio, 1);
+    CHECK(s->flags & 8); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 30); CHECK_EQ(s->frame, 0); CHECK_EQ(s->draw->dflags, 1);
     tick(3);
     CHECK_EQ(s->draw->x, 200 - 15); CHECK_EQ(s->aux, 28);
     tick(0x40 - 28 + 1);                                         /* past t1: gliding, slowing down */
@@ -217,4 +217,43 @@ void test_every_home_marker_spawns_a_real_type(void) {         /* ROM-backed */
         world_free(&w); level_free(&lv);
     }
     tables_free(&t); image_free(&img); disks_close(&d);
+}
+
+void test_a_reused_record_gets_fresh_draw_flags(void) {         /* final review Critical 1 */
+    CHECK(make_game(true));
+    spawn_jingle(&g_g, 0);
+    sk_slot *banner = NULL;
+    for (int i = 0; i < 16; i++) if ((g_g.objs.slot[i].type4 & 0x1FF) == 105 * 4 && g_g.objs.slot[i].x >= 0) banner = &g_g.objs.slot[i];
+    CHECK(banner != NULL);
+    sk_draw *d = banner->draw;
+    CHECK(d->dflags & 8);                                          /* screen-relative (bit 3 with bit 0) */
+    free_object(&g_g, banner);
+    sk_slot *s = spawn(200, 60, 12, 0x55);
+    CHECK(s->draw == d);
+    CHECK_EQ(s->draw->dflags, 1); CHECK_EQ(s->draw->prio, 0);       /* move.w #1,$1a(a0): byte 0x1A 0, byte 0x1B 1 */
+    drop_game();
+}
+
+void test_score_popup_blinks_out(void) {                       /* final review Important 1 */
+    CHECK(make_game(true));
+    g_g.score_value = 0x300;
+    sk_slot *s = spawn(100, 100, 113, 0);
+    tick(37);                                                      /* t0 50 -> 13 */
+    uint8_t a = s->draw->dflags & 4;
+    tick(1);
+    CHECK((s->draw->dflags & 4) != a);
+    drop_game();
+}
+
+void test_missing_or_short_frames_draw_nothing(void) {         /* final review Important 2 */
+    CHECK(make_game(true));
+    sk_slot *s = spawn(100, 100, 12, 0x55);
+    set_draw_size(s->draw, 32, 30, NULL);
+    set_object_frame(s, 3);
+    CHECK(s->draw->frame == NULL);
+    static uint8_t two[2 * 0x258];
+    set_draw_size(s->draw, 32, 30, two); s->draw->frames_len = sizeof two;
+    set_object_frame(s, 1); CHECK(s->draw->frame == two + 0x258);
+    set_object_frame(s, 2); CHECK(s->draw->frame == NULL);      /* past the section */
+    drop_game();
 }

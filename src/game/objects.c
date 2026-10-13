@@ -189,11 +189,16 @@ void set_draw_size(sk_draw *d, int w, int h, const uint8_t *frames) {   /* 0x108
     d->blit_size = (int16_t)((h << 6) + (row_bytes >> 1) + 1);
     d->frame_bytes = (int16_t)(5 * d->plane_bytes);
     d->frames = d->frame = frames;
+    d->frames_len = 0;
 }
 
 void set_object_frame(sk_slot *s, int frame) {                  /* 0x10DF6C */
     s->frame = (uint8_t)frame;
-    if (s->draw) s->draw->frame = s->draw->frames + frame * s->draw->frame_bytes;
+    sk_draw *d = s->draw;
+    if (!d) return;
+    size_t off = (size_t)frame * (size_t)(uint16_t)d->frame_bytes;
+    if (!d->frames || (d->frames_len && off + (size_t)(uint16_t)d->frame_bytes > d->frames_len)) { d->frame = NULL; return; }   /* port guard */
+    d->frame = d->frames + off;
 }
 
 int step_animation(sk_slot *s, const uint8_t *script, int facing_bit, int *wrapped) {   /* 0x10DE3E */
@@ -226,7 +231,8 @@ void apply_velocity(sk_slot *s) {                               /* 0x10E01C */
 static void draw_record(sk_fb *fb, const sk_draw *d, int cam_x, int cam_y) {   /* draw_object 0x1083FA */
     if (!d->used || (d->dflags & 4) || d->y == (int16_t)0x8000 || !d->frame || d->w <= 0 || d->h <= 0) return;
     int sx = d->x, sy = d->y;
-    if (!(d->dflags & 0x10)) { sx -= cam_x; sy -= cam_y; }
+    if ((d->dflags & 9) == 9) { sx += 32; }                        /* clipped path, bit 3: x + cam_x + 16 on the window (0x108946) */
+    else if (!(d->dflags & 0x10)) { sx -= cam_x; sy -= cam_y; }
     sk_frame fr = { d->w, d->h, d->w / 8, { d->frame, d->frame + d->plane_bytes, d->frame + 2 * d->plane_bytes, d->frame + 3 * d->plane_bytes }, d->frame + 4 * d->plane_bytes };
     fb_blit_bob(fb, &fr, sx, sy, (d->dflags & 0x40) ? SK_GROUP_TILES_B : SK_GROUP_TILES_A);
 }
