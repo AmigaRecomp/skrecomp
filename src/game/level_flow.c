@@ -162,8 +162,9 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     step(g, 15); edge_scan_rows(g);
     step(g, 16); edge_scan_columns(g);
     step(g, 21);                                                 /* draw_all_objects: the app draws after the step */
+    step(g, 23); if (g->ball_sprite) ball_sprites(g, g->ball_sprite);
     step(g, 24); hud_update(g);
-    step(g, 25);                                                 /* update_ball: 5b */
+    step(g, 25); update_ball(g);
     step(g, 26); player_input_state(g);
     step(g, 27); update_objects(g);
     step(g, 29); run_curtain(g);

@@ -15,7 +15,7 @@ typedef struct sk_sprite {
     uint8_t px[SK_SPR_H * SK_SPR_W];    /* 0 transparent, 1..15 -> colour SK_SPR_COLOUR_BASE + value */
 } sk_sprite;
 
-typedef struct sk_sprite_layer { sk_sprite spr[2]; } sk_sprite_layer;   /* 0 = kid, 1 = ball (5b) */
+typedef struct sk_sprite_layer { sk_sprite spr[2]; uint8_t front; } sk_sprite_layer;   /* 0 = kid, 1 = ball; front: the one in sprite block 0 (drawn over the other) */
 
 /* Decodes the attached pair whose first sprite starts at frame_addr (16 bytes of control words, then 48 rows
    of 8 bytes plane A + 8 bytes plane B; the partner at + SK_SPR_FRAME holds planes C and D). */

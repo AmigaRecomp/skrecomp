@@ -41,8 +41,8 @@ void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky, c
     for (size_t i = 0; i < (size_t)SK_SCREEN_W * SK_SCREEN_H; i++) out[i] = pal->xrgb[0];
     static uint32_t window[SK_VIEW_W * SK_VIEW_H];
     present_rows(fb, pal, sky, SK_VIEW_X, 0, SK_VIEW_W, SK_VIEW_H, window);
-    for (int i = 0; spr && i < 2; i++) {
-        const sk_sprite *sp = &spr->spr[i];
+    for (int k = 0; spr && k < 2; k++) {
+        const sk_sprite *sp = &spr->spr[k == 0 ? 1 - (spr->front & 1) : (spr->front & 1)];   /* the back one first */
         if (!sp->visible) continue;
         for (int r = 0; r < SK_SPR_H; r++) {
             int wy = sp->y + r;

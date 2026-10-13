@@ -101,6 +101,7 @@ struct sk_game {
     uint8_t msg_bits[256 * 72 / 8 * 5]; /* 0x300030: the message box bob */
     int msg_w, msg_h;
     uint8_t msg_visible;
+    sk_sprite *ball_sprite;             /* where ball_sprites (step 23) writes; NULL = not drawn */
     int8_t kick_result;                 /* 0x300338 */
     int32_t trick8_bias;                /* 0x30029C */
     int throw_x, throw_y;               /* 0x3002E4/E6: where the recalled ball appears */

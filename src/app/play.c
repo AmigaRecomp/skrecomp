@@ -81,8 +81,12 @@ static uint8_t script_input(sk_play *p) {
 void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->load_failed) return;
     uint8_t in = p->script ? script_input(p) : keyboard_input;
+    p->game.ball_sprite = &p->sprites.spr[1];
     game_frame_step(&p->game, in, &p->sprites.spr[0]);
-    p->sprites.spr[0].in_front = (p->game.layer_flags & 1) != 0;   /* select_layers: bit 0 puts the kid's pair in front of playfield 1 */
+    uint8_t lf = p->game.layer_flags;                            /* select_layers: bit 0 the kid's pair, bit 1 the ball's in front of playfield 1 */
+    p->sprites.spr[0].in_front = (lf & 1) != 0;
+    p->sprites.spr[1].in_front = (lf & 2) != 0;
+    p->sprites.front = lf == 1 ? 0 : 1;                          /* block 0 holds the ball unless layer_flags is 1 */
     sk_err e = {0};
     switch (game_outcome(&p->game)) {
     case SK_OUTCOME_NEXT_LEVEL: {

@@ -38,11 +38,22 @@ and `--no-frames` reduce the picture to one layer.
 Playing: arrows or WASD move, up jumps, down crouches (down while running slides), Space,
 Left Ctrl or X is fire, `F` toggles fullscreen, Escape quits. The game runs at the original's
 50 frames per second with the original's movement, camera, collision and level flow
-(`../re/docs/notes/gameplay.md`, `player.md`); the kid is drawn as the hardware sprite pair the
-game uses, in the level's kit colours. Falling into a pit leaves the kid below the screen until
-something kills him: the deadly tiles, the ball, the enemies and the HUD arrive with the next
-sub-project, which fills the object and attribute tables this one only plumbs. A level's exit
-tile walks the kid off the right edge into the next level; game over restarts the level.
+(`../re/docs/notes/gameplay.md`, `player.md`); the kid and the ball are drawn as the hardware
+sprite pairs the game uses, in the level's kit colours, and the HUD shows health, the timer, the
+score, the card pieces and the lives.
+
+The ball (England 1 and 2 are complete; the other levels play with whatever of their objects
+those two share):
+- **Kick:** fire with left or right kicks the ball at your feet; kicked into an enemy it knocks
+  it out for points. Jumping onto the ball with down held stands you on it.
+- **Tricks:** with the ball at your feet, hold fire still for a moment: the kid flicks it up and
+  juggles it; a direction while juggling picks the next trick (overhead, volleys, the spring off
+  the ball with up). Holding fire without the ball calls it back to you.
+- **Signs and bushes:** kick the ball hard at a sign for its message (fire closes it), at a bush
+  for butterflies, at a target for a bonus. Crates break into a bonus when kicked twice.
+
+Each level opens with KICK OFF, which holds the kid for about three seconds. A level's exit tile
+walks the kid off the right edge into the next level; game over restarts the level.
 
 `--script` drives the kid without a keyboard: tokens `<keys><frames>` joined by commas, keys
 `U D L R F` or `.` for none (`R150,RU20,R130` = run right, jump, run on). With `--frames N` and

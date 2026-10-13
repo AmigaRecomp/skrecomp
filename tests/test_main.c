@@ -161,6 +161,7 @@ void test_alloc_draw_record_refuses_past_16(void);
 void test_probe_surroundings_pushes_the_kid(void);
 void test_play_step_reports_a_failed_load(void);
 void test_respawn_reapplies_the_kit_palette(void);
+void test_play_home1_kick_scores(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -319,6 +320,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "probe_surroundings_pushes_the_kid", test_probe_surroundings_pushes_the_kid },
     { "play_step_reports_a_failed_load", test_play_step_reports_a_failed_load },
     { "respawn_reapplies_the_kit_palette", test_respawn_reapplies_the_kit_palette },
+    { "play_home1_kick_scores", test_play_home1_kick_scores },
 };
 
 int main(int argc, char **argv) {

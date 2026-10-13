@@ -89,3 +89,17 @@ void test_play_step_reports_a_failed_load(void) {               /* 5a #9 */
     CHECK_EQ(g_p.game.frame_counter, frames);                     /* stopped: no retry every frame */
     drop_play();
 }
+
+void test_play_home1_kick_scores(void) {                            /* ROM-backed: the ball kicked into the first walker */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 0, .scale = 1, .section = -1, .frames = 320, .script = ".180,R20,RF3,R40,RF3,R40,RF3" };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    int kicks = 0;
+    for (int i = 0; i < a.frames; i++) { play_step(&p, 0); kicks += p.game.player.state == 8 && p.game.player.timer == 1; }
+    CHECK(kicks >= 1);
+    CHECK(p.game.player.score > 0);
+    CHECK(p.sprites.spr[1].visible || p.game.ball.inactive);        /* the ball is drawn */
+    play_close(&p);
+}
