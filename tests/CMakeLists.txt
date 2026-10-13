@@ -18,7 +18,8 @@ add_executable(sk_tests
   test_args.c
   test_scene.c
   test_window.c
-  test_world.c)
+  test_world.c
+  test_collision.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -74,7 +75,11 @@ set(SK_TEST_NAMES
   window_fixed_step_accumulator
   adf_rejects_out_of_range_pointers
   world_builds_cells_and_start
-  world_without_start_tile_defaults)
+  world_without_start_tile_defaults
+  mask_rebuild_copies_tile_bitmasks
+  mask_rebuild_clamps_to_the_map_edges
+  mask_rebuild_is_lazy
+  probes_on_fixture_geometry)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

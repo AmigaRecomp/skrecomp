@@ -55,6 +55,10 @@ void test_window_fixed_step_accumulator(void);
 void test_adf_rejects_out_of_range_pointers(void);
 void test_world_builds_cells_and_start(void);
 void test_world_without_start_tile_defaults(void);
+void test_mask_rebuild_copies_tile_bitmasks(void);
+void test_mask_rebuild_clamps_to_the_map_edges(void);
+void test_mask_rebuild_is_lazy(void);
+void test_probes_on_fixture_geometry(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -107,6 +111,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "adf_rejects_out_of_range_pointers", test_adf_rejects_out_of_range_pointers },
     { "world_builds_cells_and_start", test_world_builds_cells_and_start },
     { "world_without_start_tile_defaults", test_world_without_start_tile_defaults },
+    { "mask_rebuild_copies_tile_bitmasks", test_mask_rebuild_copies_tile_bitmasks },
+    { "mask_rebuild_clamps_to_the_map_edges", test_mask_rebuild_clamps_to_the_map_edges },
+    { "mask_rebuild_is_lazy", test_mask_rebuild_is_lazy },
+    { "probes_on_fixture_geometry", test_probes_on_fixture_geometry },
 };
 
 int main(int argc, char **argv) {
