@@ -280,6 +280,7 @@ void test_tilt_plate_24_tilts_under_the_kid(void);
 void test_spring_40_launches_a_falling_kid(void);
 void test_side_drain_41_needs_a_side_entry(void);
 void test_object_marks_52_77_and_trap_60_61(void);
+void test_red_square_boss_76_dies_on_the_21st_hit(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -557,6 +558,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "spring_40_launches_a_falling_kid", test_spring_40_launches_a_falling_kid },
     { "side_drain_41_needs_a_side_entry", test_side_drain_41_needs_a_side_entry },
     { "object_marks_52_77_and_trap_60_61", test_object_marks_52_77_and_trap_60_61 },
+    { "red_square_boss_76_dies_on_the_21st_hit", test_red_square_boss_76_dies_on_the_21st_hit },
 };
 
 int main(int argc, char **argv) {

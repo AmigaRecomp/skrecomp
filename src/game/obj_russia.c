@@ -43,6 +43,28 @@ static const uint8_t cannon_flash_script[] = { 0, 7, 0, 2, 0, 1, 2, 3, 4, 5, 6, 
 
 static const uint8_t roller_script[] = { 0, 4, 0, 4, 0, 1, 2, 3 };                           /* 0x111AAC */
 
+static const uint8_t rs_634e[] = { 0, 4, 0, 8, 3, 4, 5, 4, 3, 4, 5, 4 };   /* 0x11634E */
+static const uint8_t rs_635a[] = { 0, 1, 0, 1, 6, 6 };   /* 0x11635A */
+static const uint8_t rs_6360[] = { 0, 1, 0, 1, 4, 4 };   /* 0x116360 */
+static const uint8_t rs_6366[] = { 0, 6, 0, 6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };   /* 0x116366 */
+static const uint8_t rs_6376[] = { 0, 1, 0, 1, 0, 6 };   /* 0x116376 */
+static const uint8_t rs_637c[] = { 0, 1, 0, 1, 19, 19 };   /* 0x11637C */
+static const uint8_t rs_6382[] = { 0, 8, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };   /* 0x116382 */
+static const uint8_t rs_6396[] = { 0, 1, 0, 1, 20, 20 };   /* 0x116396 */
+static const uint8_t rs_639c[] = { 0, 4, 0, 4, 1, 0, 0, 0, 1, 0, 0, 0 };   /* 0x11639C */
+static const uint8_t rs_63a8[] = { 0, 2, 0, 8, 0, 1, 0, 1 };   /* 0x1163A8 */
+static const uint8_t rs_63b0[] = { 0, 1, 0, 1, 8, 7 };   /* 0x1163B0 */
+static const uint8_t rs_63b6[] = { 0, 1, 0, 1, 2, 2 };   /* 0x1163B6 */
+static const uint8_t rs_63bc[] = { 0, 10, 0, 6, 12, 13, 14, 13, 18, 15, 16, 17, 16, 18, 15, 16, 17, 16, 18, 12, 13, 14, 13, 18 };   /* 0x1163BC */
+static const uint8_t rs_63d4[] = { 0, 3, 0, 4, 21, 22, 23, 21, 22, 23 };   /* 0x1163D4 */
+static const uint8_t rs_63de[] = { 0, 1, 0, 1, 23, 23 };   /* 0x1163DE */
+static const sk_phase rboss2_phases[27] = {                                                  /* 0x116242 */
+    { 100, 0, 4 }, { 65535, 10, 8 }, { 15, 150, 12 }, { 36, 30, 16 }, { 65535, 40, 20 }, { 25, 80, 24 }, { 64, 30, 28 }, { 65535, 40, 32 }, { 25, 80, 36 }, { 16, 30, 40 }, { 7, 50, 44 }, { 17, 60, 48 }, { 8, 70, 52 }, { 16, 30, 56 }, { 65535, 40, 60 }, { 25, 80, 64 }, { 32, 30, 68 }, { 15, 140, 72 }, { 12, 90, 76 }, { 50, 0, 80 }, { 65535, 10, 84 }, { 15, 150, 88 }, { 32, 30, 28 }, { 11, 110, 96 }, { 200, 120, 100 }, { 65535, 130, 100 }, { 65535, 100, 104 },
+};
+static const sk_motion rboss2_motions[16] = {                                                /* 0x1162AE */
+    { 0, 0, rs_634e, 0x00 }, { 0, -2, rs_635a, 0x04 }, { 0, 0, rs_6360, 0x08 }, { 8, 0, rs_6366, 0x0C }, { 0, 0, rs_6376, 0x10 }, { 8, -16, rs_637c, 0x14 }, { 8, -9, rs_6382, 0x18 }, { 8, 8, rs_6396, 0x1C }, { 0, 0, rs_63b0, 0x20 }, { 0, -16, rs_63b6, 0x24 }, { 0, 0, rs_63bc, 0x28 }, { 0, 0, rs_63d4, 0x2C }, { 0, 0, rs_63de, 0x30 }, { 0, 0, rs_63de, 0x34 }, { 0, 0, rs_63a8, 0x38 }, { 0, 0, rs_639c, 0x3C },
+};
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -803,6 +825,84 @@ static void obj_falling_piece_update(sk_game *g, sk_slot *s, int index) {     /*
     if (object_offscreen(g, d->x, d->y, 64) < 0) { free_object(g, s); g->flutter_count--; }
 }
 
+/* ---- type 76: RED SQUARE 2's boss (slots 133, 132, 134) with the dust puff (type 118); dies on the 21st hit ---- */
+static bool once(sk_slot *s) {                                      /* bset.b #0,aux.lo; bne: the first frame of a phase */
+    if (aux_c(s) & 1) return false;
+    set_aux_c(s, aux_c(s) | 1);
+    return true;
+}
+static void obj_rboss2_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x115F16 */
+    init_object_slot(g, s, x, y + 4, s->type4);
+    s->vx = 0; s->vy = 0; s->hits = 20;
+    const uint8_t *f = res(g, 133);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 64, f, 1);                                  /* sub_107D02 */
+    set_frame2(s, 3, 3, 0);
+    g->push_x = s->x - 0xA0;
+    spawn_object(g, s->x, s->y, 118);
+    game_music_slot(g, 1);
+}
+static void obj_rboss2_update(sk_game *g, sk_slot *s, int index) {            /* 0x115F74 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    int changed = 0, code = script_step(g, s, rboss2_phases, rboss2_motions, &changed);
+    enum { COMMON, CHECKS, LAST } tail = COMMON;
+    switch (code) {
+    case 0x04: {
+        int r = probe_rows_below2(g, s, 16, 0);
+        if (r < 0) { d->y = (int16_t)(d->y + r); script_end_next(s, rboss2_phases); }
+        break;
+    }
+    case 0x0C: {                                                    /* the dust at its feet */
+        sk_slot *puff = find_slot_by_type(g, 118);
+        if (puff) { set_aux_c(puff, aux_c(puff) | 1); puff->t0 = (int16_t)(d->x + 32); puff->t1 = (int16_t)(d->y + 50); }
+        if (once(s)) size_frames(g, d, 48, 64, res(g, 132));
+        tail = CHECKS;
+        break;
+    }
+    case 0x10: s->flags ^= 1; script_end_next(s, rboss2_phases); tail = CHECKS; break;
+    case 0x18: if (once(s)) size_frames(g, d, 48, 48, res(g, 134)); break;
+    case 0x1C: if (once(s)) { size_frames(g, d, 48, 64, res(g, 132)); set_frame2(s, 20, 20, 0); } break;
+    case 0x20: if (once(s)) { size_frames(g, d, 32, 64, res(g, 133)); set_frame2(s, 8, 7, s->flags); } tail = CHECKS; break;
+    case 0x28: if (once(s)) { size_frames(g, d, 48, 64, res(g, 132)); set_frame2(s, 12, 15, s->flags); } tail = LAST; break;
+    case 0x2C:
+        if (once(s)) {
+            size_frames(g, d, 48, 64, res(g, 132));
+            set_frame2(s, 21, 21, 0);
+            g->score_value = 0x20000;
+            add_score(g, 0x20000);
+            spawn_object(g, d->x + 32, d->y + 24, 113);
+            play_sfx(g, 0x11);
+            g->shake_amplitude = 6;
+            game_music_slot(g, 2);
+        }
+        tail = LAST;
+        break;
+    case 0x30: tail = LAST; break;
+    case 0x34: if (once(s)) { g->level_outcome = 0x81; g->level_number++; g->curtain_flags |= 0x10; } tail = LAST; break;
+    case 0x38: if (once(s)) size_frames(g, d, 32, 64, res(g, 133)); tail = CHECKS; break;
+    case 0x3C: tail = CHECKS; break;
+    default: break;                                                 /* 0x00 0x08 0x14 0x24 */
+    }
+    if (tail == CHECKS) {                                           /* 0x1161C2 */
+        if (aux_c(s) & 2) script_start(s, 26, rboss2_phases, rboss2_motions);   /* the kid lost: it gloats */
+        if (!(aux_c(s) & 4) && (int8_t)s->hits < 0) {
+            d->dflags &= (uint8_t)~2;
+            set_aux_c(s, aux_c(s) | 4);
+            script_start(s, 23, rboss2_phases, rboss2_motions);
+        }
+    }
+    if (tail != LAST) {                                             /* 0x116200 */
+        if (!(aux_c(s) & 4)) {
+            if (g->player.dying) set_aux_c(s, aux_c(s) | 2);
+            touch_player(g, d->x + 8, d->y + 16, 32, 48);
+        }
+        ball_hits_object_simple(g, s, 8, 10, 32, 54);
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
@@ -819,6 +919,7 @@ void obj_russia_install(void) {
     object_init_table[41] = obj_occluder_rect_init;    object_update_table[41] = obj_occluder_update;
     object_init_table[104] = obj_roller_init;          object_update_table[104] = obj_roller_update;
     object_init_table[101] = obj_falling_piece_init;   object_update_table[101] = obj_falling_piece_update;
+    object_init_table[76] = obj_rboss2_init;           object_update_table[76] = obj_rboss2_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;

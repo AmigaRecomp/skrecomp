@@ -327,7 +327,8 @@ set(SK_TEST_NAMES
   tilt_plate_24_tilts_under_the_kid
   spring_40_launches_a_falling_kid
   side_drain_41_needs_a_side_entry
-  object_marks_52_77_and_trap_60_61)
+  object_marks_52_77_and_trap_60_61
+  red_square_boss_76_dies_on_the_21st_hit)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

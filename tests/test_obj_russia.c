@@ -277,3 +277,24 @@ void test_occluders_40_41_hide_the_sprites(void) {                  /* types 40,
     g_res.slot[50] = &g_sec;
     drop_game();
 }
+
+void test_red_square_boss_76_dies_on_the_21st_hit(void) {          /* type 76 */
+    CHECK(make_game());
+    g_g.music_slot_last = 0;
+    sk_slot *s = spawn(300, 7 * 16, 76, 0);                          /* it drops onto the floor at row 12 (the fixture's pit is at 416) */
+    CHECK_EQ(s->hits, 20); CHECK_EQ(s->y, 7 * 16 + 4); CHECK_EQ(g_g.push_x, 300 - 160); CHECK_EQ(s->frame, 3);
+    CHECK_EQ(count_type(118), 1); CHECK_EQ(g_g.music_slot_last, 1);
+    tick(150);
+    CHECK(s->x >= 0);
+    s->hits = 0;
+    tick(300);
+    CHECK(((uint16_t)s->t1 >> 2) < 23);                              /* 0 hits left is still alive (tst.b; bpl) */
+    s->hits = 0xFF;
+    int i = 0;
+    while (((uint16_t)s->t1 >> 2) < 23 && i++ < 400) tick(1);       /* checked in its jump and turn phases (0x1161C2) */
+    CHECK(((uint16_t)s->t1 >> 2) >= 23);                              /* the death phases */
+    i = 0;
+    while (g_g.level_outcome != 0x81 && i++ < 600) tick(1);
+    CHECK_EQ(g_g.level_outcome, 0x81); CHECK_EQ(g_g.music_slot_last, 2); CHECK(g_g.curtain_flags & 0x10);
+    drop_game();
+}
