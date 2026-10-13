@@ -197,6 +197,7 @@ void test_bare_sign_26_breaks_without_a_message(void);
 void test_ball_targets_70_72_73(void);
 void test_boss_type_75_runs_its_script_and_ends_the_level(void);
 void test_boss_disc_is_thrown_and_bounces(void);
+void test_country_london_run_without_a_crash(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -391,6 +392,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "ball_targets_70_72_73", test_ball_targets_70_72_73 },
     { "boss_type_75_runs_its_script_and_ends_the_level", test_boss_type_75_runs_its_script_and_ends_the_level },
     { "boss_disc_is_thrown_and_bounces", test_boss_disc_is_thrown_and_bounces },
+    { "country_london_run_without_a_crash", test_country_london_run_without_a_crash },
 };
 
 int main(int argc, char **argv) {

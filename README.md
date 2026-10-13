@@ -42,8 +42,8 @@ Left Ctrl or X is fire, `F` toggles fullscreen, Escape quits. The game runs at t
 sprite pairs the game uses, in the level's kit colours, and the HUD shows health, the timer, the
 score, the card pieces and the lives.
 
-The ball (England 1 and 2 are complete; the other levels play with whatever of their objects
-those two share):
+The ball (all six England levels are complete: the streets, the country with its moving and sinking
+platforms, and London with LONDON2's boss; the other worlds play with whatever of their objects England shares):
 - **Kick:** fire with left or right kicks the ball at your feet; kicked into an enemy it knocks
   it out for points. Jumping onto the ball with down held stands you on it.
 - **Tricks:** with the ball at your feet, hold fire still for a moment: the kid flicks it up and
