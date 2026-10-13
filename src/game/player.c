@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "game/camera.h"
+#include "game/attr_england.h"
 #include "game/game.h"
 #include "game/obj_england.h"
 
@@ -20,7 +21,8 @@ void init_player(sk_game *g) {
     select_layers(g);
     memset(&p->jumping, 0, sizeof *p - offsetof(sk_player, jumping));   /* +0x08 .. +0x5D */
     p->top_speed = 14;
-    objects_flush_deferred(g);                                  /* the deferred-free list (the tile-restore list: attrs) */
+    replay_bump_restores(g);                                    /* the tile-restore list (0x10BC82) */
+    objects_flush_deferred(g);                                  /* the deferred-free list */
     p->x = (int16_t)g->world.start_x;
     p->y = (int16_t)g->world.start_y;
     p->jump_y = p->y;

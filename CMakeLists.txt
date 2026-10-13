@@ -48,7 +48,8 @@ add_library(skcore STATIC
   src/game/ball.c
   src/game/player_tricks.c
   src/game/obj_helpers.c
-  src/game/obj_england.c)
+  src/game/obj_england.c
+  src/game/attr_england.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB SDL3::SDL3)
 

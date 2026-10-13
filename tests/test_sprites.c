@@ -35,11 +35,11 @@ void test_kit_palette_scales_the_base_colours(void) {            /* ROM-backed *
     sk_disks d = {0}; sk_image img = {0};
     if (!load_sk(&d, &img)) { puts("skipped: SOCCERKID_ROMS not set"); return; }
     sk_palette p = {0};
-    kit_palette(&p, &img, 0);
+    kit_palette(&p, &img, 0, 0);
     CHECK_EQ(p.xrgb[49], rgb12_to_xrgb(0xEEE)); CHECK_EQ(p.xrgb[50], rgb12_to_xrgb(0xE66)); CHECK_EQ(p.xrgb[62], rgb12_to_xrgb(0xEEE)); CHECK_EQ(p.xrgb[63], rgb12_to_xrgb(0xBAA));
-    kit_palette(&p, &img, 1);                                     /* scale 15/16 per nibble, floor */
+    kit_palette(&p, &img, 1, 1);                                     /* scale 15/16 per nibble, floor */
     CHECK_EQ(p.xrgb[50], rgb12_to_xrgb(0xD55));
-    p.xrgb[49] = 0x12345678; kit_palette(&p, &img, 4);           /* kits 4..7 leave colour 49 alone */
+    p.xrgb[49] = 0x12345678; kit_palette(&p, &img, 4, 4);           /* kits 4..7 leave colour 49 alone */
     CHECK_EQ(p.xrgb[49], 0x12345678); CHECK_EQ(p.xrgb[50], rgb12_to_xrgb(0xA44));
     image_free(&img); disks_close(&d);
 }

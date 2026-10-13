@@ -32,7 +32,8 @@ add_executable(sk_tests
   test_ball.c
   test_tricks.c
   test_obj_helpers.c
-  test_obj_england.c)
+  test_obj_england.c
+  test_attr_england.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -171,7 +172,16 @@ set(SK_TEST_NAMES
   cyclist_crashes_when_hit_twice
   score_popup_picks_its_number
   kick_off_banner_holds_the_kid
-  every_home_marker_spawns_a_real_type)
+  every_home_marker_spawns_a_real_type
+  coin_scores_and_sparkles
+  full_queue_writes_the_fallback_tile
+  card_is_collected
+  kit_shades_follow_the_position
+  drain_hurts_the_kid_and_swallows_the_ball
+  bump_block_falls_and_is_restored
+  message_sign_raises_the_box_once
+  butterflies_rise_from_a_hit_bush
+  ball_target_counts_hits)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -1,6 +1,7 @@
 #include <string.h>
 #include "game/attrs.h"
 #include "game/camera.h"
+#include "game/attr_england.h"
 #include "game/game.h"
 #include "game/level_flow.h"
 #include "game/objects.h"
@@ -36,6 +37,11 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     g->frame_ticks = 0;
     g->push_x = 0; g->shake_amplitude = 0; g->powerup_timer = 0; g->scroll_mode = 0; g->cam_ease = 4;
     g->death_flags = 0;                                          /* free_level_data clears it (0x10374C) */
+    g->flutter_max = 5; g->flutter_count = 0; g->flutter_last_cell = 0;   /* 0x1003DE, 0x10491E */
+    memset(g->ball_target, 0, sizeof g->ball_target);
+    memset(g->message_shown, 0, sizeof g->message_shown);
+    g->message_box_timer = 0; g->message_box_request = 0; g->message_wait = 0;
+    g->bump_restores = 0; g->flush_count = 0; g->bump_tile = -1; g->hud_card_flag = 0;   /* 0x104878 */
     g->untouchable = false;
     if (g->world.live) world_free(&g->world);
     if (!world_build(&g->world, lv)) return false;
@@ -45,7 +51,7 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     level_record_head(g, data_index, &timer, &layer, &kit);
     g->level_data_index = data_index;
     g->layer_flags_record = layer;
-    g->kit = g->kit_current = kit;
+    g->kit = g->kit_current = g->kit_extra = kit;
     g->mask.built = false; g->mask.dirty = true;
     g->camera_x = g->camera_y = g->camera_y_raw = 0;
     g->scan_col_left = g->scan_row_left = 0;
@@ -127,6 +133,11 @@ void run_curtain(sk_game *g) {                                  /* 0x10471A */
 int curtain_rows(const sk_game *g) { return g->curtain_top > 0 ? g->curtain_top : 0; }
 
 void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
+    if (g->message_wait) {                                       /* step 31 (sub_11C816): the game waits for fire */
+        g->input_state = input;
+        if (!(input & SK_IN_FIRE)) return;
+        g->message_wait = 0;
+    }
     g->frame_counter++;                                          /* the VBL's work */
     timer_tick(g);
     g->input_state = input;
@@ -142,7 +153,7 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     objects_flush_deferred(g);                                   /* step 9's place: records freed last frame */
     step(g, 10); update_camera(g);
     step(g, 11); update_player(g, kid);
-    step(g, 13);                                                 /* message_box_tick: 5b */
+    step(g, 13); message_box_tick(g);
     step(g, 14); process_tile_queue(g);
     step(g, 15); edge_scan_rows(g);
     step(g, 16); edge_scan_columns(g);

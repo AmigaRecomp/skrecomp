@@ -60,19 +60,19 @@ void test_layer_switch_changes_the_priority_word(void) {
 
 void test_tile_queue_kinds_step_as_the_table_says(void) {
     CHECK(make_game());
-    queue_tile_change(&g_g, 5, 12, 0);                           /* kind 0: 0x1FA.. then empty */
+    queue_tile_change(&g_g, 5, 12, 0, 0);                           /* kind 0: 0x1FA.. then empty */
     process_tile_queue(&g_g);
     CHECK_EQ(world_tile_index(&g_g.world, 5, 12), 0x1FA); CHECK_EQ(g_g.world.state[12 * 40 + 5], 0x20);
     for (int i = 0; i < 8; i++) process_tile_queue(&g_g);
     CHECK_EQ(world_tile_index(&g_g.world, 5, 12), 0x1FB);
     for (int i = 0; i < 32; i++) process_tile_queue(&g_g);
     CHECK_EQ(g_g.world.live[12 * 40 + 5], 0); CHECK_EQ(world_tile_index(&g_g.world, 5, 12), 0); CHECK(!g_g.attrs.queue[0].used);
-    queue_tile_change(&g_g, 6, 12, 2);                           /* kind 2: wobble four steps, back to the start tile */
+    queue_tile_change(&g_g, 6, 12, 2, 0);                           /* kind 2: wobble four steps, back to the start tile */
     process_tile_queue(&g_g); CHECK_EQ(world_tile_index(&g_g.world, 6, 12), 1);
     for (int i = 0; i < 4; i++) process_tile_queue(&g_g); CHECK_EQ(world_tile_index(&g_g.world, 6, 12), 2);
     for (int i = 0; i < 16; i++) process_tile_queue(&g_g);
     CHECK_EQ(world_tile_index(&g_g.world, 6, 12), 1); CHECK(!g_g.attrs.queue[0].used);
-    queue_tile_change(&g_g, 7, 12, 3);                           /* kind 3: three steps, stays, dirties the mask */
+    queue_tile_change(&g_g, 7, 12, 3, 0);                           /* kind 3: three steps, stays, dirties the mask */
     g_g.mask.dirty = false;
     for (int i = 0; i < 13; i++) process_tile_queue(&g_g);
     CHECK_EQ(world_tile_index(&g_g.world, 7, 12), 4); CHECK(!g_g.attrs.queue[0].used); CHECK(g_g.mask.dirty);

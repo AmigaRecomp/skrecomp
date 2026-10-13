@@ -22,7 +22,7 @@ void attrs_reset(sk_game *g);                     /* empties the queue; installs
 int  probe_tile_attr(sk_game *g, int x, int y);   /* the object probe (probe_kind 2): -1 no attribute, 0 ran */
 void player_tile_attrs(sk_game *g);               /* 3 x 4 cells around the kid, probe_kind 0 */
 void attrs_run_cells(sk_game *g, int kind, int x0, int y0, int cols, int rows);   /* the probe loop (0x11A652) */
-void queue_tile_change(sk_game *g, int cx, int cy, int kind);
+void queue_tile_change(sk_game *g, int cx, int cy, int kind, int fallback);   /* kind 0..3 (the original's d2 / 4), fallback = d3 */
 void process_tile_queue(sk_game *g);
 void clear_cell(sk_game *g, int cx, int cy);
 void set_cell_tile(sk_game *g, int cx, int cy, int index, int state);

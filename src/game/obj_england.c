@@ -4,6 +4,7 @@
    slots (slot_table); a type whose slot is missing frees itself in its init. */
 #include <string.h>
 #include "game/game.h"
+#include "game/attr_england.h"
 #include "game/obj_england.h"
 #include "game/obj_helpers.h"
 #include "game/resources.h"
@@ -204,6 +205,28 @@ static void obj_puff_update(sk_game *g, sk_slot *s, int index) {               /
     apply_velocity_nograv(s);
     if (s->script && d->frames) step_animation_simple(s, s->script, s->flags);
     touch(g, d->x, d->y, d->w, d->h);
+    free_if_far(g, s);
+}
+
+/* ---- type 115: the target's hit effect (the child block); plays once ---- */
+const uint8_t obj_target_hit_script[] = {                                                   /* 0x11C4E0 */
+    0, 24, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+};
+static void obj_target_hit_init(sk_game *g, sk_slot *s, int x, int y) {        /* 0x10FCEE */
+    obj_puff_init(g, s, x, y);
+    sk_draw *d = D(g, s);
+    if (d) d->dflags |= 4;
+}
+static void obj_target_hit_update(sk_game *g, sk_slot *s, int index) {         /* 0x10FD4C */
+    (void)index;
+    sk_draw *d = D(g, s);
+    apply_velocity(s);
+    d->dflags &= ~4;
+    int wrapped = 0;
+    if (s->script && d->frames) step_animation(s, s->script, s->flags, &wrapped);
+    else wrapped = -1;
+    if (wrapped) { free_object(g, s); return; }
     free_if_far(g, s);
 }
 
@@ -653,6 +676,7 @@ void obj_england_install(void) {
     object_init_table[105] = obj_jingle_init;          object_update_table[105] = obj_jingle_update;
     object_init_table[112] = obj_bonus_init;           object_update_table[112] = obj_bonus_update;
     object_init_table[113] = obj_score_popup_init;     object_update_table[113] = obj_score_popup_update;
+    object_init_table[115] = obj_target_hit_init;     object_update_table[115] = obj_target_hit_update;
     object_init_table[116] = obj_debris_init;          object_update_table[116] = obj_debris_update;
     object_init_table[123] = obj_bonus_popup_init;     object_update_table[123] = obj_bonus_popup_update;
     object_init_table[124] = obj_splash_init;          object_update_table[124] = obj_splash_update;

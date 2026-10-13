@@ -23,6 +23,6 @@ bool sprite_decode_pair(const sk_image *sk, uint32_t frame_addr, int height, sk_
 
 /* Colours 49..63 for kit 0..7 (build_kit_palettes 0x11B0A4 + set_kit_colours 0x11B010 / 0x11B05A):
    each nibble of the 13 base words and the 2 extra words is scaled by (16 - kit) / 16; kits 4..7 skip 49. */
-void kit_palette(sk_palette *p, const sk_image *sk, int kit);
+void kit_palette(sk_palette *p, const sk_image *sk, int kit, int extra);   /* extra: the ball's colours 62/63 (set_kit_extra_colours) */
 
 #endif

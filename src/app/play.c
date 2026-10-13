@@ -44,7 +44,7 @@ bool play_start_level(sk_play *p, int pos, int data_index, sk_err *e) {
         p->game.res = &p->res;
     }
     if (!game_setup_level(&p->game, &p->scene.level, data_index)) return sk_fail(e, "out of memory");
-    if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit);
+    if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit, p->game.kit);
     p->level_pos = pos;
     p->game_over_frames = 0;
     return true;
@@ -106,6 +106,7 @@ void play_draw(sk_play *p) {
     sk_fb *fb = &p->scene.fb;
     const sk_level *lv = &p->scene.level;
     fb_clear(fb, 0);
+    if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit_current, p->game.kit_extra);   /* the shade attributes */
     int bg_x, bg_y;
     scene_backdrop_pos(lv, p->game.camera_x, p->game.camera_y, &bg_x, &bg_y);
     p->game.view.bg_x = bg_x;

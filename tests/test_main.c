@@ -138,6 +138,15 @@ void test_cyclist_crashes_when_hit_twice(void);
 void test_score_popup_picks_its_number(void);
 void test_kick_off_banner_holds_the_kid(void);
 void test_every_home_marker_spawns_a_real_type(void);
+void test_coin_scores_and_sparkles(void);
+void test_full_queue_writes_the_fallback_tile(void);
+void test_card_is_collected(void);
+void test_kit_shades_follow_the_position(void);
+void test_drain_hurts_the_kid_and_swallows_the_ball(void);
+void test_bump_block_falls_and_is_restored(void);
+void test_message_sign_raises_the_box_once(void);
+void test_butterflies_rise_from_a_hit_bush(void);
+void test_ball_target_counts_hits(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -273,6 +282,15 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "score_popup_picks_its_number", test_score_popup_picks_its_number },
     { "kick_off_banner_holds_the_kid", test_kick_off_banner_holds_the_kid },
     { "every_home_marker_spawns_a_real_type", test_every_home_marker_spawns_a_real_type },
+    { "coin_scores_and_sparkles", test_coin_scores_and_sparkles },
+    { "full_queue_writes_the_fallback_tile", test_full_queue_writes_the_fallback_tile },
+    { "card_is_collected", test_card_is_collected },
+    { "kit_shades_follow_the_position", test_kit_shades_follow_the_position },
+    { "drain_hurts_the_kid_and_swallows_the_ball", test_drain_hurts_the_kid_and_swallows_the_ball },
+    { "bump_block_falls_and_is_restored", test_bump_block_falls_and_is_restored },
+    { "message_sign_raises_the_box_once", test_message_sign_raises_the_box_once },
+    { "butterflies_rise_from_a_hit_bush", test_butterflies_rise_from_a_hit_bush },
+    { "ball_target_counts_hits", test_ball_target_counts_hits },
 };
 
 int main(int argc, char **argv) {

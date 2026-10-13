@@ -1,5 +1,6 @@
 #include <string.h>
 #include "game/attrs.h"
+#include "game/attr_england.h"
 #include "game/game.h"
 
 sk_attr_fn attr_table[95];
@@ -9,6 +10,7 @@ static const uint8_t bplcon2_default[4] = { 0x20, 0x21, 0x21, 0x22 };
 
 void attrs_reset(sk_game *g) {
     memset(&g->attrs, 0, sizeof g->attrs);
+    attr_england_install();
     if (!attr_table[2]) attr_table[2] = attr_checkpoint;
     if (!attr_table[13]) attr_table[13] = attr_exit;
     if (!attr_table[53]) attr_table[53] = attr_layer_switch_a;
@@ -41,7 +43,7 @@ void player_tile_attrs(sk_game *g) {                            /* 0x11A5E2 */
     sk_player *p = &g->player;
     p->carry_dx = 0;
     if (p->state == 64 || p->dying) return;
-    /* flush_tile_restores: attribute 25's list (5b) */
+    flush_tile_restores(g);
     g->attrs.probe_kind = 0;
     int x0 = p->x - 16;
     if (x0 < 0) x0 = 0;
@@ -67,7 +69,7 @@ static void write_cell(sk_game *g, int cell, uint16_t word, int index, int state
     if (state >= 0) g->world.state[cell] = (uint8_t)state;
 }
 
-void queue_tile_change(sk_game *g, int cx, int cy, int kind) {  /* 0x11A8DC */
+void queue_tile_change(sk_game *g, int cx, int cy, int kind, int fallback) {  /* 0x11A8DC */
     int cell = cell_index(g, cx, cy);
     for (int i = 0; i < 32; i++) {
         sk_tile_change *q = &g->attrs.queue[i];
@@ -75,7 +77,7 @@ void queue_tile_change(sk_game *g, int cx, int cy, int kind) {  /* 0x11A8DC */
         q->used = true; q->cell = cell; q->kind = kind; q->ticks = 0; q->start = 0;
         return;
     }
-    write_cell(g, cell, 0, 0, 0x20);                             /* queue full: apply at once (d3 = the tile index, 0 here) */
+    write_cell(g, cell, (uint16_t)fallback, fallback, 0x20);    /* queue full: the fallback tile at once (loc_11AA3E) */
 }
 
 static void apply_tile_change(sk_game *g, sk_tile_change *q) {   /* 0x11A900 */

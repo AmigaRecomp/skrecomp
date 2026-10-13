@@ -80,6 +80,19 @@ struct sk_game {
     int flutter_count;                  /* 0x3002F8: live butterflies */
     int fulltime_level;                 /* 0x30029A: FULL TIME's next level (scoreboard) */
     uint8_t banner[0x514];              /* 0x300054: the jingle banner, 160 x 13, four planes and the mask */
+    uint8_t hud_card_flag;              /* 0x3001E8: a card piece was taken; the HUD counts it */
+    int message_box_timer, message_box_kind, message_box_request;   /* 0x3001E0 / E2 / E4 */
+    uint8_t message_shown[8];           /* the flags in the table at 0x200DA4: each message once a level */
+    int message_box_shown_kind;         /* the box on screen (drawn by the HUD code) */
+    uint8_t message_wait;               /* 0x3001DE: frame step 31 holds the game until fire */
+    int flutter_max, flutter_last_cell; /* 0x300288 (5), 0x3002FA */
+    uint8_t ball_target[8];             /* 0x300395..: hits per target attribute */
+#define SK_BUMP_RESTORES 24
+    struct { int cell; uint16_t word; } bump_list[SK_BUMP_RESTORES];   /* 0x300DAE: replayed by init_player */
+    int bump_restores;
+    int flush_list[16], flush_count;    /* 0x302856 / 0x30022A (attribute 24) */
+    int bump_tile;                      /* the tile copied into bump_bob (0x427CFC) */
+    uint8_t bump_bob[0xA0];             /* 0x427CFE: 16 x 16, four planes and a full mask */
     int8_t kick_result;                 /* 0x300338 */
     int32_t trick8_bias;                /* 0x30029C */
     int throw_x, throw_y;               /* 0x3002E4/E6: where the recalled ball appears */
