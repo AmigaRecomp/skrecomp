@@ -22,12 +22,24 @@ Point the program at a directory holding the five disk images, either as `.adf` 
 `SKDisk0` to `SKDisk4`, not by file name.
 
 ```sh
-build/soccerkid --roms ../SourceROMS --level 0            # level viewer in a window
-build/soccerkid --roms ../SourceROMS --level 0 --screenshot out.png   # headless render
+build/soccerkid --roms ../SourceROMS --level 0                        # level viewer in a window
+build/soccerkid --roms ../SourceROMS --level 0 --screenshot out.png   # headless render, no window
+build/soccerkid --roms ../SourceROMS --level 17 --section file036:0   # show a graphics set's frames
+build/soccerkid --help                                                # every option
 ```
 
+`--level N` is the level's data index (0 = England 1 ... 28, 12 = the bonus stage); `--section
+fileNNN:S[:WxH]` shows the frames of a graphics-set section from the level's disk (the frame
+size is estimated from the data unless given); `--cam X,Y` sets the camera; `--no-backdrop`
+and `--no-frames` reduce the picture to one layer.
+
 Keys in the viewer: arrows scroll, PageUp/PageDown change level, `[` and `]` change the
-graphics-set section shown, `F` toggles fullscreen, Escape quits.
+graphics-set section shown, `F` toggles fullscreen, Escape quits. The window shows the
+320x256 PAL frame with the game's 288x200 play area; the HUD panel is not drawn yet.
+
+What the engine core draws follows `../re/docs/notes/display.md`: playfield 1 (foreground
+tiles) over playfield 2 (backdrop tiles, parallax), per-line sky colours, bob frames with
+masks. Object behaviour, the ball, HUD, menus and sound come with the next sub-projects.
 
 ## Test
 
