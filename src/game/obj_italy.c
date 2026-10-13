@@ -22,6 +22,9 @@ static const uint8_t hopper49_script[] = { 0, 4, 0, 2, 0, 1, 2, 3, 3, 2, 1, 0 };
 static const uint8_t thrower_walk_script[] = { 0, 6, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };          /* 0x118682 */
 static const uint8_t thrower_throw_script[] = { 0, 6, 0, 4, 16, 17, 18, 19, 19, 19, 12, 13, 14, 15, 15, 15 };  /* 0x118692 */
 static const uint8_t thrown_script[] = { 0, 8, 0, 4, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7 };       /* 0x1186A2 */
+static const uint8_t thrower68_walk_script[] = { 0, 6, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };        /* 0x118DE6 */
+static const uint8_t thrower68_throw_script[] = { 0, 4, 0, 6, 12, 13, 14, 15, 16, 17, 18, 19 };             /* 0x118DF6 */
+static const uint8_t thrown68_script[] = { 0, 2, 0, 10, 0, 0, 1, 1 };                                        /* 0x118E02 */
 static const uint8_t jumper_land_script[] = { 0, 4, 0, 4, 4, 5, 6, 6, 4, 5, 6, 6 };             /* 0x11223A */
 
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
@@ -449,6 +452,50 @@ static void obj_thrower_update(sk_game *g, sk_slot *s, int index) {           /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 68: the second thrower (slots 102, 103; its missile type 99 from slot 104) ---- */
+static void obj_thrower68_init(sk_game *g, sk_slot *s, int x, int y) {        /* 0x118C58 */
+    init_object_slot(g, s, x, y - 48, s->type4);
+    s->vx = 2; s->vy = 0; s->hits = 2;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 102);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 48, 64, f, 1);                                  /* frames_48x64 */
+}
+static void obj_thrower68_update(sk_game *g, sk_slot *s, int index) {         /* 0x118C92 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (s->flags & 2) { despawn_if_far(g, s); return; }
+    bool attack = aux_c(s) == 1;
+    if (!attack) {
+        int wrapped = 0;
+        step_animation(s, thrower68_walk_script, s->flags, &wrapped);
+        int dx = (int16_t)(d->x + 24 - s->x);
+        if (dx < 0) dx = -dx;
+        if (dx >= 150 || ground_ahead(g, s, s->flags) != 0) s->flags ^= 1;
+        if (s->t0) s->t0--;
+        else {
+            int side = s->flags, k = (int16_t)(d->x + 24 - g->player.x);
+            if (k < 0) { k = -k; side ^= 1; }
+            if (!(side & 1) && k < 90) { reset_animation(s); s->vx = 0; set_aux_c(s, 1); attack = true; }
+        }
+    }
+    if (attack) {
+        int wrapped = 0;
+        if (step_animation(s, thrower68_throw_script, s->flags, &wrapped) && s->anim_index == 3)
+            spawn_child(g, s, d->x + 24, d->y + 16, 99, 24, res(g, 104), thrown68_script, 32, 19, 10, 0);
+        if (wrapped) {
+            set_frame2(s, 0, 6, s->flags);
+            reset_animation(s);
+            s->t0 = 25; s->vx = 2; set_aux_c(s, 0);
+        }
+    }
+    touch_player(g, d->x, d->y, 48, 64);
+    if (ball_hits_object(g, s, 0, 0, 48, 64, 0, 0x500) >= 0) size_frames(g, d, 64, 57, res(g, 103));
+    despawn_if_far(g, s);
+}
+
 void obj_italy_install(void) {
     object_init_table[36] = obj_pendulum_init;         object_update_table[36] = obj_pendulum_update;
     object_init_table[37] = obj_jumper_init;           object_update_table[37] = obj_jumper_update;
@@ -458,5 +505,6 @@ void obj_italy_install(void) {
     object_init_table[48] = obj_rock_init;             object_update_table[48] = obj_rock_update;
     object_init_table[49] = obj_hopper49_init;         object_update_table[49] = obj_hopper49_update;
     object_init_table[64] = obj_thrower_init;          object_update_table[64] = obj_thrower_update;
+    object_init_table[68] = obj_thrower68_init;        object_update_table[68] = obj_thrower68_update;
     object_init_table[100] = obj_rider_init;           object_update_table[100] = obj_rider_update;
 }

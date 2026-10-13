@@ -255,7 +255,8 @@ set(SK_TEST_NAMES
   bouncer_hops_then_leaves
   rock_trembles_then_drops_on_the_kid
   hopper_49_bounces_and_leaves
-  thrower_64_patrols_and_throws_at_the_kid)
+  thrower_64_patrols_and_throws_at_the_kid
+  thrower_68_throws_and_waits_25)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

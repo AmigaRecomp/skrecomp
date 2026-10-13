@@ -211,3 +211,19 @@ void test_thrower_64_patrols_and_throws_at_the_kid(void) {    /* type 64 */
     CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->vx, 2); CHECK_EQ(s->t0, 50); /* walks on, 50 frames before the next */
     drop_game();
 }
+
+void test_thrower_68_throws_and_waits_25(void) {              /* type 68 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 68, 0);
+    CHECK_EQ(s->vx, 2); CHECK_EQ(s->hits, 2); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->y, 11 * 16 - 48);
+    g_g.player.x = (int16_t)(s->draw->x + 24 - 60);
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->vx, 0);
+    int i = 0;
+    while (count_type(99) == 0 && i++ < 100) tick(1);
+    CHECK_EQ(count_type(99), 1);
+    i = 0;
+    while (aux_c(s) == 1 && i++ < 100) tick(1);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->t0, 25); CHECK_EQ(s->frame, 0);
+    drop_game();
+}
