@@ -41,6 +41,8 @@ static const uint8_t cannon_script[] = { 0, 8, 0, 1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 
 static const uint8_t cannon_shot_script[] = { 0, 6, 0, 2, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 };     /* 0x113516 */
 static const uint8_t cannon_flash_script[] = { 0, 7, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };      /* 0x113588 */
 
+static const uint8_t roller_script[] = { 0, 4, 0, 4, 0, 1, 2, 3 };                           /* 0x111AAC */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -756,6 +758,51 @@ static void obj_occluder_update(sk_game *g, sk_slot *s, int index) {          /*
     free_object(g, s);
 }
 
+/* ---- type 104: the roller (slot 22) attribute 60 lets go: at an attribute-52 cell it sets the mine (type 35) off ---- */
+static void obj_roller_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x111A46 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->flags |= 1;
+    s->vx = 4; s->vy = 0;
+    const uint8_t *f = res(g, 22);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 15, f, 1);                                  /* sub_107906 */
+}
+static void obj_roller_update(sk_game *g, sk_slot *s, int index) {            /* 0x111A72: it never despawns otherwise */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    step_animation_simple(s, roller_script, 0);
+    g->attrs.probe_slot = s;
+    probe_tile_attr(g, d->x - 8, d->y + 8);                         /* probe_tile_attr_saved */
+    if (!(s->flags & 0x10)) return;
+    s->flags &= ~0x10;
+    sk_slot *mine = find_slot_by_type(g, 35);
+    if (mine) set_aux_c(mine, 0xFF);                                /* port guard: the original writes through a1 regardless */
+    free_object(g, s);
+}
+
+/* ---- type 101: the falling piece attribute 65 lets go (slot 51) ---- */
+static void obj_falling_piece_init(sk_game *g, sk_slot *s, int x, int y) {    /* 0x112426 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->type4 |= (int16_t)0x8000;
+    s->vx = 0; s->vy = 0;
+    s->t0 = (int16_t)((g->frame_ticks & 3) + 3);                    /* its top speed */
+    const uint8_t *f = res(g, 51);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 12, f, 1);                                  /* sub_1078A0 */
+    int fr = g->frame_ticks & 3;
+    set_frame2(s, fr == 3 ? 2 : fr, 0, 0);
+}
+static void obj_falling_piece_update(sk_game *g, sk_slot *s, int index) {     /* 0x112480 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    if (!((uint16_t)s->t0 < (uint16_t)s->vy)) s->vy++;
+    d->y = (int16_t)(d->y + ((uint16_t)s->vy >> 1));
+    if (object_offscreen(g, d->x, d->y, 64) < 0) { free_object(g, s); g->flutter_count--; }
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
@@ -770,6 +817,8 @@ void obj_russia_install(void) {
     object_init_table[71] = obj_sea_leaper_init;       object_update_table[71] = obj_sea_leaper_update;
     object_init_table[40] = obj_occluder_mask_init;    object_update_table[40] = obj_occluder_update;
     object_init_table[41] = obj_occluder_rect_init;    object_update_table[41] = obj_occluder_update;
+    object_init_table[104] = obj_roller_init;          object_update_table[104] = obj_roller_update;
+    object_init_table[101] = obj_falling_piece_init;   object_update_table[101] = obj_falling_piece_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;

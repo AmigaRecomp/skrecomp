@@ -2,6 +2,7 @@
 #include "game/attrs.h"
 #include "game/attr_country_london.h"
 #include "game/attr_italy.h"
+#include "game/attr_russia.h"
 #include "game/attr_england.h"
 #include "game/game.h"
 
@@ -15,6 +16,7 @@ void attrs_reset(sk_game *g) {
     attr_england_install();
     attr_country_london_install();
     attr_italy_install();
+    attr_russia_install();
     if (!attr_table[2]) attr_table[2] = attr_checkpoint;
     if (!attr_table[13]) attr_table[13] = attr_exit;
     if (!attr_table[53]) attr_table[53] = attr_layer_switch_a;

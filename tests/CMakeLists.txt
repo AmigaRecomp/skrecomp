@@ -44,6 +44,7 @@ add_executable(sk_tests
   test_obj_italy.c
   test_obj_russia.c
   test_attr_italy.c
+  test_attr_russia.c
   test_attr_country_london.c
   test_obj_russia.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
@@ -322,7 +323,11 @@ set(SK_TEST_NAMES
   bullet_97_bursts_on_the_kid
   wall_cannon_52_fires_every_100
   leaper_71_leaps_from_the_sea
-  occluders_40_41_hide_the_sprites)
+  occluders_40_41_hide_the_sprites
+  tilt_plate_24_tilts_under_the_kid
+  spring_40_launches_a_falling_kid
+  side_drain_41_needs_a_side_entry
+  object_marks_52_77_and_trap_60_61)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

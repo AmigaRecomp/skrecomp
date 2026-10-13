@@ -219,24 +219,24 @@ void message_box_tick(sk_game *g) {                              /* 0x11C66E */
 }
 
 /* ---- attribute 62: butterflies from a bush; the ball targets share the tail ---- */
-static void flutter(sk_game *g, int x, int y) {
+void flutter_spawn(sk_game *g, int x, int y, int type) {           /* 0x11BF10's tail: one creature per cell pass, up to flutter_max */
     if (x == g->flutter_last_cell || g->flutter_count >= g->flutter_max) return;
     g->flutter_count++;
     g->flutter_last_cell = x;
-    spawn_object(g, x + (g->frame_ticks & 15), y, 103);
+    spawn_object(g, x + (g->frame_ticks & 15), y, type);
 }
-static bool ball_hits_cell(const sk_game *g, int x, int y) {
+bool ball_hits_cell(const sk_game *g, int x, int y) {
     int dx = (int16_t)(bx(g) - x), dy = (int16_t)(by(g) - y);
     return dx >= 0 && dx <= 16 && dy >= 0 && dy <= 16 && iabs(bvx(g)) + iabs(bvy(g)) > 2;
 }
 static void attr_butterflies(sk_game *g, int cx, int cy) {              /* 0x11BF10 */
     int x = cx * 16, y = cy * 16;
     const sk_player *p = &g->player;
-    if (g->attrs.probe_kind == 1) { if (ball_hits_cell(g, x, y)) flutter(g, x, y); return; }
+    if (g->attrs.probe_kind == 1) { if (ball_hits_cell(g, x, y)) flutter_spawn(g, x, y, 103); return; }
     if (g->attrs.probe_kind != 0) return;
     int dx = (int16_t)(p->x - x), dy = (int16_t)(p->y - y);
     if (dx < 0 || dx > 16 || dy < -41 || dy > -30 || (uint16_t)p->speed < 4) return;
-    flutter(g, x, y);
+    flutter_spawn(g, x, y, 103);
 }
 
 void ball_target(sk_game *g, int cx, int cy, uint8_t *count, int param) {   /* ball_target_tail 0x11C3A4 */
@@ -261,7 +261,7 @@ void ball_target(sk_game *g, int cx, int cy, uint8_t *count, int param) {   /* b
         }
         if (*count >= 8) { *count = 0xFF; spawn_object(g, x - 8, y, 112); }
     }
-    flutter(g, x, y);
+    flutter_spawn(g, x, y, 103);
 }
 static void attr_ball_target_a(sk_game *g, int cx, int cy) { ball_target(g, cx, cy, &g->ball_target[0], 0); }   /* 0x11C318 */
 
