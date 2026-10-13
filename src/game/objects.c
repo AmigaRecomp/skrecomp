@@ -80,7 +80,7 @@ sk_draw *slot_draw_record(sk_game *g, const sk_slot *s) {
 static void init_common(sk_game *g, sk_slot *s, int x, int y, int type4) {
     s->type4 = (int16_t)type4;
     s->flags = 0; s->aux = 0; s->t0 = 0; s->t1 = 0;
-    s->anim = 0; s->frame = 0; s->anim_tick = 0; s->anim_index = 0; s->timer = 0; s->script = NULL; s->marker_cell = -1;
+    s->anim = 0; s->frame = 0; s->anim_tick = 0; s->anim_index = 0; s->timer = 0; s->script = NULL; s->marker_cell = -1; s->platform = -1;
     s->x = s->x0 = (int16_t)x;
     s->y = s->y0 = (int16_t)y;
     g->object_count++;

@@ -148,26 +148,37 @@ void flush_tile_restores(sk_game *g) {                           /* 0x11B504: at
     g->flush_count = 0;
 }
 
-/* type 122: the fallen block (0x1174B0 / 0x117518); it rides a platform record in the original (5c), here it
-   only falls: the kid is not carried */
+/* type 122: the fallen block (0x1174B0 / 0x117518): it rides a platform record, so the kid standing on it
+   is carried down (platform_carry) and its shape joins the collision masks */
 static void obj_bumped_block_init(sk_game *g, sk_slot *s, int x, int y) {
     init_object_slot_nodraw(g, s, x, y, s->type4);
-    s->t1 = 0;                                                      /* the platform record's counter (+0x10) */
-    s->aux = (int16_t)y;                                            /* the platform's y */
+    int index = -1;
+    sk_platform *pf = alloc_platform(g, &index);
+    s->platform = index;
+    s->flags = (int16_t)((index * 32) >> 8);                       /* move.w d0,$a(a6): the index in the flags word */
     s->anim = 0;
     frames_16x16(g, s, g->bump_bob, 1);
+    if (!pf) return;
+    pf->px = (int32_t)((uint32_t)(uint16_t)(x + 8) << 16);
+    pf->py = (int32_t)((uint32_t)(uint16_t)y << 16);
+    pf->half_w = 8; pf->half_h = 8;
+    pf->pframe = g->bump_bob + 0x80;                              /* dat_427D7E: the full mask */
 }
 static void obj_bumped_block_update(sk_game *g, sk_slot *s, int index) {
     (void)index;
     sk_draw *d = slot_draw_record(g, s);
-    if (++s->t0 < 25) {
-        s->t1++;
-        s->aux = (int16_t)(s->aux + ((uint16_t)s->t1 >> 2));
-        d->x = s->x; d->y = s->aux;
+    sk_platform *pf = slot_platform(g, s);
+    if (++s->t0 < 25 && pf) {
+        pf->pvy = (int32_t)((uint32_t)(uint16_t)((pf->pvy >> 16) + 1) << 16);   /* addq.w #1,$10(a4): a counter */
+        int dy = (uint16_t)(pf->pvy >> 16) >> 2;
+        platform_carry(g, pf, 0, dy);
+        pf->py += dy << 16;
+        if (d) { d->x = (int16_t)((pf->px >> 16) - 8); d->y = (int16_t)(pf->py >> 16); }
         if (object_offscreen(g, s->x, s->y, 160) >= 0) return;
     }
     g->mask.dirty = true;
     g->bw.mask_dirty = true;
+    free_platform(g, s);
     free_object(g, s);
 }
 

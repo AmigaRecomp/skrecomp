@@ -24,6 +24,7 @@ typedef struct sk_slot {
     uint8_t anim, hits, frame, anim_tick, anim_index, timer;
     const uint8_t *script;         /* the long at +0x14 for the child types that keep a script there */
     int marker_cell;               /* +0x18: the marker cell that spawned it (cell index), -1 none */
+    int platform;                  /* the platform record index the flags word holds (index * 32), -1 none */
 } sk_slot;                         /* x < 0 = free; draw_index: 0..15 dynamic, 100 + n fixed, -1 none */
 
 #define SK_FIXED_INDEX_BASE 100

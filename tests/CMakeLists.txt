@@ -34,7 +34,8 @@ add_executable(sk_tests
   test_obj_helpers.c
   test_obj_england.c
   test_attr_england.c
-  test_hud.c)
+  test_hud.c
+  test_platforms.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -205,7 +206,13 @@ set(SK_TEST_NAMES
   flash_draws_the_flash_colours
   flash_does_not_leak
   ball_vanish_ends_on_the_roll_table
-  message_box_rejects_a_tiny_box)
+  message_box_rejects_a_tiny_box
+  kid_stands_on_a_platform
+  platform_carries_the_kid
+  ball_rides_a_platform
+  platform_carry_against_a_ceiling
+  platform_records_full
+  bumped_block_carries_the_kid)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

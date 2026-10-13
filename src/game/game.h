@@ -12,6 +12,7 @@
 #include "game/attrs.h"
 #include "game/ball.h"
 #include "game/hud.h"
+#include "game/platforms.h"
 #include "game/objects.h"
 #include "game/player.h"
 #include "game/world.h"
@@ -102,6 +103,7 @@ struct sk_game {
     int msg_w, msg_h;
     uint8_t msg_visible;
     sk_sprite *ball_sprite;             /* where ball_sprites (step 23) writes; NULL = not drawn */
+    sk_platform platforms[SK_PLATFORMS]; int platform_count;   /* 0x3028D6 / 0x30022C */
     int8_t kick_result;                 /* 0x300338 */
     int32_t trick8_bias;                /* 0x30029C */
     int throw_x, throw_y;               /* 0x3002E4/E6: where the recalled ball appears */

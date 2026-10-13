@@ -168,3 +168,19 @@ void test_respawn_reapplies_the_kit_palette(void) {             /* 5a #11 */
     CHECK_EQ(g_g.kit_current, 2); CHECK_EQ(g_g.kit_extra, 2);
     drop_game();
 }
+
+void test_bumped_block_carries_the_kid(void) {                  /* type 122 rides a platform record (0x1174B0) */
+    CHECK(make_game());
+    int cell = 9 * g_g.world.w + 6;
+    g_g.world.live[cell] = (uint16_t)(0x70 << 9 | 1); g_g.world.tile[cell] = 1;
+    g_g.player.x = 6 * 16 + 8; g_g.player.y = 9 * 16 - 40; g_g.player.vy = 0; g_g.player.jumping = 0; g_g.player.falling = 0;
+    run(25, 0, 6, 9);
+    CHECK_EQ(g_g.platform_count, 1);
+    g_g.player.y = 9 * 16 - 41;                                    /* standing on the block's surface */
+    int y0 = g_g.player.y;
+    for (int i = 0; i < 12; i++) { g_g.frame_ticks++; update_objects(&g_g); }
+    CHECK(g_g.player.y > y0);                                      /* carried down */
+    for (int i = 0; i < 20; i++) { g_g.frame_ticks++; update_objects(&g_g); }
+    CHECK_EQ(g_g.platform_count, 0);                               /* freed with the block */
+    drop_game();
+}

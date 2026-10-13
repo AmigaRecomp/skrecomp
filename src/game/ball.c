@@ -134,7 +134,7 @@ void rebuild_ball_mask(sk_game *g) {
             for (int k = 0; k < 16; k++) { dst[k * 8] = tail[k * 2]; dst[k * 8 + 1] = tail[k * 2 + 1]; }
         }
     }
-    /* merge_platform_masks_ball (0x1181DA): moving platforms are sub-project 5c */
+    merge_platform_masks(g, bw->mask, bw->mask_x, bw->mask_y, true);   /* merge_platform_masks_ball (0x1181DA) */
 }
 
 static bool ball_near_feet(const sk_game *g) {    /* sub_1099A6 */

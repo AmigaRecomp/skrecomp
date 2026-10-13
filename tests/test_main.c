@@ -170,6 +170,12 @@ void test_flash_draws_the_flash_colours(void);
 void test_flash_does_not_leak(void);
 void test_ball_vanish_ends_on_the_roll_table(void);
 void test_message_box_rejects_a_tiny_box(void);
+void test_kid_stands_on_a_platform(void);
+void test_platform_carries_the_kid(void);
+void test_ball_rides_a_platform(void);
+void test_platform_carry_against_a_ceiling(void);
+void test_platform_records_full(void);
+void test_bumped_block_carries_the_kid(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -337,6 +343,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "flash_does_not_leak", test_flash_does_not_leak },
     { "ball_vanish_ends_on_the_roll_table", test_ball_vanish_ends_on_the_roll_table },
     { "message_box_rejects_a_tiny_box", test_message_box_rejects_a_tiny_box },
+    { "kid_stands_on_a_platform", test_kid_stands_on_a_platform },
+    { "platform_carries_the_kid", test_platform_carries_the_kid },
+    { "ball_rides_a_platform", test_ball_rides_a_platform },
+    { "platform_carry_against_a_ceiling", test_platform_carry_against_a_ceiling },
+    { "platform_records_full", test_platform_records_full },
+    { "bumped_block_carries_the_kid", test_bumped_block_carries_the_kid },
 };
 
 int main(int argc, char **argv) {
