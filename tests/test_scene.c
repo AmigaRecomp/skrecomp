@@ -21,22 +21,23 @@ void test_scene_draw_level_on_fixture(void) {
     sk_fb fb;
     CHECK(fb_init(&fb, SK_FB_W, SK_FB_H));
     /* foreground only: both cells use all-0xFF tiles -> value 15 in group A for x < 32 */
-    scene_draw_level(&lv, &fb, 0, 0, false, NULL);
-    CHECK_EQ(fb.px[0], 0x0F);
+    scene_draw_level(&lv, &fb, 0, 0, false, NULL);           /* buffer col 0 = world cam_x - 16 (the original's window starts at cam + 16) */
+    CHECK_EQ(fb.px[15], 0x00);
     CHECK_EQ(fb.px[16], 0x0F);
-    CHECK_EQ(fb.px[15 * SK_FB_W + 31], 0x0F);
-    CHECK_EQ(fb.px[32], 0x00);
-    CHECK_EQ(fb.px[16 * SK_FB_W], 0x00);
+    CHECK_EQ(fb.px[32], 0x0F);
+    CHECK_EQ(fb.px[15 * SK_FB_W + 47], 0x0F);
+    CHECK_EQ(fb.px[48], 0x00);
+    CHECK_EQ(fb.px[16 * SK_FB_W + 16], 0x00);
     /* with the backdrop: cells 0 and 1 are out of range (one tile), cell 2 is tile 0 (0x0F bytes) */
     scene_draw_level(&lv, &fb, 0, 0, true, NULL);
-    CHECK_EQ(fb.px[0], 0x0F);
-    CHECK_EQ(fb.px[36], 0xF0);
-    CHECK_EQ(fb.px[32], 0x00);
-    CHECK_EQ(fb.px[16 * SK_FB_W + 36], 0xF0);
-    /* camera offset: foreground cell 1 (x 16..31) lands at buffer x 6..21 for cam_x = 10 */
+    CHECK_EQ(fb.px[16], 0x0F);
+    CHECK_EQ(fb.px[52], 0xF0);
+    CHECK_EQ(fb.px[48], 0x00);
+    CHECK_EQ(fb.px[16 * SK_FB_W + 52], 0xF0);
+    /* camera offset: foreground cell 1 (x 16..31) lands at buffer x 22..37 for cam_x = 10 (buffer 0 = world cam_x - 16) */
     scene_draw_level(&lv, &fb, 10, 0, false, NULL);
-    CHECK_EQ(fb.px[21] & 0x0F, 0x0F);
-    CHECK_EQ(fb.px[22] & 0x0F, 0x00);
+    CHECK_EQ(fb.px[37] & 0x0F, 0x0F);
+    CHECK_EQ(fb.px[38] & 0x0F, 0x00);
     fb_free(&fb);
     level_free(&lv);
     free(d);

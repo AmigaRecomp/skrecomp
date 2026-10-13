@@ -130,7 +130,7 @@ void test_player_logic_picks_walk_and_jump_frames(void) {
     static sk_sprite kid;
     g_g.player.x = 100; g_g.player.y = 120; g_g.view.cam_x = 40; g_g.view.cam_y = 10;
     update_player(&g_g, &kid);                                   /* no sk image: the frame table reads as zeros */
-    CHECK_EQ(kid.x, 100 - 40 - 1); CHECK_EQ(kid.y, 120 - 6 - 10); CHECK(kid.visible);
+    CHECK_EQ(kid.x, 100 - 40 - 16); CHECK_EQ(kid.y, 120 - 7 - 10); CHECK(kid.visible);   /* buffer col 0 = world cam_x - 16 */
     g_g.player.invulnerable = 101; update_player(&g_g, &kid); CHECK(!kid.visible);   /* odd: flicker frame */
     g_g.player.invulnerable = 100; update_player(&g_g, &kid); CHECK(kid.visible);
     g_g.player.exit_walk = 1; update_player(&g_g, &kid); CHECK(!kid.visible);

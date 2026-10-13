@@ -107,7 +107,7 @@ void play_draw(sk_play *p) {
     p->game.view.bg_y = bg_y;
     if (p->scene.backdrop) scene_draw_backdrop(lv, fb, bg_x, bg_y);
     scene_draw_tiles(lv, fb, p->game.world.tile, p->game.camera_x, p->game.camera_y);
-    draw_all_objects(&p->game, fb, p->game.camera_x, p->game.camera_y);
+    draw_all_objects(&p->game, fb, p->game.camera_x + SK_BUFFER_WORLD_X, p->game.camera_y);
 }
 
 void play_present(sk_play *p, uint32_t *out) {

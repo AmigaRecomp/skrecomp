@@ -5,7 +5,10 @@
 
 #define SK_FB_W 352             /* playfield bitmaps: 44 bytes per plane row (VERIFIED: modulo 0x84 = 176 - 44) */
 #define SK_FB_H 200             /* lines 44..243 carry the per-line colour writes (VERIFIED) */
-#define SK_VIEW_X 32            /* visible buffer columns 32..319 (READING: DDFSTRT 0x30, DIWSTRT 0x91) */
+#define SK_VIEW_X 32            /* visible buffer columns 32..319 (DDFSTRT 0x30, DIWSTRT 0x91) */
+#define SK_BUFFER_WORLD_X (-16)  /* buffer column 0 shows world cam_x - 16: the window starts at cam_x + 16 (VERIFIED: the
+                                   pointer is ((cam_x + 15) & ~31) / 8 with a 31 - ((cam_x + 15) & 31) pixel delay, 0x1062D8;
+                                   the kid's sprite at HSTART x + dx - cam_x + 0x60 lands its feet on x only with this) */
 #define SK_VIEW_W 288           /* DIW 145..432 (VERIFIED) */
 #define SK_VIEW_H 200
 #define SK_SCREEN_W 320         /* the standard PAL frame the window is placed in */

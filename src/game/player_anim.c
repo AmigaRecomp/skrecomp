@@ -79,8 +79,8 @@ void update_player(sk_game *g, sk_sprite *kid) {
     kid->visible = false;
     if (p->exit_walk || off) return;
     if (p->invulnerable && p->invulnerable < 1000 && (p->invulnerable & 1)) return;   /* the flicker */
-    kid->x = sx - 1;                                             /* the sprite pipeline shows one pixel left (READING) */
-    kid->y = sy + 1;
+    kid->x = sx - 16;                /* HSTART = sx + 0x60, window from hpos 0x91: window x = sx - 48, buffer x = sx - 16 */
+    kid->y = sy;                     /* VSTART = sy + 0x2D and the open window starts at line 0x2D */
     kid->in_front = false;
     if (g->sk) {
         if (!sprite_decode_pair(g->sk, SK_KID_FRAMES_ADDR + offset, kid)) return;

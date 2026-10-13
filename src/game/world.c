@@ -4,6 +4,29 @@
 
 static int clamp0(int v) { return v > 0 ? v : 0; }
 
+/* A byte of the GRAF A chunk's tile units (160 bytes each: 128 of image, 32 of solidity) as one linear run. */
+static int unit_byte(const sk_tileset *ts, size_t o) {
+    size_t unit = o / SK_TILE_UNIT_A, in = o % SK_TILE_UNIT_A;
+    if (unit >= (size_t)ts->count) return -1;
+    if (in < SK_TILE_BYTES) return ts->tiles[unit * SK_TILE_BYTES + in];
+    return ts->tails ? ts->tails[unit * SK_TILE_TAIL + in - SK_TILE_BYTES] : 0;
+}
+
+/* sub_10380C: from unit offset 96, in steps of 128 bytes, the first run of 32 bytes that are all 0xFF; the step count
+   is the wall tile (the original's stride differs from the 160-byte units; reproduced as is). 0 when none. */
+static int wall_tile(const sk_level *lv) {
+    for (int k = 0; ; k++) {
+        size_t o = 96 + (size_t)k * 128;
+        int all = 1;
+        for (int i = 0; i < 32; i++) {
+            int b = unit_byte(&lv->tiles_a, o + (size_t)i);
+            if (b < 0) return 0;
+            if (b != 0xFF) { all = 0; break; }
+        }
+        if (all) return k;
+    }
+}
+
 bool world_build(sk_world *w, const sk_level *lv) {
     memset(w, 0, sizeof *w);
     w->lv = lv;
@@ -33,6 +56,12 @@ bool world_build(sk_world *w, const sk_level *lv) {
                 w->start_y = cy * 16 - 24;
             }
         }
+    int wall = wall_tile(lv);                                   /* relocate_map: wall in the first and last column of every row */
+    for (int cy = 0; cy < w->h && w->w > 0; cy++) {
+        size_t a = (size_t)cy * (size_t)w->w, b = a + (size_t)w->w - 1;
+        w->live[a] = w->live[b] = (uint16_t)wall;
+        w->tile[a] = w->tile[b] = (uint16_t)wall;
+    }
     w->fg_max_x = clamp0(w->w * 16 - 352);
     w->fg_max_y = clamp0(w->h * 16 - 200);
     w->bg_max_x = clamp0(lv->backdrop.width * 16 - 320);

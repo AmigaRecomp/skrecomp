@@ -36,7 +36,8 @@ void test_mask_rebuild_clamps_to_the_map_edges(void) {        /* Review Focus 2 
     mask_rebuild(&m, &g_w, 4, 0);                               /* left edge, above the map */
     CHECK_EQ(m.origin_x, 0); CHECK_EQ(m.origin_y, -16);
     CHECK(mask_solid(&m, 10, -5));                              /* rows above the map are solid */
-    CHECK(!mask_solid(&m, 10, 5));
+    CHECK(mask_solid(&m, 10, 5));                               /* column 0 is the side wall (relocate_map) */
+    CHECK(!mask_solid(&m, 20, 5));
     CHECK(!mask_solid(&m, -1, 5));                              /* left of the window: false, no crash */
     m.built = false;
     mask_rebuild(&m, &g_w, 40 * 16 - 4, 15 * 16);               /* right/bottom corner */

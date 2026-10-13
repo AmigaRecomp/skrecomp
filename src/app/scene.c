@@ -20,8 +20,8 @@ void scene_clamp_camera(const sk_level *lv, int *x, int *y) {
 
 static void draw_grid(sk_fb *fb, const sk_tileset *ts, int cols, int rows, int scroll_x, int scroll_y, int group,
                       int (*index_at)(const void *, int, int), const void *ctx) {
-    int first_col = scroll_x / 16, off_x = scroll_x % 16;
-    int first_row = scroll_y / 16, off_y = scroll_y % 16;
+    int first_col = scroll_x >> 4, off_x = scroll_x & 15;          /* floor division: scroll_x can be negative */
+    int first_row = scroll_y >> 4, off_y = scroll_y & 15;
     for (int ty = 0; ty <= fb->h / 16 + 1; ty++) {
         int cy = first_row + ty;
         if (cy < 0 || cy >= rows) continue;
@@ -61,12 +61,12 @@ void scene_sky(const sk_level *lv, int bg_y, sk_sky *sky) {
 }
 
 void scene_draw_backdrop(const sk_level *lv, sk_fb *fb, int bg_x, int bg_y) {
-    if (lv->backdrop.grid) draw_grid(fb, &lv->tiles_b, lv->backdrop.width, lv->backdrop.height, bg_x, bg_y, SK_GROUP_TILES_B, bg_index, lv);
+    if (lv->backdrop.grid) draw_grid(fb, &lv->tiles_b, lv->backdrop.width, lv->backdrop.height, bg_x + SK_BUFFER_WORLD_X, bg_y, SK_GROUP_TILES_B, bg_index, lv);
 }
 
 void scene_draw_tiles(const sk_level *lv, sk_fb *fb, const uint16_t *indices, int cam_x, int cam_y) {
     index_grid gr = { indices, lv->map.width };
-    draw_grid(fb, &lv->tiles_a, lv->map.width, lv->map.height, cam_x, cam_y, SK_GROUP_TILES_A, fg_index, &gr);
+    draw_grid(fb, &lv->tiles_a, lv->map.width, lv->map.height, cam_x + SK_BUFFER_WORLD_X, cam_y, SK_GROUP_TILES_A, fg_index, &gr);
 }
 
 void scene_draw_level(const sk_level *lv, sk_fb *fb, int cam_x, int cam_y, bool backdrop, const sk_frames *frames) {

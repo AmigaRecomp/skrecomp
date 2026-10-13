@@ -28,6 +28,9 @@ void test_world_builds_cells_and_start(void) {
     CHECK_EQ(w.fg_max_x, 40 * 16 - 352); CHECK_EQ(w.fg_max_y, 16 * 16 - 200);
     CHECK_EQ(w.bg_max_x, 30 * 16 - 320); CHECK_EQ(w.bg_max_y, 14 * 16 - 200 < 0 ? 0 : 14 * 16 - 200);
     CHECK_EQ(w.state[0], 0);
+    /* relocate_map: the first tile whose 32 bytes at chunk offset 130 + 128k are all 0xFF (here k = 1) walls in both edges */
+    CHECK_EQ(world_tile_index(&w, 0, 0), 1); CHECK_EQ(world_tile_index(&w, 39, 5), 1); CHECK_EQ(world_tile_index(&w, 1, 0), 0);
+    CHECK_EQ(w.live[0], 1); CHECK_EQ(w.live[39], 1);
     world_free(&w); level_free(&lv); free(d);
 }
 
