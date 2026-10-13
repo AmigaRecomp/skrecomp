@@ -76,6 +76,13 @@ void test_death_with_no_lives_left_is_game_over(void);
 void test_player_falls_out_of_an_empty_level_and_respawns(void);
 void test_exit_walk_sets_the_outcome(void);
 void test_ball_states_are_stubs_that_return_to_normal(void);
+void test_spawn_marker_allocates_a_slot_with_type_and_param(void);
+void test_spawn_marker_ignores_types_beyond_the_table(void);
+void test_slots_fill_up_at_sixteen(void);
+void test_despawn_if_far_uses_the_160_margin(void);
+void test_step_animation_follows_the_script(void);
+void test_touch_player_box_and_add_score(void);
+void test_draw_all_objects_blits_fixture_frames(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -149,6 +156,13 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "player_falls_out_of_an_empty_level_and_respawns", test_player_falls_out_of_an_empty_level_and_respawns },
     { "exit_walk_sets_the_outcome", test_exit_walk_sets_the_outcome },
     { "ball_states_are_stubs_that_return_to_normal", test_ball_states_are_stubs_that_return_to_normal },
+    { "spawn_marker_allocates_a_slot_with_type_and_param", test_spawn_marker_allocates_a_slot_with_type_and_param },
+    { "spawn_marker_ignores_types_beyond_the_table", test_spawn_marker_ignores_types_beyond_the_table },
+    { "slots_fill_up_at_sixteen", test_slots_fill_up_at_sixteen },
+    { "despawn_if_far_uses_the_160_margin", test_despawn_if_far_uses_the_160_margin },
+    { "step_animation_follows_the_script", test_step_animation_follows_the_script },
+    { "touch_player_box_and_add_score", test_touch_player_box_and_add_score },
+    { "draw_all_objects_blits_fixture_frames", test_draw_all_objects_blits_fixture_frames },
 };
 
 int main(int argc, char **argv) {

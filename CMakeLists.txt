@@ -39,6 +39,7 @@ add_library(skcore STATIC
   src/game/player.c
   src/game/player_anim.c
   src/game/player_states.c
+  src/game/objects.c
   src/game/stubs.c)
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB SDL3::SDL3)

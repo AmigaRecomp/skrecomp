@@ -9,6 +9,7 @@
 #include "core/tables.h"
 #include "game/collision.h"
 #include "game/input.h"
+#include "game/objects.h"
 #include "game/player.h"
 #include "game/world.h"
 
@@ -33,6 +34,9 @@ struct sk_game {
     sk_view view;
     sk_player player;
     sk_ball ball;
+    sk_objects objs;
+    int object_count;                   /* 0x300228 */
+    bool untouchable;                   /* bytes 0x30033A / 0x300382: touch_player ignores the kid */
     uint8_t input_state;                /* the five SK_IN_ bits (0x300387) */
     int frame_ticks, frame_counter;     /* 0x30020E, 0x300064 */
     int camera_x, camera_y, camera_y_raw;   /* 0x3001A2, 0x3001A4, 0x3001BA */

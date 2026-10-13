@@ -22,7 +22,8 @@ add_executable(sk_tests
   test_collision.c
   test_player.c
   test_sprites.c
-  test_player_states.c)
+  test_player_states.c
+  test_objects.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -99,7 +100,14 @@ set(SK_TEST_NAMES
   death_with_no_lives_left_is_game_over
   player_falls_out_of_an_empty_level_and_respawns
   exit_walk_sets_the_outcome
-  ball_states_are_stubs_that_return_to_normal)
+  ball_states_are_stubs_that_return_to_normal
+  spawn_marker_allocates_a_slot_with_type_and_param
+  spawn_marker_ignores_types_beyond_the_table
+  slots_fill_up_at_sixteen
+  despawn_if_far_uses_the_160_margin
+  step_animation_follows_the_script
+  touch_player_box_and_add_score
+  draw_all_objects_blits_fixture_frames)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
