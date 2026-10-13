@@ -157,3 +157,23 @@ void test_shell_20_fires_every_100_frames(void) {                   /* type 20 *
     CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->draw->x, s->x);               /* reloaded at 100: fires again */
     drop_game();
 }
+
+void test_conveyor_42_pushes_and_feeds_its_belt(void) {             /* types 42 and 98 */
+    CHECK(make_game());
+    sk_slot *s = spawn(100, 11 * 16, 42, 0);                        /* its belt runs in the row above the ground */
+    CHECK(s->draw == NULL); CHECK_EQ(s->x, 116); CHECK_EQ(s->t1, 144); CHECK_EQ(s->x0, 2);
+    g_g.player.x = 150; g_g.player.y = 12 * 16 - 41;                 /* on it: y + 40 - (y0 - 16) = 31 */
+    tick(1);
+    CHECK_EQ(g_g.player.carry_dx, 2);
+    g_g.player.carry_dx = 0; g_g.player.x = 400;
+    tick(1);
+    CHECK_EQ(g_g.player.carry_dx, 0);
+    tick(16);
+    CHECK_EQ(count_type(98), 1);                                     /* the 18th frame: a belt piece, speed 4 */
+    sk_slot *b = NULL;
+    for (int i = 0; i < 16; i++) if (g_g.objs.slot[i].x >= 0 && (g_g.objs.slot[i].type4 & 0x1FF) == 98 * 4) b = &g_g.objs.slot[i];
+    CHECK(b != NULL); CHECK_EQ(b->vx, 4); CHECK_EQ(b->flags & 1, 1);
+    tick(18);
+    CHECK_EQ(s->x0, 3);                                              /* the second: speed 3 (6), 16 px higher */
+    drop_game();
+}

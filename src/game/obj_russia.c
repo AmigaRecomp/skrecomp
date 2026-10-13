@@ -28,6 +28,9 @@ static const uint8_t shell_flash_script[] = { 0, 8, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7
 static const uint8_t shell_fly_script[] = { 0, 4, 0, 3, 0, 1, 2, 3, 4, 5, 6, 7 };              /* 0x1103FE */
 static const uint8_t shell_burst_script[] = { 0, 5, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };       /* 0x11040A */
 
+static const uint8_t belt_script[] = { 0, 4, 0, 2, 0, 1, 2, 3, 0, 1, 2, 3 };                  /* 0x1133AE */
+static const uint8_t belt_fast_script[] = { 0, 4, 0, 3, 4, 5, 6, 7, 4, 5, 6, 7 };             /* 0x1133BA */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -449,9 +452,62 @@ static void obj_shell_update(sk_game *g, sk_slot *s, int index) {             /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 42: the conveyor (no draw): pushes the kid and the ball right; type 98: its belt pieces (slot 67) ---- */
+static int y0_hi(const sk_slot *s) { return (uint16_t)s->y0 >> 8; }                            /* byte +0x6 */
+static void obj_conveyor_init(sk_game *g, sk_slot *s, int x, int y) {         /* 0x113256 */
+    init_object_slot_shared(g, s, x + 16, y, s->type4, &g->objs.chain[7]);
+    s->draw = NULL;                                                 /* the original sets no draw record */
+    s->t0 = 18;
+    s->t1 = 9 << 4;                                                 /* move.b #9,d0 overwrites the parameter: 144 px */
+    s->x0 = 2; s->y0 = 0;
+}
+static void obj_conveyor_update(sk_game *g, sk_slot *s, int index) {          /* 0x113284 */
+    (void)index;
+    int d = (int16_t)(g->player.x - s->x);
+    if (d >= 0 && (uint16_t)d < (uint16_t)s->t1) {
+        int e = (int16_t)(g->player.y + 40 - (s->y - 16));
+        if (e >= 0 && e < 32) g->player.carry_dx = s->x0;
+    }
+    d = (int16_t)((int16_t)(g->ball.x >> 16) + 8 - s->x);
+    if (d >= 0 && (uint16_t)d < (uint16_t)s->t1) {
+        int e = (int16_t)((int16_t)(g->ball.y >> 16) + 8 - (s->y - 16));
+        if (e >= 0 && e < 32) g->bw.carry_dx = s->x0;
+    }
+    if (--s->t0 == 0) {
+        int y = s->y;
+        if (aux_c(s)) { s->y0 = (int16_t)((y0_hi(s) ^ 0xFF) << 8 | (s->y0 & 0xFF)); y -= 16; }
+        int sp = y0_hi(s) ? 3 : 2;
+        s->x0 = (int16_t)sp;
+        g->objs.marker_param = sp * 2;
+        spawn_object(g, s->x, y, 98);
+        s->t0 = 18;
+        set_aux_c(s, aux_c(s) ^ 0xFF);
+    }
+    if (object_offscreen(g, s->x, s->y, 160) < 0) free_object(g, s);
+}
+static void obj_belt_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x113342 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->vx = (int16_t)(g->objs.marker_param & 0xFF);
+    s->vy = 0;
+    s->flags |= 1;
+    const uint8_t *f = res(g, 67);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 10, f, 1);                                  /* frames_16x10 */
+}
+static void obj_belt_update(sk_game *g, sk_slot *s, int index) {              /* 0x113376 */
+    (void)index;
+    if (!slot_draw_record(g, s)) return;
+    apply_velocity(s);
+    if (wall_ahead(g, s, s->flags)) { free_object(g, s); return; }
+    step_animation_simple(s, s->vx == 4 ? belt_fast_script : belt_script, s->flags);
+    free_if_far(g, s);
+}
+
 void obj_russia_install(void) {
     object_init_table[11] = obj_sprout_init;           object_update_table[11] = obj_sprout_update;
     object_init_table[20] = obj_shell_init;            object_update_table[20] = obj_shell_update;
+    object_init_table[42] = obj_conveyor_init;         object_update_table[42] = obj_conveyor_update;
+    object_init_table[98] = obj_belt_init;             object_update_table[98] = obj_belt_update;
     object_init_table[35] = obj_mine_init;             object_update_table[35] = obj_mine_update;
     object_init_table[65] = obj_sled_init;             object_update_table[65] = obj_sled_update;
     object_init_table[66] = obj_icicle_init;           object_update_table[66] = obj_icicle_update;
