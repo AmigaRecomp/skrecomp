@@ -23,7 +23,8 @@ typedef struct {
     bool has_start; int start_x, start_y;   /* --start X,Y: the kid's start in world pixels */
     int near_type, near_n;      /* --near TYPE[,N]: start beside the N-th marker of TYPE (<= 0: off) */
     bool markers;               /* --markers: list the level's object markers and exit */
-    const char *save_path;      /* --save FILE: the SaveGame file (default: the user's data folder) */
+    const char *save_path;
+    const char *controls_path;  /* --controls FILE: the key and pad bindings (default: the user's data folder) */      /* --save FILE: the SaveGame file (default: the user's data folder) */
     bool no_intro;              /* --no-intro: start at the language screen */
     bool new_game;              /* --new-game: straight into a new game at world map 0, no frontend */
     int cup;                    /* --cup MASK: the cup pieces held at the start (0..31), -1 = none given */

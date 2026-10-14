@@ -53,6 +53,7 @@ typedef struct sk_play {
     sk_name_entry name;
     sk_savescreen save;             /* the save prompt or the RESUME list, when on */
     char save_path[512];
+    char controls_path[512];        /* controls.cfg (the window's bindings), empty: not saved */
     bool resuming; sk_save_slot resume_slot;   /* RESUME GAME: the slot load_game_slot puts over the new game */
     int typed_key;                  /* last_ascii_key: this step's typed character */
     int typed_queue[8], typed_n;    /* the window's keys waiting for their frame */

@@ -41,9 +41,12 @@ static int run_play(const sk_args *in, sk_err *e) {
     static sk_play p;
     sk_args args = *in, *a = &args;
     static char save[512];
-    if (!a->save_path) {                                            /* SaveGame in the user's data folder */
+    static char controls[512];
+    if (!a->save_path || !a->controls_path) {                       /* SaveGame and controls.cfg in the user's data folder */
         char *dir = SDL_GetPrefPath("soccerkid", "soccerkid");
-        if (dir) { snprintf(save, sizeof save, "%sSaveGame", dir); SDL_free(dir); a->save_path = save; }
+        if (dir && !a->save_path) { snprintf(save, sizeof save, "%sSaveGame", dir); a->save_path = save; }
+        if (dir && !a->controls_path) { snprintf(controls, sizeof controls, "%scontrols.cfg", dir); a->controls_path = controls; }
+        SDL_free(dir);
     }
     if (!play_open(&p, a, e)) { fprintf(stderr, "soccerkid: %s\n", e->msg); return 1; }
     int rc = 0;

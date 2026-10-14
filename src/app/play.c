@@ -93,6 +93,7 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     game_new_game(&p->game);
     p->cup_arg = a->cup;
     if (a->save_path) snprintf(p->save_path, sizeof p->save_path, "%s", a->save_path);
+    if (a->controls_path) snprintf(p->controls_path, sizeof p->controls_path, "%s", a->controls_path);
     if (a->cup >= 0) p->game.cup_pieces = (uint8_t)a->cup;
     if (a->level < 0 && !a->new_game) {                             /* the frontend: the language screen first */
         p->with_frontend = true;

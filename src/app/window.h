@@ -7,6 +7,8 @@
 #include <SDL3/SDL.h>
 #include "app/play.h"
 #include "app/scene.h"
+#include "app/controls.h"
+#include "app/remap.h"
 #include "core/err.h"
 
 typedef struct {
@@ -16,6 +18,11 @@ typedef struct {
     uint32_t *pixels;           /* SK_SCREEN_W * SK_SCREEN_H */
     int frames_presented;
     struct sk_audio_out *audio;  /* play mode: M mutes it */
+    SDL_Gamepad *pad;           /* the first gamepad plugged in, NULL none */
+    sk_controls controls;       /* the bindings (controls.cfg) */
+    sk_remap remap;             /* F12 */
+    bool prev_pause, prev_back; /* the pause and back actions act on a press */
+    int16_t prev_axis[SDL_GAMEPAD_AXIS_COUNT];   /* the remap screen takes a stick crossing its threshold */
 } sk_window;
 
 bool window_open(sk_window *w, int scale, sk_err *e);
@@ -25,8 +32,8 @@ int window_run(sk_window *w, sk_play *p, int exit_after);
 int window_run_viewer(sk_window *w, sk_scene *s, int exit_after);
 /* The joystick bits held on the keyboard: arrows or WASD, Space / Left Ctrl / X = fire (pure, for tests). */
 uint8_t window_input_bits(const bool *keys);
-unsigned window_frontend_keys(const bool *keys);
-int window_typed_key(SDL_Keycode k);                /* last_ascii_key for the save name, 0 none */    /* SK_FE_KEY_TAB and F1..F10 */
+unsigned window_frontend_keys(const bool *keys);    /* SK_FE_KEY_TAB and F1..F10 */
+int window_typed_key(SDL_Keycode k);                /* last_ascii_key for the save name, 0 none */
 void window_close(sk_window *w);
 
 /* Moves the camera by (dx, dy) * step pixels, clamped to the scene's limits (pure, for tests). */

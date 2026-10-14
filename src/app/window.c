@@ -1,6 +1,7 @@
 #include "app/audio_out.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "app/window.h"
 #include "app/frontend.h"
 #include "game/input.h"
@@ -23,7 +24,7 @@ void window_step_camera(sk_scene *s, int dx, int dy, int step) {
 bool window_open(sk_window *w, int scale, sk_err *e) {
     SDL_SetHint(SDL_HINT_FORCE_RAISEWINDOW, "1");                /* started from a terminal: take the focus */
     SDL_SetHint(SDL_HINT_WINDOW_ACTIVATE_WHEN_RAISED, "1");
-    if (!SDL_Init(SDL_INIT_VIDEO)) return sk_fail(e, "SDL: %s", SDL_GetError());
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) return sk_fail(e, "SDL: %s", SDL_GetError());
     w->win = SDL_CreateWindow("Soccer Kid", SK_SCREEN_W * scale, SK_SCREEN_H * scale, SDL_WINDOW_RESIZABLE);
     if (!w->win) return sk_fail(e, "SDL window: %s", SDL_GetError());
     SDL_RaiseWindow(w->win);
@@ -101,10 +102,54 @@ static void present_pixels(sk_window *w) {
 
 /* Quit and one-shot keys: polled every iteration so the window stays responsive. s may be NULL (play mode); p is the
    game (NULL in the viewer): a save screen takes the typed keys and Escape. */
+static void open_first_pad(sk_window *w) {
+    int n = 0;
+    SDL_JoystickID *ids = SDL_GetGamepads(&n);
+    if (ids && n > 0) w->pad = SDL_OpenGamepad(ids[0]);
+    SDL_free(ids);
+}
+
+static void pad_state(const sk_window *w, sk_pad *pad) {
+    memset(pad, 0, sizeof *pad);
+    if (!w->pad) return;
+    pad->present = true;
+    for (int b = 0; b < SDL_GAMEPAD_BUTTON_COUNT; b++) pad->button[b] = SDL_GetGamepadButton(w->pad, (SDL_GamepadButton)b);
+    for (int a = 0; a < SDL_GAMEPAD_AXIS_COUNT; a++) pad->axis[a] = SDL_GetGamepadAxis(w->pad, (SDL_GamepadAxis)a);
+}
+
+/* The remap screen takes every key and pad press while it is open; on DONE the file is written. */
+static void remap_event(sk_window *w, sk_play *p, const SDL_Event *ev) {
+    sk_bind b = { SK_BIND_NONE, 0, 0 };
+    if (ev->type == SDL_EVENT_KEY_DOWN && !ev->key.repeat) { b.kind = SK_BIND_KEY; b.code = (int16_t)ev->key.scancode; }
+    else if (ev->type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) { b.kind = SK_BIND_BUTTON; b.code = (int16_t)ev->gbutton.button; }
+    else if (ev->type == SDL_EVENT_GAMEPAD_AXIS_MOTION && ev->gaxis.axis < SDL_GAMEPAD_AXIS_COUNT) {
+        int v = ev->gaxis.value, was = w->prev_axis[ev->gaxis.axis];
+        w->prev_axis[ev->gaxis.axis] = (int16_t)v;
+        bool now_out = v >= SK_AXIS_THRESHOLD || v <= -SK_AXIS_THRESHOLD, was_out = was >= SK_AXIS_THRESHOLD || was <= -SK_AXIS_THRESHOLD;
+        if (!now_out || was_out) return;
+        b.kind = SK_BIND_AXIS; b.code = (int16_t)ev->gaxis.axis; b.sign = (int8_t)(v < 0 ? -1 : 1);
+    }
+    if (b.kind == SK_BIND_NONE) return;
+    if (remap_input(&w->remap, b) == SK_REMAP_DONE && p && p->controls_path[0] && !controls_save(&w->controls, p->controls_path))
+        fprintf(stderr, "soccerkid: could not write %s\n", p->controls_path);
+}
+
 static bool poll_events(sk_window *w, sk_scene *s, sk_play *p) {
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
         if (ev.type == SDL_EVENT_QUIT) return false;
+        if (ev.type == SDL_EVENT_GAMEPAD_ADDED && !w->pad) { w->pad = SDL_OpenGamepad(ev.gdevice.which); continue; }
+        if (ev.type == SDL_EVENT_GAMEPAD_REMOVED) {
+            if (w->pad && SDL_GetGamepadID(w->pad) == ev.gdevice.which) { SDL_CloseGamepad(w->pad); w->pad = NULL; open_first_pad(w); }
+            continue;
+        }
+        if (p && w->remap.open) { remap_event(w, p, &ev); continue; }
+        if (p && ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_F12) {   /* the remap screen */
+            remap_open(&w->remap, &w->controls);
+            memset(w->prev_axis, 0, sizeof w->prev_axis);
+            continue;
+        }
+        if (p && p->intro && ev.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) { play_type(p, 1); continue; }   /* a pad button skips the intro */
         if (p && p->intro && ((ev.type == SDL_EVENT_KEY_DOWN && ev.key.key != SDLK_ESCAPE && ev.key.key != SDLK_F && ev.key.key != SDLK_M) ||
                                 ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN)) {
             play_type(p, 1);                                    /* frame_interrupt: any key, the mouse button or fire */
@@ -118,7 +163,6 @@ static bool poll_events(sk_window *w, sk_scene *s, sk_play *p) {
         if (ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat) {
             switch (ev.key.key) {
             case SDLK_ESCAPE: if (!p) return false; p->esc_key = true; break;
-            case SDLK_F10: case SDLK_P: if (p) p->pause_key = true; break;
             case SDLK_M: if (w->audio) audio_out_mute(w->audio, !w->audio->muted); break;
             case SDLK_PAGEUP: if (s) change_level(s, -1); break;
             case SDLK_PAGEDOWN: if (s) change_level(s, 1); break;
@@ -175,6 +219,8 @@ int window_run_viewer(sk_window *w, sk_scene *s, int exit_after) {
 
 int window_run(sk_window *w, sk_play *p, int exit_after) {
     static sk_audio_out audio;
+    if (!controls_load(&w->controls, p->controls_path[0] ? p->controls_path : NULL)) controls_defaults(&w->controls);
+    open_first_pad(w);
     if (audio_out_open(&audio, 48000)) { p->audio = &audio; w->audio = &audio; }   /* no device: silent */
     uint64_t last = SDL_GetTicksNS(), acc = 0;
     bool running = true;
@@ -184,14 +230,22 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
         int steps = window_steps_for(&acc, now - last);
         last = now;
         running = poll_events(w, NULL, p);
-        for (int i = 0; i < steps; i++) {
-            p->fe_keys = window_frontend_keys(SDL_GetKeyboardState(NULL));
-            play_step(p, window_input_bits(SDL_GetKeyboardState(NULL)));
+        for (int i = 0; i < steps && !w->remap.open; i++) {        /* the remap screen holds the game */
+            const bool *keys = SDL_GetKeyboardState(NULL);
+            sk_pad pad;
+            pad_state(w, &pad);
+            bool pause = controls_held(&w->controls, SK_ACT_PAUSE, keys, &pad), back = controls_held(&w->controls, SK_ACT_BACK, keys, &pad);
+            if (pause && !w->prev_pause) p->pause_key = true;
+            if (back && !w->prev_back) p->esc_key = true;
+            w->prev_pause = pause; w->prev_back = back;
+            p->fe_keys = window_frontend_keys(keys);
+            play_step(p, controls_bits(&w->controls, keys, &pad));
         }
         if (p->load_failed) { fprintf(stderr, "soccerkid: %s\n", p->load_err.msg); running = false; rc = 1; }
         if (p->quit) running = false;
         play_draw(p);
         play_present(p, w->pixels);
+        remap_draw(&w->remap, p->game.sk, w->pixels);
         present_pixels(w);
         if (exit_after > 0 && w->frames_presented >= exit_after) break;
         if (steps == 0) SDL_Delay(1);
@@ -202,6 +256,7 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
 }
 
 void window_close(sk_window *w) {
+    if (w->pad) { SDL_CloseGamepad(w->pad); w->pad = NULL; }
     free(w->pixels);
     if (w->tex) SDL_DestroyTexture(w->tex);
     if (w->ren) SDL_DestroyRenderer(w->ren);
