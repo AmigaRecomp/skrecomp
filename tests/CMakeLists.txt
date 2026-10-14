@@ -350,7 +350,7 @@ set(SK_TEST_NAMES
   tube_22_carries_the_kid_up
   kicker_32_shoots_a_fire_trail
   factory_boss_34_stomps_and_drops_rocks
-  signal_post_23_warns_then_passes)
+  train_23_warns_then_passes)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
