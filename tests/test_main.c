@@ -357,6 +357,16 @@ void test_loading_strip_shows_25_frames_in_lines_58_to_141(void);
 void test_ending_waits_for_fire_then_fades_64_frames(void);
 void test_play_whole_game_runs_map_levels_and_the_scoreboard(void);
 void test_play_game_end_starts_over(void);
+void test_scoreboard_setup_turns_the_counters_to_bcd(void);
+void test_scoreboard_setup_needs_all_cards_and_no_piece(void);
+void test_scoreboard_kid_walks_in_then_fetches_the_ball(void);
+void test_scoreboard_counts_the_cards_into_the_bonus(void);
+void test_scoreboard_pays_the_bonus_into_the_score(void);
+void test_scoreboard_ends_with_the_exit_walk(void);
+void test_level_end_stats_add_time_and_balls(void);
+void test_scoreboard_free_clears_the_cards(void);
+void test_play_draws_the_board_text_into_playfield_one(void);
+void test_scoreboard_level_counts_and_moves_on(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -711,6 +721,16 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "ending_waits_for_fire_then_fades_64_frames", test_ending_waits_for_fire_then_fades_64_frames },
     { "play_whole_game_runs_map_levels_and_the_scoreboard", test_play_whole_game_runs_map_levels_and_the_scoreboard },
     { "play_game_end_starts_over", test_play_game_end_starts_over },
+    { "scoreboard_setup_turns_the_counters_to_bcd", test_scoreboard_setup_turns_the_counters_to_bcd },
+    { "scoreboard_setup_needs_all_cards_and_no_piece", test_scoreboard_setup_needs_all_cards_and_no_piece },
+    { "scoreboard_kid_walks_in_then_fetches_the_ball", test_scoreboard_kid_walks_in_then_fetches_the_ball },
+    { "scoreboard_counts_the_cards_into_the_bonus", test_scoreboard_counts_the_cards_into_the_bonus },
+    { "scoreboard_pays_the_bonus_into_the_score", test_scoreboard_pays_the_bonus_into_the_score },
+    { "scoreboard_ends_with_the_exit_walk", test_scoreboard_ends_with_the_exit_walk },
+    { "level_end_stats_add_time_and_balls", test_level_end_stats_add_time_and_balls },
+    { "scoreboard_free_clears_the_cards", test_scoreboard_free_clears_the_cards },
+    { "play_draws_the_board_text_into_playfield_one", test_play_draws_the_board_text_into_playfield_one },
+    { "scoreboard_level_counts_and_moves_on", test_scoreboard_level_counts_and_moves_on },
 };
 
 int main(int argc, char **argv) {

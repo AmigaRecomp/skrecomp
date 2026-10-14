@@ -4,6 +4,7 @@
 #include "game/attr_england.h"
 #include "game/game.h"
 #include "game/level_flow.h"
+#include "game/scoreboard.h"
 #include "game/scroll_modes.h"
 #include "game/objects.h"
 #include "game/player.h"
@@ -38,6 +39,7 @@ static void merge_kid_platforms(sk_mask *m, void *ctx) {        /* merge_platfor
 
 bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* setup_level + load_level's gameplay part */
     g->level_outcome = 0;
+    scoreboard_free(g);                                          /* reset_level_state 0x104992 */
     /* reset_level_state (0x1047F8) */
     memset(&g->ball, 0, sizeof g->ball);
     ball_world_init(&g->bw);
@@ -81,6 +83,8 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     g->level_end = false;
     g->view.full_redraw = true;
     hud_init(g);                                                 /* 0x10372E: clear and draw the panel */
+    g->balls_allotted = g->sk ? image_u8(g->sk, SK_LEVEL_RECORDS_ADDR + (uint32_t)data_index * SK_LEVEL_RECORD + 6) : 10;   /* record +6 */
+    scoreboard_setup(g);                                         /* 0x10423A */
     return true;
 }
 
@@ -200,6 +204,7 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
         if (g->shake_amplitude > 0) g->shake_amplitude--;
     }
     scroll_modes_frame(g);                                       /* 0x104338: sub_1049C8 / sub_104BF0 */
+    step(g, 7); if (g->level_data_index == 12) scoreboard_update(g);
     step(g, 8); if (g->timeout_armed) timeout_check(g);
     step(g, 10); update_camera(g);
     step(g, 11); update_player(g, kid);

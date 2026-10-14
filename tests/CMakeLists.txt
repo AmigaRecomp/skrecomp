@@ -54,7 +54,8 @@ add_executable(sk_tests
   test_obj_russia.c
   test_between.c
   test_mapsprites.c
-  test_pictures.c)
+  test_pictures.c
+  test_scoreboard.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -412,7 +413,17 @@ set(SK_TEST_NAMES
   loading_strip_shows_25_frames_in_lines_58_to_141
   ending_waits_for_fire_then_fades_64_frames
   play_whole_game_runs_map_levels_and_the_scoreboard
-  play_game_end_starts_over)
+  play_game_end_starts_over
+  scoreboard_setup_turns_the_counters_to_bcd
+  scoreboard_setup_needs_all_cards_and_no_piece
+  scoreboard_kid_walks_in_then_fetches_the_ball
+  scoreboard_counts_the_cards_into_the_bonus
+  scoreboard_pays_the_bonus_into_the_score
+  scoreboard_ends_with_the_exit_walk
+  level_end_stats_add_time_and_balls
+  scoreboard_free_clears_the_cards
+  play_draws_the_board_text_into_playfield_one
+  scoreboard_level_counts_and_moves_on)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

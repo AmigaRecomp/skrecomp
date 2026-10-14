@@ -80,7 +80,12 @@ static void hud_health(sk_game *g) {                             /* 0x1028F2 */
 }
 
 static void hud_cards(sk_game *g) {                              /* 0x102954 */
-    if (g->level_data_index == 12) return;                       /* the scoreboard's own branch: frontend */
+    if (g->level_data_index == 12) {                             /* 0x102A42: the board puts the cards back one by one */
+        if (!g->hud_card_flag) return;
+        hud_glyph(g, 0x68 + 16 * g->cards, 4, 0x10 + g->card_anim[0]);
+        if (++g->card_anim[0] == 6) { g->cards++; g->hud_card_flag = 0; g->card_anim[0] = 0; }
+        return;
+    }
     if (g->all_cards) {
         if (g->frame_ticks & 1) return;
         for (int n = 0; n < 11; n++) {

@@ -96,6 +96,27 @@ struct sk_game {
     int flutter_count;                  /* 0x3002F8: live butterflies */
     int fulltime_level;                 /* 0x30029A: FULL TIME's next level (scoreboard) */
     uint8_t cup_pieces;                 /* 0x300394: bit k = world k's cup piece (type 81); 0x1F = all five */
+    uint8_t piece_collected;            /* 0x300298: a piece since the last map (blocks a bonus level) */
+    uint8_t bonus_pending;              /* 0x300299: scoreboard_setup found 11 cards */
+    uint8_t stat_balls, stat_time;      /* 0x300371, 0x300372 (BCD): the scoreboard's BALLS and TIME (CARDS is cards_taken) */
+    uint8_t balls_allotted;             /* 0x300376: the level record's +6 */
+    struct {                            /* the scoreboard (between-levels.md section 6) */
+        bool active;                    /* board_font is allocated (scoreboard_setup ran) */
+        uint8_t state;                  /* 0x300362: 0 walk in, 0xFE fetch the ball, 0xFF juggle */
+        int8_t phase;                   /* 0x30036B: 0..5 rows, -1.. the bonus digits, 0x7F the end */
+        int8_t wait, delay;             /* 0x30036C, 0x30036D */
+        uint8_t draw;                   /* 0x30036E: the label is drawn twice (two buffers) */
+        uint8_t juggle_wait;            /* player +0x52 */
+        uint8_t juggle;                 /* player +0x5C: the juggle script's index */
+        uint32_t bonus;                 /* 0x3000F2 (BCD) */
+        uint16_t counter;               /* 0x3002DC */
+        int ticker_pos, ticker_len;     /* 0x3002D8, 0x3002DA */
+        char ticker[160];               /* 0x3020BE */
+        char value[8];                  /* 0x203E3A: "VVo" + the points */
+        int border_x[2], border_y;      /* where place_tile_column put the frame this frame (world pixels) */
+        uint8_t text[256][40];          /* the dots scoreboard_text wrote into playfield 1's plane 0, by window pixel */
+        uint8_t text_set[256][40];      /* which pixels it wrote (a glyph cell replaces 16 pixels of 8 even lines) */
+    } board;
     uint8_t banner[0x514];              /* 0x300054: the jingle banner, 160 x 13, four planes and the mask */
     uint8_t hud_card_flag;              /* 0x3001E8: a card piece was taken; the HUD counts it */
     int message_box_timer, message_box_kind, message_box_request;   /* 0x3001E0 / E2 / E4 */

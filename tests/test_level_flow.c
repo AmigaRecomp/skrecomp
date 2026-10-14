@@ -27,7 +27,7 @@ void test_frame_step_runs_the_steps_in_the_notes_order(void) {
     g_g.step_probe = probe; g_n = 0;
     static sk_sprite kid;
     game_frame_step(&g_g, 0, &kid);
-    int expect[] = { 1, 2, 3, 8, 10, 11, 13, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 29, 32 };   /* the steps the port runs, gameplay.md table */
+    int expect[] = { 1, 2, 3, 7, 8, 10, 11, 13, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 29, 32 };   /* the steps the port runs, gameplay.md table */
     CHECK_EQ(g_n, (int)(sizeof expect / sizeof *expect));
     for (int i = 0; i < g_n && i < (int)(sizeof expect / sizeof *expect); i++) CHECK_EQ(g_order[i], expect[i]);
     CHECK_EQ(g_g.frame_ticks, 1); CHECK_EQ(g_g.frame_counter, 1);

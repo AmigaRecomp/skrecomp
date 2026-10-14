@@ -9,6 +9,7 @@
 #include "game/camera.h"
 #include "game/level_flow.h"
 #include "game/objects.h"
+#include "game/scoreboard.h"
 #include "gfx/display_model.h"
 
 static void play_advance(sk_play *p);
@@ -199,11 +200,12 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
     sk_err e = {0};
     switch (game_outcome(&p->game)) {
     case SK_OUTCOME_NEXT_LEVEL:
+        level_end_stats(&p->game);                                  /* the frame loop's exit (0x104558) */
         sound_fade_out(&p->snd);
         p->fade_wait = 64;
         break;
     case SK_OUTCOME_GAME_OVER:
-        if (p->game_over_frames == 0) sound_fade_out(&p->snd);       /* fade_music_out 0x1040F2: every level exit */
+        if (p->game_over_frames == 0) { level_end_stats(&p->game); sound_fade_out(&p->snd); }   /* the loop's exit; fade_music_out 0x1040F2 */
         if (++p->game_over_frames >= GAME_OVER_FRAMES) {
             game_new_game(&p->game);
             if (p->level_pos >= 0) p->game.level_number = p->level_pos;
@@ -213,6 +215,27 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
     default: break;
     }
     sound_step(p);
+}
+
+/* The scoreboard's dots live in playfield 1's plane 0 (scoreboard_text); the frame columns it places are drawn over them. */
+static void draw_board(sk_play *p) {
+    const sk_game *g = &p->game;
+    sk_fb *fb = &p->scene.fb;
+    for (int y = 0; y < SK_VIEW_H && y < fb->h; y++)
+        for (int x = 0; x < SK_VIEW_W; x++) {
+            uint8_t bit = (uint8_t)(0x80 >> (x & 7));
+            if (!(g->board.text_set[y][x >> 3] & bit)) continue;
+            uint8_t *px = &fb->px[y * fb->w + SK_VIEW_X + x];
+            *px = (uint8_t)((*px & ~1) | ((g->board.text[y][x >> 3] & bit) ? 1 : 0));
+        }
+    const sk_level *lv = &p->scene.level;
+    for (int k = 0; k < 2; k++)
+        for (int r = 0; r < 7; r++) {
+            int cx = g->board.border_x[k] >> 4, cy = (g->board.border_y >> 4) + r;
+            if (!world_inside(&g->world, cx, cy)) continue;
+            int i = cy * g->world.w + cx, idx = g->world.tile[i] & SK_INDEX_MASK, a = idx + (g->tile_anim[g->world.state[i]] >> 7);
+            fb_blit_tile(fb, &lv->tiles_a, a < lv->tiles_a.count ? a : idx, cx * 16 - g->camera_x - SK_BUFFER_WORLD_X, cy * 16 - g->camera_y, SK_GROUP_TILES_A);
+        }
 }
 
 void play_draw(sk_play *p) {
@@ -247,6 +270,7 @@ void play_draw(sk_play *p) {
         else scene_draw_backdrop_cells(lv, p->game.world.bg, fb, bg_x, bg_y);
     }
     scene_draw_tiles_anim(lv, fb, p->game.world.tile, p->game.world.state, p->game.tile_anim, p->game.camera_x, p->game.camera_y);
+    if (p->game.board.active) draw_board(p);
     draw_all_objects(&p->game, fb, p->game.camera_x + SK_BUFFER_WORLD_X, p->game.camera_y);
     const sk_game *g = &p->game;
     if (g->msg_visible && g->msg_w > 0) {                        /* the message box: centred on the view (show_message_box) */

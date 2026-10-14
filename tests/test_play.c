@@ -384,13 +384,46 @@ void test_play_game_end_starts_over(void) {                          /* ROM-back
     finish_level(&p);
     for (int i = 0; i < 64 + 25 + 1; i++) play_step(&p, 0);
     CHECK_EQ(p.pic.kind, SK_PIC_ENDING); CHECK_EQ(p.game.level_number, 50);
+    CHECK(p.snd.slot[0] != NULL); CHECK(p.snd.music_use4);       /* file090 on four channels */
     for (int i = 0; i < 100; i++) play_step(&p, 0);
     CHECK_EQ(p.pic.kind, SK_PIC_ENDING);                            /* waits for fire */
     play_step(&p, SK_IN_FIRE);
     for (int i = 0; i < 64 + 25; i++) play_step(&p, 0);
     CHECK_EQ(p.pic.kind, SK_PIC_MAP); CHECK_EQ(p.pic.map_index, 5);
+    CHECK(!p.snd.music_use4); CHECK(p.snd.slot[0] == NULL);
     for (int i = 0; i < 2000 && p.pic.kind == SK_PIC_MAP; i++) play_step(&p, 0);
     for (int i = 0; i < 25 + 25 + 201; i++) play_step(&p, 0);      /* 42: a new game, map 0 */
     CHECK_EQ(p.game.player.lives, 3); CHECK(p.game.level_number <= 1);
+    play_close(&p);
+}
+
+void test_play_draws_the_board_text_into_playfield_one(void) {
+    CHECK(make_play());
+    g_p.game.board.active = true;
+    g_p.game.board.text_set[5][1] = 0xC0; g_p.game.board.text[5][1] = 0x80;   /* window x 8 lit, x 9 written dark */
+    play_draw(&g_p);
+    CHECK_EQ(g_p.scene.fb.px[5 * SK_FB_W + SK_VIEW_X + 8] & 1, 1);
+    CHECK_EQ(g_p.scene.fb.px[5 * SK_FB_W + SK_VIEW_X + 9] & 1, 0);
+    g_p.game.board.active = false;
+    drop_play();
+}
+
+void test_scoreboard_level_counts_and_moves_on(void) {             /* ROM-backed: the board after HOME2 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 1, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    p.game.cards_taken = 4; p.game.recalls = 2; p.game.level_timer = 0x31; p.game.kills[1] = 3;
+    finish_level(&p);                                               /* HOME2 done: TIME += 31, BALLS += 10 - 2 */
+    for (int i = 0; i < 64 + 25 + 1; i++) play_step(&p, 0);
+    CHECK_EQ(p.scene.level_index, 12);
+    CHECK_EQ(p.game.stat_time, 0x31); CHECK_EQ(p.game.stat_balls, 0x08); CHECK_EQ(p.game.cards_taken, 4);
+    uint32_t score = p.game.player.score;
+    int n = 0;
+    while (p.scene.level_index == 12 && n < 6000) { play_step(&p, 0); n++; }
+    CHECK_EQ(p.scene.level_index, 2);                               /* ENG COUNTRY1 next */
+    CHECK_EQ(p.game.player.score - score, 0x6200u);               /* 4 x 300 + 8 x 200 + 31 x 100 + 3 x 100, BCD */
+    CHECK_EQ(p.game.cards, 0); CHECK_EQ(p.game.stat_time, 0);
     play_close(&p);
 }

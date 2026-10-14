@@ -6,6 +6,7 @@
 #include "game/camera.h"
 #include "game/attr_england.h"
 #include "game/game.h"
+#include "game/scoreboard.h"
 #include "game/obj_england.h"
 
 void play_sfx(sk_game *g, int n) { g->sfx_last = n; g->sfx_count++; if (g->snd) sound_play_sfx(g->snd, n); }
@@ -288,6 +289,7 @@ void player_input_state(sk_game *g) {                           /* 0x10A576 */
     p->anim_hold = 0;
     p->tricking = 0;
     int in = g->input_state;                                    /* sub_100BD0 only records/replays demos: identity */
+    if (g->level_data_index == 12) in = scoreboard_player_input(g, in);   /* 0x10A5BA */
     if (!(in & SK_IN_FIRE)) p->fire_lock = 0;
     if (p->fire_lock) in &= ~SK_IN_FIRE;
     p->input = (int16_t)in;
