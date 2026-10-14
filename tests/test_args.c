@@ -14,7 +14,7 @@ void test_args_defaults_and_errors(void) {
     const char *ok[] = { "soccerkid", "--roms", "d" };
     CHECK(parse(&a, &e, 3, ok));
     CHECK(strcmp(a.roms, "d") == 0);
-    CHECK_EQ(a.level, 0);
+    CHECK_EQ(a.level, -1);                                         /* no --level: the whole game from world map 0 */
     CHECK_EQ(a.cam_x, 0);
     CHECK_EQ(a.cam_y, 0);
     CHECK_EQ(a.scale, 3);

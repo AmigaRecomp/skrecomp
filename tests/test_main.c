@@ -94,7 +94,6 @@ void test_tile_queue_kinds_step_as_the_table_says(void);
 void test_frame_step_runs_the_steps_in_the_notes_order(void);
 void test_timer_counts_down_in_bcd_and_times_out(void);
 void test_curtain_opens_and_closes(void);
-void test_play_level_next_skips_non_tile_levels(void);
 void test_level_setup_and_outcome(void);
 void test_present_curtain_blacks_rows(void);
 void test_scene_backdrop_pos_and_sky(void);
@@ -356,6 +355,8 @@ void test_world_map_draws_the_collected_pieces_only(void);
 void test_world_map_one_waits_flies_and_holds(void);
 void test_loading_strip_shows_25_frames_in_lines_58_to_141(void);
 void test_ending_waits_for_fire_then_fades_64_frames(void);
+void test_play_whole_game_runs_map_levels_and_the_scoreboard(void);
+void test_play_game_end_starts_over(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -447,7 +448,6 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "frame_step_runs_the_steps_in_the_notes_order", test_frame_step_runs_the_steps_in_the_notes_order },
     { "timer_counts_down_in_bcd_and_times_out", test_timer_counts_down_in_bcd_and_times_out },
     { "curtain_opens_and_closes", test_curtain_opens_and_closes },
-    { "play_level_next_skips_non_tile_levels", test_play_level_next_skips_non_tile_levels },
     { "level_setup_and_outcome", test_level_setup_and_outcome },
     { "present_curtain_blacks_rows", test_present_curtain_blacks_rows },
     { "scene_backdrop_pos_and_sky", test_scene_backdrop_pos_and_sky },
@@ -709,6 +709,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "world_map_one_waits_flies_and_holds", test_world_map_one_waits_flies_and_holds },
     { "loading_strip_shows_25_frames_in_lines_58_to_141", test_loading_strip_shows_25_frames_in_lines_58_to_141 },
     { "ending_waits_for_fire_then_fades_64_frames", test_ending_waits_for_fire_then_fades_64_frames },
+    { "play_whole_game_runs_map_levels_and_the_scoreboard", test_play_whole_game_runs_map_levels_and_the_scoreboard },
+    { "play_game_end_starts_over", test_play_game_end_starts_over },
 };
 
 int main(int argc, char **argv) {

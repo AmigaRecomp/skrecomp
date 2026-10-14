@@ -150,7 +150,6 @@ set(SK_TEST_NAMES
   frame_step_runs_the_steps_in_the_notes_order
   timer_counts_down_in_bcd_and_times_out
   curtain_opens_and_closes
-  play_level_next_skips_non_tile_levels
   level_setup_and_outcome
   present_curtain_blacks_rows
   scene_backdrop_pos_and_sky
@@ -411,7 +410,9 @@ set(SK_TEST_NAMES
   world_map_draws_the_collected_pieces_only
   world_map_one_waits_flies_and_holds
   loading_strip_shows_25_frames_in_lines_58_to_141
-  ending_waits_for_fire_then_fades_64_frames)
+  ending_waits_for_fire_then_fades_64_frames
+  play_whole_game_runs_map_levels_and_the_scoreboard
+  play_game_end_starts_over)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

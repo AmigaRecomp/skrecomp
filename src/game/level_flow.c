@@ -19,7 +19,8 @@ void game_new_game(sk_game *g) {                                /* 0x10402E and 
     if (!g->rng) g->rng = 0xDC359A7Bu;                          /* the start-up seed (0x1003FC): once per run */
     g->player.lives = 3;
     g->player.score = 0;
-    g->level_number = 1;
+    g->level_number = 0;                                         /* 0x103FC0: world map 0 first */
+    g->cup_pieces = 0;                                           /* 0x104004 */
 }
 
 static void level_record_head(const sk_game *g, int data_index, uint32_t *timer, uint8_t *layer, int *kit) {
@@ -218,15 +219,6 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     step(g, 32);                                                 /* request flags: the window handles Escape */
 }
 
-int play_level_next(const sk_tables *t, int level_number) {
-    for (int i = level_number + 1; i < SK_LEVEL_SEQUENCE_LEN; i++) {
-        int d = t->sequence[i];
-        if (d == 42) return -1;
-        if (d == 12 || d == 29 || (d >= 30 && d <= 35) || d == 41) continue;   /* scoreboard, end screens, world maps, the ALIEN screen */
-        return i;
-    }
-    return -1;
-}
 
 sk_outcome game_outcome(const sk_game *g) {
     if (g->level_end && (g->level_outcome & 0x80)) return SK_OUTCOME_NEXT_LEVEL;

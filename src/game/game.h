@@ -95,6 +95,7 @@ struct sk_game {
     uint8_t extra_heart;                /* 0x300366 */
     int flutter_count;                  /* 0x3002F8: live butterflies */
     int fulltime_level;                 /* 0x30029A: FULL TIME's next level (scoreboard) */
+    uint8_t cup_pieces;                 /* 0x300394: bit k = world k's cup piece (type 81); 0x1F = all five */
     uint8_t banner[0x514];              /* 0x300054: the jingle banner, 160 x 13, four planes and the mask */
     uint8_t hud_card_flag;              /* 0x3001E8: a card piece was taken; the HUD counts it */
     int message_box_timer, message_box_kind, message_box_request;   /* 0x3001E0 / E2 / E4 */

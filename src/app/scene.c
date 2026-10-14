@@ -225,7 +225,7 @@ bool scene_open(sk_scene *s, const sk_args *a, sk_err *e) {
     free(sk);
     if (!ok || !tables_load(&s->tables, &s->sk, e)) { scene_close(s); return false; }
     if (!fb_init(&s->fb, SK_FB_W, SK_FB_H)) { scene_close(s); return sk_fail(e, "out of memory"); }
-    if (!scene_load_level(s, a->level, e)) { scene_close(s); return false; }
+    if (!scene_load_level(s, a->level < 0 ? 0 : a->level, e)) { scene_close(s); return false; }
     if (a->section_file && !scene_load_section(s, a->section_file, a->section, a->frame_w, a->frame_h, e)) {
         scene_close(s);
         return false;

@@ -183,7 +183,7 @@ void sound_frame(sk_sound *s, int16_t *out, int frames) {
         s->request = false;
         uint8_t *m = s->req_module == SK_MUSIC_JINGLE ? s->jingle : s->slot[0];
         size_t n = s->req_module == SK_MUSIC_JINGLE ? s->jingle_n : s->slot_n[0];
-        if (!s->music_off) { s->fading = 0; pt_start(&s->pt, &s->paula, m, n, s->req_tune, false); }
+        if (!s->music_off) { s->fading = 0; pt_start(&s->pt, &s->paula, m, n, s->req_tune, s->music_use4); }
     }
     pt_phase1(&s->pt);                                              /* step 8: the CIA chain */
     pt_phase2(&s->pt);

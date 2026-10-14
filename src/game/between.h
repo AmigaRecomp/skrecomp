@@ -14,10 +14,10 @@ typedef struct { sk_run_kind kind; int data_index; int map_index; } sk_run;
    a tile level is left for its exit walk to move on, 42 ends the game. */
 sk_run play_level_entry(const sk_tables *t, int *level_number);
 
-#endif
-
 /* plane_flight (0x11E778): the aircraft marker, 16.16, one pixel a frame along atan2_256's heading, always east. */
 typedef struct { int32_t x, y, sx, sy; int tx; int big_off, small_off; } sk_flight;
 void flight_init(sk_flight *f, int from_x, int from_y, int to_x, int to_y);
 bool flight_step(sk_flight *f);                  /* one frame's move; true when it reached the target (left drawn there) */
 int  flight_draw_x(const sk_flight *f);          /* the marker's x in the picture, 0..319 */
+
+#endif

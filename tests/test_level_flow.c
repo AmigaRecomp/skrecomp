@@ -65,22 +65,10 @@ void test_curtain_opens_and_closes(void) {
     drop_game();
 }
 
-void test_play_level_next_skips_non_tile_levels(void) {
-    sk_tables t = {0};
-    uint8_t seq[] = { 30, 0, 1, 12, 2, 29, 3, 42 };
-    memcpy(t.sequence, seq, sizeof seq);
-    CHECK_EQ(play_level_next(&t, 0), 1);                          /* 30 (world map) skipped -> position 1 (level 0) */
-    CHECK_EQ(play_level_next(&t, 2), 4);                          /* 12 (scoreboard) skipped */
-    CHECK_EQ(play_level_next(&t, 4), 6);                          /* 29 skipped */
-    CHECK_EQ(play_level_next(&t, 6), -1);                         /* 42 = end */
-    uint8_t usa[] = { 27, 28, 12, 41, 29, 35, 42 };               /* the game's tail: CITY 1, CITY 2, the ALIEN screen, the end */
-    memcpy(t.sequence, usa, sizeof usa);
-    CHECK_EQ(play_level_next(&t, 1), -1);                         /* 41 (ALIEN, not a tile level) skipped too */
-}
 
 void test_level_setup_and_outcome(void) {
     CHECK(make_game());
-    CHECK_EQ(g_g.player.lives, 3); CHECK_EQ(g_g.player.score, 0); CHECK_EQ(g_g.level_number, 1);
+    CHECK_EQ(g_g.player.lives, 3); CHECK_EQ(g_g.player.score, 0); CHECK_EQ(g_g.level_number, 0);
     CHECK_EQ(g_g.level_outcome, 0); CHECK_EQ(g_g.timer_rate, 0x5DC); CHECK_EQ(g_g.level_timer, 0x45); CHECK_EQ(g_g.cam_ease, 4);
     CHECK(!(g_g.timer_flags & 0x80)); CHECK_EQ(g_g.player.top_speed, 16); CHECK(g_g.view.full_redraw);   /* KICK OFF starts the clock */
     CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_RUNNING);

@@ -7,7 +7,7 @@
 static const char *USAGE =
     "usage: soccerkid --roms <dir> [options]\n"
     "  --roms <dir>            directory holding the five disk images (.adf or .zip)\n"
-    "  --level N               level data index 0..41 (default 0 = England 1)\n"
+    "  --level N               play one level, data index 0..41 (default: the whole game from world map 0)\n"
     "  --section fileNNN:S[:WxH]  show the frames of graphics-set file NNN section S (size estimated unless given)\n"
     "  --cam X,Y               camera position in pixels (default 0,0)\n"
     "  --start X,Y             start the kid at world pixel X,Y (respawns come back there too)\n"
@@ -38,6 +38,7 @@ static char section_name[64];
 bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
     memset(a, 0, sizeof *a);
     a->section = -1;
+    a->level = -1;
     a->scale = 3;
     a->near_type = -1;
     for (int i = 1; i < argc; i++) {
@@ -110,5 +111,6 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
         }
     }
     if (!a->help && !a->version && !a->roms) return sk_fail(e, "--roms <dir> is required");
+    if (a->level < 0 && (a->viewer || a->markers || a->near_type > 0 || a->has_start || a->section_file)) a->level = 0;   /* these need a level */
     return true;
 }

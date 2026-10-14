@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include "app/args.h"
 #include "app/scene.h"
+#include "app/pictures.h"
+#include "game/between.h"
 #include "game/game.h"
 #include "game/resources.h"
 #include "audio/sound.h"
@@ -30,6 +32,8 @@ typedef struct sk_play {
     int16_t audio_buf[2 * 960];     /* the step's 1/50 s at 48 kHz */
     int fade_wait;                  /* frames of fade_music_out left before the next level loads (0x1040F2) */
     sk_err load_err;
+    sk_pictures pic;                /* a picture mode (loading strip, world map, ending) runs instead of the level when on */
+    sk_run next;                    /* what follows the loading strip */
 } sk_play;
 
 bool play_open(sk_play *p, const sk_args *a, sk_err *e);

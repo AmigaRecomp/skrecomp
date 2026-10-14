@@ -6,7 +6,7 @@
 #include "gfx/display_model.h"
 
 #define LOADING_STRIP_ADDR 0x208CC2u    /* loading_screen: a ByteKiller container in sk */
-#define LOADING_STRIP_PACKED 5444u
+#define LOADING_STRIP_PACKED (4u + 5444u)   /* the length word and its payload */
 #define LOADING_TOP 58                  /* copper_loading DIW lines 102..186, the frame starts at line 44 */
 #define LOADING_H 84
 #define LOADING_FRAMES 25

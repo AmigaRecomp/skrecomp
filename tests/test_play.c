@@ -258,7 +258,7 @@ void test_music_survives_a_level_change(void) {                     /* ROM-backe
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     for (int i = 0; i < 400; i++) play_step(&p, 0);
-    p.game.level_outcome = 0x81; p.game.level_end = true;           /* the level is won */
+    p.game.level_number++; p.game.level_outcome = 0x81; p.game.level_end = true;   /* the level is won (the exit walk) */
     int frames = 0;
     while (p.scene.level_index == 0 && frames++ < 400) play_step(&p, 0);
     CHECK(p.scene.level_index != 0);
@@ -338,4 +338,59 @@ void test_usa_run_without_a_crash(void) {                         /* ROM-backed:
                p.game.player.state, p.game.player.lives, p.game.player.score, p.game.object_count, p.game.view.bg_x, p.game.train_level);
         play_close(&p);
     }
+}
+
+static void finish_level(sk_play *p) {                              /* what the exit walk (state 60) leaves */
+    p->game.level_number++;
+    p->game.level_outcome = 0x81;
+    p->game.level_end = true;
+}
+
+void test_play_whole_game_runs_map_levels_and_the_scoreboard(void) {   /* ROM-backed */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    if (!SK_OK(&e)) printf("play_open: %s\n", e.msg);
+    CHECK_EQ(p.pic.kind, SK_PIC_LOADING);
+    for (int i = 0; i < 25; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_MAP); CHECK_EQ(p.pic.map_index, 0); CHECK_EQ(p.game.level_number, 1);
+    for (int i = 0; i < 201; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_LOADING);
+    for (int i = 0; i < 25; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_OFF); CHECK_EQ(p.scene.level_index, 0); CHECK_EQ(p.level_pos, 1);
+    play_step(&p, 0);
+    finish_level(&p);                                               /* HOME1 done: HOME2 */
+    for (int i = 0; i < 64 + 25 + 1; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_OFF); CHECK_EQ(p.scene.level_index, 1);
+    finish_level(&p);                                               /* HOME2 done: the scoreboard (position 3) */
+    for (int i = 0; i < 64 + 25 + 1; i++) play_step(&p, 0);
+    CHECK_EQ(p.scene.level_index, 12); CHECK_EQ(p.game.level_number, 3);
+    p.game.level_number = 9;                                        /* the last scoreboard of England: map 1 at 10 */
+    finish_level(&p);
+    for (int i = 0; i < 64 + 25 + 1; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_MAP); CHECK_EQ(p.pic.map_index, 1); CHECK_EQ(p.game.level_number, 11);
+    play_close(&p);
+}
+
+void test_play_game_end_starts_over(void) {                          /* ROM-backed: the ending, map 5, then 42 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 28, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    p.game.level_number = 47;                                       /* CITY 2's scoreboard done: 48 ALIEN (8b), 49 the ending */
+    finish_level(&p);
+    for (int i = 0; i < 64 + 25 + 1; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_ENDING); CHECK_EQ(p.game.level_number, 50);
+    for (int i = 0; i < 100; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_ENDING);                            /* waits for fire */
+    play_step(&p, SK_IN_FIRE);
+    for (int i = 0; i < 64 + 25; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_MAP); CHECK_EQ(p.pic.map_index, 5);
+    for (int i = 0; i < 2000 && p.pic.kind == SK_PIC_MAP; i++) play_step(&p, 0);
+    for (int i = 0; i < 25 + 25 + 201; i++) play_step(&p, 0);      /* 42: a new game, map 0 */
+    CHECK_EQ(p.game.player.lives, 3); CHECK(p.game.level_number <= 1);
+    play_close(&p);
 }

@@ -34,6 +34,7 @@ typedef struct sk_sound {
     const uint8_t *jingle_src;                                      /* 0x2046C8 in sk */
     bool request; int req_module, req_tune;                         /* music_request_flag, 0x20030C (as a kind), 0x200310 */
     int fading;                                                     /* fade_music_out: frames into the fade, 0 = none */
+    bool music_use4;                                                /* 0x200314: the music has channel 4 too (the end screens) */
 } sk_sound;
 
 void sound_init(sk_sound *s, const sk_image *sk, int rate);         /* effects 0..14 and the jingle from sk (NULL: none) */

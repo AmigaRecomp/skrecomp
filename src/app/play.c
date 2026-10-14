@@ -11,6 +11,8 @@
 #include "game/objects.h"
 #include "gfx/display_model.h"
 
+static void play_advance(sk_play *p);
+
 #define GAME_OVER_FRAMES 150            /* ruling: the original's exit from state 64 is unknown */
 
 bool script_parse_step(const char **s, uint8_t *input, int *frames, sk_err *e) {
@@ -83,6 +85,7 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     int pos = -1;
     for (int i = 0; i < SK_LEVEL_SEQUENCE_LEN; i++) if (p->scene.tables.sequence[i] == a->level) { pos = i; break; }
     game_new_game(&p->game);
+    if (a->level < 0) { play_advance(p); if (p->load_failed) { *e = p->load_err; play_close(p); return false; } return true; }   /* the whole game */
     if (pos >= 0) p->game.level_number = pos;
     if (a->has_start) { p->has_start = true; p->start_level = a->level; p->start_x = a->start_x; p->start_y = a->start_y; }
     if (!play_start_level(p, pos, a->level, e)) { play_close(p); return false; }
@@ -101,6 +104,57 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
         if (!play_start_level(p, pos, a->level, e)) { play_close(p); return false; }
     }
     return true;
+}
+
+static void fail(sk_play *p, const sk_err *e) { p->load_failed = true; p->load_err = *e; }
+
+/* play_level (0x104060): what level_number points at, behind the loading strip */
+static void play_advance(sk_play *p) {
+    sk_err e = {0};
+    sk_run r = play_level_entry(&p->scene.tables, &p->game.level_number);
+    if (r.kind == SK_RUN_GAME_END) {                                /* 42: the frontend (8c); until then a new game (ruling) */
+        game_new_game(&p->game);
+        r = play_level_entry(&p->scene.tables, &p->game.level_number);
+    }
+    p->next = r;
+    if (!pictures_loading(&p->pic, &p->scene.sk, &e)) fail(p, &e);
+}
+
+static void start_next(sk_play *p) {                                /* after loading_screen's 25 frames */
+    sk_err e = {0};
+    switch (p->next.kind) {
+    case SK_RUN_MAP:                                                /* world_map: free_level_data, no music */
+        sound_stop(&p->snd);
+        if (!pictures_map(&p->pic, &p->scene.disks, p->next.map_index, p->game.cup_pieces, &e)) fail(p, &e);
+        break;
+    case SK_RUN_ENDING: {                                           /* end_screens 0x11EFAC */
+        bool good = p->game.cup_pieces == 0x1F;
+        sound_stop(&p->snd);
+        if (!pictures_ending(&p->pic, &p->scene.disks, good, &e)) { fail(p, &e); break; }
+        uint8_t *mod = NULL; size_t n = 0;                          /* disk3 file090 "skend", four channels, position 1 / 0 */
+        if (disks_read_file_no(&p->scene.disks, 3, 90, true, &mod, &n, &e)) {
+            sound_set_module(&p->snd, 0, mod, n);
+            p->snd.music_use4 = true;
+            sound_music(&p->snd, SK_MUSIC_LEVEL, good ? 1 : 0);
+        } else fprintf(stderr, "soccerkid: no ending music: %s\n", e.msg);
+        break;
+    }
+    default:
+        pictures_free(&p->pic);
+        if (!play_start_level(p, p->game.level_number, 0, &e)) fail(p, &e);
+        break;
+    }
+}
+
+static void picture_step(sk_play *p, uint8_t in) {
+    sk_pic_kind kind = p->pic.kind;
+    bool was_fading = p->pic.fading;
+    bool done = pictures_step(&p->pic, in);
+    if (p->pic.fading && !was_fading) sound_fade_out(&p->snd);     /* the ending: fade_music_out */
+    if (!done) return;
+    if (kind == SK_PIC_LOADING) { start_next(p); return; }
+    if (kind == SK_PIC_ENDING) { sound_stop(&p->snd); p->snd.music_use4 = false; sound_set_module(&p->snd, 0, NULL, 0); }
+    play_advance(p);
 }
 
 static uint8_t script_input(sk_play *p) {
@@ -124,14 +178,15 @@ static void sound_step(sk_play *p) {                                /* the VBL's
 void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->load_failed) return;
     p->game.snd = &p->snd;
+    if (p->pic.kind != SK_PIC_OFF) {
+        picture_step(p, p->script ? script_input(p) : keyboard_input);
+        sound_step(p);
+        return;
+    }
     if (p->fade_wait > 0) {                                         /* fade_music_out blocks the game for 64 frames */
         sound_step(p);
         if (--p->fade_wait > 0) return;
-        sk_err e = {0};
-        int next = play_level_next(&p->scene.tables, p->level_pos);
-        if (next < 0) next = play_level_next(&p->scene.tables, -1);       /* the end: start over (ruling) */
-        if (next >= 0) p->game.level_number = next;
-        if (!play_start_level(p, next, p->scene.level_index, &e)) { p->load_failed = true; p->load_err = e; }
+        play_advance(p);                                            /* play_level loops: level_number moved on by the exit */
         return;
     }
     uint8_t in = p->script ? script_input(p) : keyboard_input;
@@ -161,6 +216,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
 }
 
 void play_draw(sk_play *p) {
+    if (p->pic.kind != SK_PIC_OFF) return;                          /* pictures_present draws the mode */
     sk_fb *fb = &p->scene.fb;
     const sk_level *lv = &p->scene.level;
     fb_clear(fb, 0);
@@ -201,12 +257,14 @@ void play_draw(sk_play *p) {
 }
 
 void play_present(sk_play *p, uint32_t *out) {
+    if (p->pic.kind != SK_PIC_OFF) { pictures_present(&p->pic, out); return; }
     sk_sky sky;
     scene_sky(&p->scene.level, p->game.view.bg_y, &sky);
     present_screen(&p->scene.fb, &p->scene.palette, &sky, &p->sprites, curtain_rows(&p->game), &p->game.hud, out);
 }
 
 void play_close(sk_play *p) {
+    pictures_free(&p->pic);
     sound_free(&p->snd);
     resources_free(&p->res);
     game_close(&p->game);
