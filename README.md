@@ -22,7 +22,8 @@ Point the program at a directory holding the five disk images, either as `.adf` 
 `SKDisk0` to `SKDisk4`, not by file name.
 
 ```sh
-build/soccerkid --roms ../SourceROMS                                  # play the whole game from the first world map
+build/soccerkid --roms ../SourceROMS                                  # the game: language screen, title, then the whole game
+build/soccerkid --roms ../SourceROMS --new-game                       # straight into a new game at the first world map
 build/soccerkid --roms ../SourceROMS --level 0                        # play level 0 in a window
 build/soccerkid --roms ../SourceROMS --level 0 --frames 300 --script R150,RU20,R130 --screenshot out.png
                                                                       # play 300 frames headless from a script, then a PNG
@@ -31,18 +32,23 @@ build/soccerkid --roms ../SourceROMS --level 17 --viewer --section file036:0   #
 build/soccerkid --help                                                # every option
 ```
 
-Without `--level` the game runs as the original's level sequence: the loading strip, the world map with the aircraft
+Without `--level` the program starts as the original does after its intro: the language screen (the language
+of the in-game messages), then the title with START GAME, KIT DESIGN (the kid's shirt and shorts) and OPTIONS (music,
+sound, the tutorial, RESUME GAME). Left alone, the title shows the hi-score table and the demo level; a good score asks
+for a name; before each new world the game offers to save (the file is kept in your user data folder, or `--save FILE`).
+A game then runs as the original's level sequence: the loading strip, the world map with the aircraft
 flying to the next country (and the cup pieces collected so far), each pair of levels, the scoreboard that counts the
 cards, balls, time and trick kicks into a bonus (all 11 cards of a pair open the world's bonus level: a minute to take
 50 tokens, then the cup piece), the ALIEN (it sends the kid home without the five cup pieces and fights with them), and
-the end screen, then the game starts over. `--cup 31` starts with all five pieces. `--level N` plays one level by its data index (0 = England 1 ... 28,
+the end screen, then back to the title. `--cup 31` starts with all five pieces. `--level N` plays one level by its data index (0 = England 1 ... 28,
 12 = the scoreboard) and moves on along the sequence from there; `--section
 fileNNN:S[:WxH]` shows the frames of a graphics-set section from the level's disk (the frame
 size is estimated from the data unless given); `--cam X,Y` sets the camera; `--no-backdrop`
 and `--no-frames` reduce the picture to one layer.
 
 Playing: arrows or WASD move, up jumps, down crouches (down while running slides), Space,
-Left Ctrl or X is fire, `F` toggles fullscreen, `M` mutes the sound, Escape quits. The game runs at the original's
+Left Ctrl or X is fire, `F` toggles fullscreen, `M` mutes the sound, Escape quits. On the title, TAB shows the version
+and F1..F10 in KIT DESIGN copy a hi-score's kit; typing names a save. The game runs at the original's
 50 frames per second with the original's movement, camera, collision and level flow
 (`../re/docs/notes/gameplay.md`, `player.md`); the kid and the ball are drawn as the hardware
 sprite pairs the game uses, in the level's kit colours, and the HUD shows health, the timer, the
@@ -56,8 +62,7 @@ audio device the game runs silent.
 The ball (all five worlds are complete, every level of the game: England's streets, country and London with LONDON2's boss;
 Italy's Ruins, Venice and the Riviera with RIVIERA2's boss; Russia's forest, the rocking battle ship with its rope and RED SQUARE
 with its boss; Japan's TRAIN whose scenery streams past through tunnels and the FACTORY with FACTORY2's boss; the USA's Wild West,
-the beach and the city with the last boss, the five bonus levels and the ALIEN. The title screen and the intro are not
-done yet):
+the beach and the city with the last boss, the five bonus levels and the ALIEN. The intro is not done yet):
 - **Kick:** fire with left or right kicks the ball at your feet; kicked into an enemy it knocks
   it out for points. Jumping onto the ball with down held stands you on it.
 - **Tricks:** with the ball at your feet, hold fire still for a moment: the kid flicks it up and
