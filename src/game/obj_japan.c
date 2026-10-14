@@ -4,6 +4,8 @@
 #include "game/game.h"
 #include "game/obj_helpers.h"
 #include "game/obj_japan.h"
+#include "game/obj_italy.h"
+#include "game/platforms.h"
 #include "game/resources.h"
 
 static const uint8_t insect_script[] = { 0, 4, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7 };                 /* 0x11088E */
@@ -159,7 +161,21 @@ static void obj_piece_update(sk_game *g, sk_slot *s, int index) {             /*
     free_if_far(g, s);
 }
 
+/* ---- type 6: the wheel platform: a chain platform turning full circles at (param bits 1..3) + 1 ---- */
+static void obj_wheel_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x1177F6 */
+    sk_platform *pf = chain_platform_init(g, s, x, y);
+    if (pf) pf->pspeed = (uint8_t)(((g->objs.marker_param & 0xE) >> 1) + 1);
+}
+static void obj_wheel_update(sk_game *g, sk_slot *s, int index) {             /* 0x117904 */
+    (void)index;
+    sk_platform *pf = slot_platform(g, s);
+    if (!pf) return;
+    pf->pangle = (uint8_t)(pf->pangle + pf->pspeed);
+    chain_platform_place(g, s, pf);
+}
+
 void obj_japan_install(void) {
+    object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;

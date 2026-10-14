@@ -189,7 +189,8 @@ static int32_t with_hi(int32_t v, int h) { return (int32_t)((uint32_t)(uint16_t)
 static int t0_hi(const sk_slot *s) { return (uint16_t)s->t0 >> 8; }                              /* byte +0x14 */
 static void set_t0_hi(sk_slot *s, int v) { s->t0 = (int16_t)((v & 0xFF) << 8 | (s->t0 & 0xFF)); }
 
-static void obj_swing_platform_init(sk_game *g, sk_slot *s, int x, int y) {    /* 0x117A04 */
+/* The chain platforms' shared parts: types 38 (0x117A04 / 0x117B08) and 6 (0x1177F6 / 0x117904) differ only in the angle step. */
+sk_platform *chain_platform_init(sk_game *g, sk_slot *s, int x, int y) {
     x += 8;
     init_object_slot(g, s, x, y, s->type4);
     int p = g->objs.marker_param & 0xFF;
@@ -203,11 +204,11 @@ static void obj_swing_platform_init(sk_game *g, sk_slot *s, int x, int y) {    /
     s->flags = (int16_t)(index < 0 ? 0xFF : (index * 32) >> 8);   /* move.w d0,$a(a6): byte +0xA */
     const sk_section *sec = g->res ? g->res->param[(p & 0xC0) >> 6].sec : NULL;
     const uint8_t *links = res(g, 46);
-    if (!pf || !sec || !links) { if (pf) free_platform(g, s); free_object(g, s); return; }   /* port guard */
+    if (!pf || !sec || !links) { if (pf) free_platform(g, s); free_object(g, s); return NULL; }   /* port guard */
     const uint8_t *b = g->res->param[(p & 0xC0) >> 6].bytes;
     pf->px = (int32_t)((uint32_t)(uint16_t)x << 16);
     pf->py = (int32_t)((uint32_t)(uint16_t)y << 16);
-    pf->pspeed = 0x1E; pf->pangle = 0;
+    pf->pangle = 0;
     pf->half_w = b[0]; pf->half_h = b[1];
     pf->px = with_hi(pf->px, hi(pf->px) + (int8_t)b[2]);
     s->anim = b[3];
@@ -226,25 +227,11 @@ static void obj_swing_platform_init(sk_game *g, sk_slot *s, int x, int y) {    /
         g->objs.chain[i].frame_bytes = 0x80;
     }
     g->objs.chain_b = true;
+    return pf;
 }
-static void obj_swing_platform_update(sk_game *g, sk_slot *s, int index) {     /* 0x117B08 */
-    (void)index;
+void chain_platform_place(sk_game *g, sk_slot *s, sk_platform *pf) {
     sk_draw *d = slot_draw_record(g, s);
-    sk_platform *pf = slot_platform(g, s);
-    if (!pf) return;
-    int r = s->x0;
-    int sp = pf->pspeed < 0x12 ? pf->pspeed : 0x12;
-    int step = (uint8_t)(sp + 7) >> 3;
-    if (t0_hi(s)) step = -step;
-    pf->pangle = (uint8_t)(pf->pangle + step);
-    int a = pf->pangle;
-    bool turn = true;
-    if (t1_hi(s)) {
-        pf->pspeed++;
-        if (a != 0) turn = false;
-        else set_t1_hi(s, t1_hi(s) ^ 0xFF);
-    }
-    if (turn && --pf->pspeed == 0) { set_t0_hi(s, t0_hi(s) ^ 0xFF); set_t1_hi(s, t1_hi(s) ^ 0xFF); }
+    int r = s->x0, a = pf->pangle;
     int c = cos_1024(a * 4), sn = sin_1024(a * 4);
     int dx = (int16_t)(((int16_t)(sn * r >> 8)) + s->x - hi(pf->px));   /* muls, lsr.l #8: the low word */
     int dy = (int16_t)(((int16_t)(c * r >> 8)) + s->y - hi(pf->py));
@@ -264,6 +251,29 @@ static void obj_swing_platform_update(sk_game *g, sk_slot *s, int index) {     /
         free_object(g, s);
         g->objs.chain_b = false;
     }
+}
+
+static void obj_swing_platform_init(sk_game *g, sk_slot *s, int x, int y) {    /* 0x117A04 */
+    sk_platform *pf = chain_platform_init(g, s, x, y);
+    if (pf) pf->pspeed = 0x1E;
+}
+static void obj_swing_platform_update(sk_game *g, sk_slot *s, int index) {     /* 0x117B08 */
+    (void)index;
+    sk_platform *pf = slot_platform(g, s);
+    if (!pf) return;
+    int sp = pf->pspeed < 0x12 ? pf->pspeed : 0x12;
+    int step = (uint8_t)(sp + 7) >> 3;
+    if (t0_hi(s)) step = -step;
+    pf->pangle = (uint8_t)(pf->pangle + step);
+    int a = pf->pangle;
+    bool turn = true;
+    if (t1_hi(s)) {
+        pf->pspeed++;
+        if (a != 0) turn = false;
+        else set_t1_hi(s, t1_hi(s) ^ 0xFF);
+    }
+    if (turn && --pf->pspeed == 0) { set_t0_hi(s, t0_hi(s) ^ 0xFF); set_t1_hi(s, t1_hi(s) ^ 0xFF); }
+    chain_platform_place(g, s, pf);
 }
 
 /* ---- type 43: the strider (slots 53, 55; 54 when its rider is knocked off) ---- */

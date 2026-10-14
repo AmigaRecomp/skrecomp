@@ -76,3 +76,25 @@ void test_thrower_67_wakes_and_throws(void) {                       /* type 67, 
     CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->t0, 40);
     drop_game();
 }
+
+static uint8_t g_plat[32 * 10 / 8 * 5];
+static sk_section g_psec;
+
+void test_wheel_platform_6_turns_full_circles(void) {               /* type 6 */
+    CHECK(make_game());
+    memset(g_plat, 0xFF, sizeof g_plat);
+    g_psec.data = g_plat; g_psec.len = sizeof g_plat;
+    g_res.param[0].sec = &g_psec;
+    static const uint8_t bytes[6] = { 16, 5, 0, 0, 0x01, 0 };
+    memcpy(g_res.param[0].bytes, bytes, 6);
+    sk_slot *s = spawn(160, 4 * 16, 6, 0x16);                        /* radius 64 + 16, speed (0x16 & 0xE) / 2 + 1 = 4 */
+    CHECK_EQ(s->x0, 80); CHECK(g_g.objs.chain_b); CHECK_EQ(g_g.objs.chain_count, 3);
+    sk_platform *pf = slot_platform(&g_g, s);
+    CHECK(pf != NULL); CHECK_EQ(pf->pspeed, 4); CHECK_EQ(pf->pangle, 0);
+    tick(1);
+    CHECK_EQ(pf->pangle, 4);
+    tick(63);
+    CHECK_EQ(pf->pangle, 0);                                         /* 64 frames a turn, never reversing */
+    CHECK_EQ(pf->py >> 16, s->y + 80);                               /* back at the bottom */
+    drop_game();
+}

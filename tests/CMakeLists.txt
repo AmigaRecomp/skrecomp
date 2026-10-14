@@ -339,7 +339,8 @@ set(SK_TEST_NAMES
   kid_occluder_reference_is_sx_minus_16
   cannon_without_a_fixed_record
   insect_25_homes_on_the_kid
-  thrower_67_wakes_and_throws)
+  thrower_67_wakes_and_throws
+  wheel_platform_6_turns_full_circles)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
