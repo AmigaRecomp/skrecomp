@@ -71,6 +71,9 @@ static const sk_motion fboss_motions[19] = {                                    
 static const uint8_t fboss_pair_script[] = { 0, 2, 0, 4, 0, 0, 1, 1 };                         /* 0x114D44 */
 static const int16_t rock_delays[4] = { 0x50, 0x6E, 0x14, 0x32 };                           /* 0x114F42 */
 
+static const uint8_t warning_script[] = { 0, 8, 0, 5, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF };   /* 0x111646 */
+static const uint8_t passer_steps[] = { 5, 20, 4, 20, 3, 20, 0xFF, 0, 2, 0xEC, 1, 0xEC, 0, 0xEC, 0, 0xEC, 0, 0xEC, 0, 0xEC };   /* 0x111728: (frame, dx) */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -843,6 +846,102 @@ static void obj_rock_update(sk_game *g, sk_slot *s, int index) {              /*
     set_frame2(s, (s->frame + 1) & 7, (s->frame + 1) & 7, 0);
 }
 
+/* ---- type 23: the oncoming train (slot 36, 16 x 176; READING): a blinking warning (type 108), then it sweeps by along the
+   bottom with a second piece (type 109); spawned by attributes 78 / 79 ---- */
+static void obj_post_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x11152A */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->flags |= 1;
+    s->vx = 0; s->vy = 0;
+    s->t0 = 75;
+    const uint8_t *f = res(g, 36);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 176, f, 1);                                 /* sub_1079D2 */
+    s->draw->dflags |= 4;
+}
+static void obj_post_update(sk_game *g, sk_slot *s, int index) {              /* 0x111560 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (s->t0) {
+        if (--s->t0 == 40) {
+            sk_objects *o = &g->objs;
+            o->child_frames = res(g, 37); o->child_script = warning_script;
+            o->child_vx = 8; o->child_vy = 8; o->child_w = 32; o->child_h = 32;   /* type 108 reads these as its position */
+            spawn_object(g, d->x, d->y, 108);
+        }
+        if (!s->t0) {                                               /* it comes */
+            s->vx = 24;
+            d->dflags &= (uint8_t)~4;
+            d->x = (int16_t)(g->camera_x - 16);
+            d->y = (int16_t)(g->world.fg_max_y + 30);
+            spawn_object(g, d->x - 8, d->y - 2, 109);
+        }
+    } else if (object_offscreen(g, d->x, d->y, 32) < 0) {
+        if (!(g->post_flag & 0x80)) { g->post_flag = 0; free_object(g, s); return; }
+        s->vx = 0; s->t0 = 75;                                      /* still on the near side: again */
+        d->dflags |= 4;
+    }
+    if (g->player.dying) free_object(g, s);
+}
+
+/* ---- type 108: a fixed effect at (child_vx, child_vy) running the child script once ---- */
+static void obj_fixed_effect_init(sk_game *g, sk_slot *s, int x, int y) {     /* 0x10FE10 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->type4 = (int16_t)(s->type4 | 0x8000);
+    sk_objects *o = &g->objs;
+    s->x0 = o->child_vx; s->y0 = o->child_vy;
+    s->script = o->child_script;
+    set_draw_size_at(g, s, o->child_w, o->child_h, o->child_frames);
+    if (s->draw) s->draw->dflags |= 4 | 8;
+}
+static void obj_fixed_effect_update(sk_game *g, sk_slot *s, int index) {      /* 0x10FE5A */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    d->x = s->x0; d->y = s->y0;
+    d->dflags &= (uint8_t)~4;
+    int wrapped = 0;
+    if (s->script) step_animation(s, s->script, s->flags, &wrapped);
+    if (wrapped) free_object(g, s);
+}
+
+/* ---- type 109: the train's second piece (slot 38): steps through its frames as the view passes ---- */
+static void obj_post_piece_init(sk_game *g, sk_slot *s, int x, int y) {       /* 0x11165A */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->type4 = (int16_t)(s->type4 | 0x8000);
+    s->flags |= 1;
+    s->vx = 24; s->vy = 0; s->t0 = 0;
+    const uint8_t *f = res(g, 38);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
+    set_frame2(s, 5, 5, 0);
+    s->draw->x = (int16_t)(s->draw->x + 20);
+    s->anim = 20;
+}
+static void obj_post_piece_update(sk_game *g, sk_slot *s, int index) {        /* 0x1116A4 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    int v = (int16_t)(d->x - g->camera_x + 32);
+    if ((int16_t)(v - s->t0) > 0x30) {
+        s->t0 = (int16_t)v;
+        s->anim_index++;
+        d->dflags |= 4;
+        int i = s->anim_index < (int)sizeof passer_steps / 2 ? s->anim_index : (int)sizeof passer_steps / 2 - 1;   /* port guard: the table's end */
+        const uint8_t *e = passer_steps + 2 * i;
+        if (!(e[0] & 0x80)) {
+            d->x = (int16_t)(d->x - (int8_t)s->anim + (int8_t)e[1]);
+            s->anim = e[1];
+            d->dflags &= (uint8_t)~4;
+            set_frame2(s, e[0], e[0], 0);
+        }
+    }
+    touch_player(g, d->x, d->y, 32, 32);
+    if (object_offscreen(g, d->x, d->y, 32) < 0) free_object(g, s);
+}
+
 void obj_japan_install(void) {
     object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
     object_init_table[18] = obj_crab_init;             object_update_table[18] = obj_crab_update;
@@ -855,6 +954,9 @@ void obj_japan_install(void) {
     object_init_table[110] = obj_fireball_init;        object_update_table[110] = obj_fireball_update;
     object_init_table[34] = obj_fboss_init;            object_update_table[34] = obj_fboss_update;
     object_init_table[106] = obj_rock_init;            object_update_table[106] = obj_rock_update;
+    object_init_table[23] = obj_post_init;             object_update_table[23] = obj_post_update;
+    object_init_table[108] = obj_fixed_effect_init;    object_update_table[108] = obj_fixed_effect_update;
+    object_init_table[109] = obj_post_piece_init;      object_update_table[109] = obj_post_piece_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;

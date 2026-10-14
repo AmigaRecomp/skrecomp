@@ -301,6 +301,7 @@ void test_bubble_21_blinks_then_rises(void);
 void test_tube_22_carries_the_kid_up(void);
 void test_kicker_32_shoots_a_fire_trail(void);
 void test_factory_boss_34_stomps_and_drops_rocks(void);
+void test_train_23_warns_then_passes(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -599,6 +600,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "tube_22_carries_the_kid_up", test_tube_22_carries_the_kid_up },
     { "kicker_32_shoots_a_fire_trail", test_kicker_32_shoots_a_fire_trail },
     { "factory_boss_34_stomps_and_drops_rocks", test_factory_boss_34_stomps_and_drops_rocks },
+    { "train_23_warns_then_passes", test_train_23_warns_then_passes },
 };
 
 int main(int argc, char **argv) {

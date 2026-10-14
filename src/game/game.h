@@ -78,6 +78,7 @@ struct sk_game {
     int occl_count;                     /* 0x30038A */
     uint32_t rng;                       /* 0x30000C: sub_102B42's shift register, seeded once at start-up */
     int8_t train_fade;                  /* 0x30035D: JAPAN TRAIN's palette fade in progress (sub_1049C8) */
+    uint8_t post_flag;                  /* 0x300379: bit 7 the side of attribute 78 / 79 the kid is on; nonzero, the oncoming train (type 23) runs */
     uint8_t fboss_wobble, fboss_drop;   /* 0x300383 / 0x300384: FACTORY 2's boss shakes the rocks loose (type 106) */
     uint8_t train_flags;                /* 0x30035B */               /* the sound driver; NULL plays nothing (tests) */
     uint8_t kill_kind;                  /* 0x30037F: 1 pick-up kick, 2 volley, 3 overhead (kill statistics) */

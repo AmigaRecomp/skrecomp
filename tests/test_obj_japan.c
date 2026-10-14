@@ -239,3 +239,20 @@ void test_factory_boss_34_stomps_and_drops_rocks(void) {           /* types 34 a
     CHECK_EQ(count_type(107), 2);                                    /* the pair it throws */
     drop_game();
 }
+
+void test_train_23_warns_then_passes(void) {                  /* types 23, 108 and 109 */
+    CHECK(make_game());
+    g_g.camera_x = 100; g_g.camera_y = g_g.world.fg_max_y;          /* the train's view: at the bottom limit */
+    sk_slot *s = spawn(200, 10 * 16, 23, 0);
+    CHECK_EQ(s->t0, 75); CHECK(s->draw->dflags & 4); CHECK_EQ(s->draw->w, 16); CHECK_EQ(s->draw->h, 176);
+    tick(35);
+    CHECK_EQ(count_type(108), 1);                                    /* the warning blinks */
+    tick(40);
+    CHECK_EQ(s->t0, 0); CHECK_EQ(s->vx, 24); CHECK_EQ(s->draw->dflags & 4, 0);
+    CHECK_EQ(s->draw->x, g_g.camera_x - 16); CHECK_EQ(s->draw->y, g_g.world.fg_max_y + 30);
+    CHECK_EQ(count_type(109), 1);
+    int x = s->draw->x;
+    tick(1);
+    CHECK_EQ(s->draw->x, x + 12);                                    /* the post sweeps by */
+    drop_game();
+}
