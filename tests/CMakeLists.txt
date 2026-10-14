@@ -348,7 +348,8 @@ set(SK_TEST_NAMES
   press_19_rises_slams_and_fills_its_column
   bubble_21_blinks_then_rises
   tube_22_carries_the_kid_up
-  kicker_32_shoots_a_fire_trail)
+  kicker_32_shoots_a_fire_trail
+  factory_boss_34_stomps_and_drops_rocks)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

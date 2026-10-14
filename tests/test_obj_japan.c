@@ -218,3 +218,24 @@ void test_kicker_32_shoots_a_fire_trail(void) {                     /* types 32 
     CHECK(count_type(114) >= 2);                                     /* the burst, then fires along the floor */
     drop_game();
 }
+
+void test_factory_boss_34_stomps_and_drops_rocks(void) {           /* types 34 and 106 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 34, 0);
+    CHECK_EQ(s->x, 184); CHECK_EQ(s->y, 11 * 16 - 48); CHECK_EQ(s->hits, 25); CHECK_EQ(s->draw->w, 64);
+    CHECK_EQ(count_type(106), 4); CHECK_EQ(g_g.push_x, 184 - 128);
+    sk_slot *rock = NULL;
+    for (int i = 0; i < 16; i++) if ((g_g.objs.slot[i].type4 & 0x1FF) == 106 * 4 && g_g.objs.slot[i].x == 184 + 0x60) rock = &g_g.objs.slot[i];
+    CHECK(rock != NULL); if (!rock) { drop_game(); return; }
+    CHECK_EQ(rock->t0, 0x14); CHECK_EQ(aux_c(rock), 3);
+    g_g.fboss_drop = 1;                                              /* a stomp: one rock falls at once */
+    tick(1);
+    CHECK_EQ(g_g.fboss_drop, 0);
+    int dropped = 0;
+    for (int i = 0; i < 16; i++) if ((g_g.objs.slot[i].type4 & 0x1FF) == 106 * 4 && aux_c(&g_g.objs.slot[i]) == 2) dropped++;
+    CHECK_EQ(dropped, 1);
+    int i = 0;
+    while (count_type(107) == 0 && i++ < 400) tick(1);
+    CHECK_EQ(count_type(107), 2);                                    /* the pair it throws */
+    drop_game();
+}

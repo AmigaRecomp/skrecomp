@@ -48,6 +48,29 @@ static const uint8_t fireball_data[0x3A] = {                                    
 #define FIREBALL_FIRE (fireball_data + 0x0C)  /* 0x1114FC */
 #define FIREBALL_BURST (fireball_data + 0x2E) /* 0x11151E */
 
+static const uint8_t fb_4e7a[] = { 0, 1, 0, 0, 0, 0 };   /* 0x114E7A */
+static const uint8_t fb_4e80[] = { 0, 1, 0, 0, 13, 13 };   /* 0x114E80 */
+static const uint8_t fb_4e86[] = { 0, 3, 0, 6, 2, 3, 4, 2, 3, 4 };   /* 0x114E86 */
+static const uint8_t fb_4e90[] = { 0, 1, 0, 0, 1, 1 };   /* 0x114E90 */
+static const uint8_t fb_4e96[] = { 0, 1, 0, 0, 5, 5 };   /* 0x114E96 */
+static const uint8_t fb_4e9c[] = { 0, 3, 0, 10, 5, 5, 6, 5, 5, 7 };   /* 0x114E9C */
+static const uint8_t fb_4ea6[] = { 0, 4, 0, 7, 19, 20, 21, 22, 15, 16, 17, 18 };   /* 0x114EA6 */
+static const uint8_t fb_4eb2[] = { 0, 3, 0, 20, 12, 13, 13, 12, 13, 13 };   /* 0x114EB2 */
+static const uint8_t fb_4ebc[] = { 0, 3, 0, 10, 5, 9, 11, 5, 10, 11 };   /* 0x114EBC */
+static const uint8_t fb_4ec6[] = { 0, 1, 0, 0, 11, 11 };   /* 0x114EC6 */
+static const uint8_t fb_4ecc[] = { 0, 4, 0, 4, 25, 25, 26, 26, 23, 23, 24, 24 };   /* 0x114ECC */
+static const uint8_t fb_4ed8[] = { 0, 4, 0, 6, 27, 28, 29, 30, 27, 28, 29, 30 };   /* 0x114ED8 */
+static const uint8_t fb_4ee4[] = { 0, 3, 0, 12, 12, 13, 13, 12, 13, 13 };   /* 0x114EE4 */
+static const uint8_t fb_4eee[] = { 0, 1, 0, 0, 14, 14 };   /* 0x114EEE */
+static const sk_phase fboss_phases[28] = {                                                  /* 0x114D4C */
+    { 150, 0, 4 }, { 25, 10, 8 }, { 17, 20, 12 }, { 30, 170, 16 }, { 90, 50, 20 }, { 30, 60, 24 }, { 180, 40, 28 }, { 30, 60, 32 }, { 90, 50, 36 }, { 25, 30, 40 }, { 120, 80, 44 }, { 25, 170, 48 }, { 90, 50, 52 }, { 2, 30, 56 }, { 30, 60, 24 }, { 15, 110, 64 }, { 65535, 130, 28 }, { 65535, 140, 72 }, { 65535, 120, 76 }, { 25, 30, 16 }, { 25, 150, 84 }, { 200, 160, 88 }, { 65535, 180, 0 }, { 25, 30, 96 }, { 10, 100, 100 }, { 40, 70, 104 }, { 40, 90, 108 }, { 65535, 130, 28 },
+};
+static const sk_motion fboss_motions[19] = {                                                /* 0x114DBC */
+    { 0, 0, fb_4e7a, 0x00 }, { 0, 0, fb_4e90, 0x04 }, { 0, 0, fb_4e86, 0x08 }, { 0, 0, fb_4e96, 0x0C }, { 2, 0, fb_4ea6, 0x10 }, { 2, 0, fb_4ea6, 0x14 }, { 0, 0, fb_4e9c, 0x18 }, { 2, -20, fb_4eb2, 0x1C }, { 0, 0, fb_4ebc, 0x20 }, { 0, 0, fb_4e80, 0x24 }, { 0, 0, fb_4ec6, 0x28 }, { 0, 0, fb_4ecc, 0x2C }, { 0, 0, fb_4ed8, 0x30 }, { 0, 0, fb_4ea6, 0x34 }, { 2, 0, fb_4ea6, 0x38 }, { 0, -12, fb_4ee4, 0x3C }, { 0, 0, fb_4eee, 0x40 }, { 0, 0, fb_4e96, 0x44 }, { 0, 0, fb_4eee, 0x48 },
+};
+static const uint8_t fboss_pair_script[] = { 0, 2, 0, 4, 0, 0, 1, 1 };                         /* 0x114D44 */
+static const int16_t rock_delays[4] = { 0x50, 0x6E, 0x14, 0x32 };                           /* 0x114F42 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -642,6 +665,184 @@ static void obj_fireball_update(sk_game *g, sk_slot *s, int index) {          /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 34: FACTORY 2's boss (slots 40, 41 for the pair it throws); stomps shake rocks (type 106) loose; dies on the 26th hit ---- */
+static bool fonce(sk_slot *s) {
+    if (aux_c(s) & 1) return false;
+    set_aux_c(s, aux_c(s) | 1);
+    return true;
+}
+static void obj_fboss_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x114942 */
+    init_object_slot(g, s, x - 16, y - 48, s->type4);
+    s->vx = 0; s->vy = 0; s->hits = 25;
+    const uint8_t *f = res(g, 40);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 64, 64, f, 1);                                  /* frames_64x64 */
+    static const int dx[4] = { -0x50, -0x30, 0x60, 0x80 };
+    for (int k = 0; k < 4; k++) {
+        g->objs.marker_param = (uint8_t)(2 * k);
+        spawn_object(g, s->x + dx[k], s->y - 0x50, 106);
+    }
+    g->push_x = s->x - 0x80;
+    game_music_slot(g, 1);
+}
+static void obj_fboss_update(sk_game *g, sk_slot *s, int index) {             /* 0x1149D4 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    sk_objects *o = &g->objs;
+    sk_player *p = &g->player;
+    int changed = 0, code = script_step(g, s, fboss_phases, fboss_motions, &changed);
+    enum { END, CHECKS, HITS } tail = CHECKS;
+    switch (code) {
+    case 0x00: case 0x04: case 0x3C: tail = END; break;
+    case 0x08:                                                      /* throws the pair on frame 4 */
+        if (changed && s->frame == 4) {
+            o->child_frames = res(g, 41); o->child_script = fboss_pair_script;
+            o->child_vx = 4; o->child_vy = -6; o->child_w = 32; o->child_h = 17;
+            spawn_object(g, d->x, d->y + 16, 107);
+            o->child_vx = (int16_t)(o->child_vx | 0x8000);
+            spawn_object(g, d->x + 32, d->y + 16, 107);
+        }
+        tail = END;
+        break;
+    case 0x10: {                                                    /* the kid 70..79 px in front: an attack */
+        int k = (int16_t)(p->x - d->x - 32);
+        if (!(s->flags & 1)) k = -k;
+        if ((uint16_t)k < 0x50 && (uint16_t)k >= 0x46) {
+            s->x0 = s->t1; s->y0 = (int16_t)(s->t0 + 0x28);
+            script_start(s, 23, fboss_phases, fboss_motions);
+        }
+        break;
+    }
+    case 0x14:                                                      /* the kid below and close: the grab */
+        if ((int16_t)(p->y - d->y) >= 0) {
+            int k = (int16_t)(p->x - d->x - 32);
+            if (!(s->flags & 1)) k = -k;
+            if ((uint16_t)k < 0x3C) set_aux_c(s, aux_c(s) | 2);
+        }
+        break;
+    case 0x18: if (fonce(s)) s->flags ^= 1; break;
+    case 0x1C: tail = HITS; break;
+    case 0x20:                                                      /* stomping: rocks wobble loose */
+        if (fonce(s)) g->fboss_wobble = 4;
+        if (changed && s->anim_index == 0) { g->shake_amplitude = 4; play_sfx(g, 0x16); }
+        break;
+    case 0x24: if (fonce(s)) { g->fboss_drop = 4; play_sfx(g, 0x11); g->shake_amplitude = 6; } break;
+    case 0x2C:                                                      /* the lunge */
+        if (fonce(s)) {
+            play_sfx(g, 0x10);
+            int dx = (s->flags & 1) ? 32 : -32;
+            s->anim = (uint8_t)dx;
+            d->x = (int16_t)(d->x + dx);
+        }
+        tail = HITS;
+        break;
+    case 0x30:                                                      /* waits for the kid to be back */
+        if ((uint16_t)s->t0 >= 0x60 && p->health) {
+            set_aux_c(s, aux_c(s) & ~0x0C);
+            script_end_next(s, fboss_phases);
+        }
+        break;
+    case 0x34: script_start(s, (uint16_t)s->x0 >> 2, fboss_phases, fboss_motions); s->t0 = s->y0; break;   /* resume */
+    case 0x38: {                                                    /* walks home */
+        int dx = (int16_t)(d->x - s->x);
+        s->flags &= ~1;
+        if (dx == 0) script_end_next(s, fboss_phases);
+        else if (dx < 0) s->flags |= 1;
+        break;
+    }
+    case 0x40:
+        if (fonce(s)) {
+            g->score_value = 0x40000;
+            add_score(g, 0x40000);
+            spawn_object(g, d->x + 32, d->y + 24, 113);
+            play_sfx(g, 0x11);
+            g->fboss_drop = 4;
+            g->shake_amplitude = 8;
+            game_music_slot(g, 2);
+        }
+        tail = END;
+        break;
+    case 0x48: if (fonce(s)) { g->level_outcome = 0x81; g->level_number++; g->curtain_flags |= 0x10; } tail = END; break;
+    default: break;                                                 /* 0x0C 0x28 0x44 */
+    }
+    if (tail == CHECKS) {                                           /* 0x114CB4 */
+        if ((int8_t)s->hits < 0) {
+            d->dflags &= (uint8_t)~2;
+            script_start(s, 20, fboss_phases, fboss_motions);
+            tail = END;
+        } else {
+            if (aux_c(s) & 2) {
+                set_aux_c(s, aux_c(s) & ~2);
+                s->x0 = s->t1; s->y0 = s->t0;
+                script_start(s, 15, fboss_phases, fboss_motions);
+            }
+            if ((aux_c(s) & 4) && !(aux_c(s) & 8)) {                /* the kid died: it walks home */
+                set_aux_c(s, aux_c(s) | 8);
+                script_start(s, 17, fboss_phases, fboss_motions);
+            }
+            tail = HITS;
+        }
+    }
+    if (tail == HITS) {                                             /* 0x114D10 */
+        touch_player(g, d->x + 10, d->y + 8, 0x2C, 0x30);
+        if (p->dying) set_aux_c(s, aux_c(s) | 4);
+        ball_hits_object_simple(g, s, 8, 0, 0x30, 0x40);
+    }
+    despawn_if_far(g, s);
+}
+
+/* ---- type 106: a rock in FACTORY 2's roof (slot 42): drops on a stomp (0x300384) or wobbles first (0x300383), resets off the view ---- */
+static void obj_rock_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x114EF4 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    int p = g->objs.marker_param & 0xFF;
+    s->t0 = rock_delays[(p >> 1) & 3];
+    s->vx = 0; s->vy = 0;
+    s->t1 = s->t0;
+    set_aux_c(s, 3);
+    const uint8_t *f = res(g, 42);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 20, f, 1);                                  /* sub_10794A */
+    set_frame2(s, p, p, 0);
+}
+static void obj_rock_update(sk_game *g, sk_slot *s, int index) {              /* 0x114F4A */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (g->player.dying) { free_object(g, s); return; }
+    enum { WAIT, WOBBLE, FALL, DROP, TOUCH, CHECK } st;
+    switch (aux_c(s)) {
+    case 1: st = WOBBLE; break;
+    case 2: st = FALL; break;
+    case 0: st = WAIT; break;
+    case 4: st = CHECK; break;
+    default:
+        if (g->fboss_drop) { g->fboss_drop--; st = DROP; }
+        else if (g->fboss_wobble) { g->fboss_wobble--; set_aux_c(s, 0); st = WAIT; }
+        else return;
+    }
+    if (st == WAIT) {
+        if (--s->t0) st = TOUCH;
+        else { d->dflags &= (uint8_t)~4; set_aux_c(s, 1); s->vx = 4; s->t0 = 6; st = WOBBLE; }
+    }
+    if (st == WOBBLE) { s->flags ^= 1; st = --s->t0 ? TOUCH : DROP; }
+    if (st == DROP) { set_aux_c(s, 2); s->vx = 0; set_frame2(s, s->frame + 1, s->frame + 1, 0); st = FALL; }
+    if (st == FALL) {
+        s->flags |= 4;
+        if (probe_rows_below(g, s, 8, 0) < 0) { s->vy = -8; set_aux_c(s, 4); }   /* lands: a bounce */
+        st = TOUCH;
+    }
+    if (st == TOUCH) touch_player(g, d->x, d->y, 16, 16);
+    if (object_offscreen(g, d->x, d->y, 64) >= 0) return;
+    s->t0 = s->t1;                                                  /* off the view: back in the roof */
+    set_aux_c(s, 3);
+    s->flags &= ~4;
+    d->x = s->x; d->y = s->y;
+    s->vx = 0; s->vy = 0;
+    set_frame2(s, (s->frame + 1) & 7, (s->frame + 1) & 7, 0);
+}
+
 void obj_japan_install(void) {
     object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
     object_init_table[18] = obj_crab_init;             object_update_table[18] = obj_crab_update;
@@ -652,6 +853,8 @@ void obj_japan_install(void) {
     object_init_table[22] = obj_tube_init;             object_update_table[22] = obj_tube_update;
     object_init_table[32] = obj_kicker_init;           object_update_table[32] = obj_kicker_update;
     object_init_table[110] = obj_fireball_init;        object_update_table[110] = obj_fireball_update;
+    object_init_table[34] = obj_fboss_init;            object_update_table[34] = obj_fboss_update;
+    object_init_table[106] = obj_rock_init;            object_update_table[106] = obj_rock_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;
