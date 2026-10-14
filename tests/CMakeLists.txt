@@ -437,7 +437,11 @@ set(SK_TEST_NAMES
   alien_82_starts_over_after_the_kid_dies
   alien_shot_83_flies_along_the_arm_and_clamps_its_frame
   bonus_levels_and_alien_load_and_run
-  args_cup_sets_the_pieces)
+  args_cup_sets_the_pieces
+  tokens_left_85_shows_in_the_bonus_levels
+  alien_children_come_from_the_spawns_not_a_stale_slot
+  alien_lets_go_of_a_head_freed_under_it
+  bonus_level_game_over_and_direct_start)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

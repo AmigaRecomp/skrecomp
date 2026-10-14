@@ -446,3 +446,18 @@ void test_bonus_levels_and_alien_load_and_run(void) {               /* ROM-backe
         play_close(&p);
     }
 }
+
+void test_bonus_level_game_over_and_direct_start(void) {            /* ROM-backed */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 37, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    CHECK(p.game.timeout_armed); CHECK_EQ(p.game.timer_rate, 0x32); CHECK_EQ(p.game.fulltime_level, 20);   /* as if from Italy's last board */
+    p.game.player.lives = -1; p.game.player.state = 64;             /* game over */
+    for (int i = 0; i < 400 && p.pic.kind == SK_PIC_OFF; i++) play_step(&p, 0);
+    CHECK_EQ(p.pic.kind, SK_PIC_LOADING);                           /* not the bonus level again: on from where the board left */
+    CHECK_EQ(p.next.kind, SK_RUN_MAP); CHECK_EQ(p.next.map_index, 2);
+    CHECK(!p.game.timeout_armed);
+    play_close(&p);
+}

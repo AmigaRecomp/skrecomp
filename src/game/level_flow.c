@@ -89,6 +89,7 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     hud_init(g);                                                 /* 0x10372E: clear and draw the panel */
     g->balls_allotted = g->sk ? image_u8(g->sk, SK_LEVEL_RECORDS_ADDR + (uint32_t)data_index * SK_LEVEL_RECORD + 6) : 10;   /* record +6 */
     scoreboard_setup(g);                                         /* 0x10423A */
+    if (g->timeout_armed) spawn_object(g, 0, 0, 85);             /* 0x104270: the bonus levels' tokens left */
     return true;
 }
 

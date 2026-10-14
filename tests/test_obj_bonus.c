@@ -149,3 +149,53 @@ void test_alien_shot_83_flies_along_the_arm_and_clamps_its_frame(void) {
     CHECK_EQ(s->frame, 0);
     drop_game();
 }
+
+void test_tokens_left_85_shows_in_the_bonus_levels(void) {        /* setup_level 0x104270 spawns type 85 when the clock is armed */
+    CHECK(make_game());
+    CHECK_EQ(count_type(85), 0);
+    g_g.timeout_armed = true;
+    CHECK(game_setup_level(&g_g, &g_lv, 36));
+    objects_reset(&g_g);                                         /* make_game's own reset is after the setup: spawn again as the setup does */
+    g_g.timeout_armed = true;
+    CHECK(game_setup_level(&g_g, &g_lv, 36));
+    CHECK_EQ(count_type(85), 1);
+    sk_slot *s = NULL;
+    for (int i = 0; i < 16; i++) if (g_g.objs.slot[i].x >= 0 && (g_g.objs.slot[i].type4 & 0x1FF) == 85 * 4) s = &g_g.objs.slot[i];
+    CHECK(s && s->draw);
+    tick(1);
+    CHECK(!(s->draw->dflags & 4)); CHECK(s->draw->dflags & 8);   /* screen-relative, shown */
+    CHECK_EQ(s->draw->x, 16); CHECK_EQ(s->draw->y, 16);
+    CHECK_EQ(g_g.token_digits[0], 0x5D + 5); CHECK_EQ(g_g.token_digits[1], 0x5D + 0);   /* "50" */
+    g_g.bonus_tokens = 43; tick(1);
+    CHECK_EQ(g_g.token_digits[0], 0x5D + 0); CHECK_EQ(g_g.token_digits[1], 0x5D + 7);
+    drop_game();
+}
+
+void test_alien_children_come_from_the_spawns_not_a_stale_slot(void) {
+    CHECK(make_game());
+    g_g.cup_pieces = 0x1F; g_g.player.x = 100;
+    for (int i = 0; i < 14; i++) spawn(50 + i, 50, 81, 0);       /* two slots left: the boss and one piece */
+    sk_slot *s = spawn(400, 11 * 16, 82, 0);
+    CHECK(s != NULL);
+    CHECK(g_g.alien.piece_b == NULL);                            /* its spawn failed */
+    CHECK(g_g.alien.piece_a != s && g_g.alien.piece_b != s);
+    tick(400);                                                   /* through the rise: no pose on the boss itself */
+    CHECK(s->t1 >= 0 && s->t1 < 39 * 4);
+    drop_game();
+}
+
+void test_alien_lets_go_of_a_head_freed_under_it(void) {
+    CHECK(make_game());
+    g_g.cup_pieces = 0x1F; g_g.player.x = 100;
+    sk_slot *s = spawn(400, 11 * 16, 82, 0);
+    sk_slot *head = g_g.alien.head;
+    CHECK(head != NULL);
+    free_object(&g_g, head);
+    sk_slot *other = spawn(200, 100, 81, 1);                     /* takes the head's slot */
+    CHECK(other == head);
+    uint8_t flags = other->draw->dflags;
+    tick(160);
+    CHECK_EQ(other->draw->dflags & ~2, flags & ~2);              /* not the boss's flags */
+    CHECK(s->x >= 0);
+    drop_game();
+}

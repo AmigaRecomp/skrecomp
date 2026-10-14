@@ -99,6 +99,8 @@ struct sk_game {
     uint8_t piece_collected;            /* 0x300298: a piece since the last map (blocks a bonus level) */
     uint8_t bonus_pending;              /* 0x300299: scoreboard_setup found 11 cards */
     int bonus_tokens;                   /* 0x300296: attribute 80's tokens taken (0x32 = all) */
+    uint8_t token_digits[2];            /* 0x11A3DE: type 85's two characters (0x5D + digit) */
+    uint8_t token_bits[0x104];          /* dat_300070: type 85's 32 x 13 bob, four planes and the mask */
     struct {                            /* the ALIEN's parts (type 82): 0x300090 / 0x30007C / 0x300084 and their draw records */
         sk_slot *head, *piece_a, *piece_b;
         sk_draw *head_draw, *pa_draw, *pb_draw;

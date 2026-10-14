@@ -10,8 +10,8 @@
 
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
-static int state_of(const sk_slot *s) { return aux_d(s); }                  /* aux.lo, byte +0xD */
-static void set_state(sk_slot *s, int v) { set_aux_d(s, v); }
+static int state_of(const sk_slot *s) { return aux_c(s); }                  /* byte +0xC */
+static void set_state(sk_slot *s, int v) { set_aux_c(s, v); }
 
 /* ---- type 81: the cup piece (slot 131, 32 x 22, frame = the world): shows when all 50 tokens are taken ---- */
 static const int8_t piece_bob[16] = { 0, 0, 1, 1, 2, 2, 1, 1, 0, 0, -1, -1, -2, -2, -1, -1 };   /* 0x11A052 */
@@ -177,9 +177,10 @@ static void obj_alien_plain_init(sk_game *g, sk_slot *s, int x, int y) {        
 static void obj_alien_init(sk_game *g, sk_slot *s, int x, int y) {              /* 0x1163E4 */
     if (g->cup_pieces != 0x1F) { obj_alien_plain_init(g, s, x, y); return; }
     x -= 0x20; y -= 0x31;
+    memset(&g->alien, 0, sizeof g->alien);                                      /* port: nothing left from an earlier fight */
     s->x = 0;                                                                   /* reserves the slot for the children */
-    g->objs.marker_param = 0; spawn_object(g, x, y, 84); g->alien.piece_a = g->objs.last_slot;
-    g->objs.marker_param = 1; spawn_object(g, x, y, 84); g->alien.piece_b = g->objs.last_slot;
+    g->objs.marker_param = 0; g->alien.piece_a = spawn_object(g, x, y, 84);     /* port: the spawn's own result (last_slot can be stale) */
+    g->objs.marker_param = 1; g->alien.piece_b = spawn_object(g, x, y, 84);
     init_object_slot(g, s, x, y, s->type4);
     s->x0 = 0; s->y0 = 0x0808; s->vx = 0; s->vy = 0; s->hits = 0x23;
     const uint8_t *f = res(g, 135), *parts = res(g, 136), *link = res(g, 137);
@@ -210,7 +211,14 @@ static void alien_free_all(sk_game *g, sk_slot *s) {                           /
     memset(&g->alien, 0, sizeof g->alien);
 }
 
+static void forget_lost_parts(sk_game *g) {                                    /* port: a part freed under the boss (free_if_far) is let go */
+    if (g->alien.head && (g->alien.head->x < 0 || (g->alien.head->type4 & 0x1FF) != 116 * 4)) { g->alien.head = NULL; g->alien.head_draw = NULL; }
+    if (g->alien.piece_a && (g->alien.piece_a->x < 0 || (g->alien.piece_a->type4 & 0x1FF) != 84 * 4)) { g->alien.piece_a = NULL; g->alien.pa_draw = NULL; }
+    if (g->alien.piece_b && (g->alien.piece_b->x < 0 || (g->alien.piece_b->type4 & 0x1FF) != 84 * 4)) { g->alien.piece_b = NULL; g->alien.pb_draw = NULL; }
+}
+
 static void alien_boss(sk_game *g, sk_slot *s, sk_draw *d) {                    /* alien_boss_body 0x116702 */
+    forget_lost_parts(g);
     int ox = d->x, oy = d->y, changed = 0;
     int code = script_step(g, s, alien_phases, alien_motions, &changed);
     shift(g->alien.head_draw, d->x - ox, d->y - oy); shift(g->alien.pa_draw, d->x - ox, d->y - oy); shift(g->alien.pb_draw, d->x - ox, d->y - oy);
@@ -411,9 +419,44 @@ static void obj_alien_shot_update(sk_game *g, sk_slot *s, int index) {          
     if (object_offscreen(g, d->x, d->y, 64) < 0) free_object(g, s);
 }
 
+/* ---- type 85: the tokens still to take, two big digits at the top left of the bonus levels (setup_level 0x104270) ---- */
+#define BIG_FONT 0x207A00u                                                      /* 13 rows of 4 words a glyph: ~mask, three planes */
+static void obj_tokens_left_init(sk_game *g, sk_slot *s, int x, int y) {        /* 0x11A2FC */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->x0 = 16; s->y0 = 16; s->vx = 6; s->vy = 0; s->t0 = 0x32; set_aux_c(s, 0);
+    memset(g->token_bits, 0, sizeof g->token_bits);
+    frames_wh(g, s, 32, 13, g->token_bits, 1);                                  /* sub_107A5A */
+    if (s->draw) s->draw->dflags |= 4 | 8;
+}
+static void obj_tokens_left_update(sk_game *g, sk_slot *s, int index) {         /* 0x11A344 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    d->x = s->x0; d->y = s->y0;
+    d->dflags &= (uint8_t)~4;
+    int left = 0x32 - g->bonus_tokens;
+    if (left < 0) left = 0;                                                     /* port guard: two digits */
+    g->token_digits[0] = (uint8_t)(0x5D + left / 10 % 10);
+    g->token_digits[1] = (uint8_t)(0x5D + left % 10);
+    for (int c = 0; c < 2 && g->sk; c++) {
+        const uint8_t *glyph = image_ptr(g->sk, BIG_FONT + (uint32_t)(g->token_digits[c] - 0x40) * 0x68u, 0x68);
+        if (!glyph) continue;
+        for (int r = 0; r < 13; r++) {
+            uint8_t *row = g->token_bits + r * 4 + c * 2;
+            const uint8_t *w = glyph + r * 8;
+            row[4 * 0x34] = (uint8_t)~w[0]; row[4 * 0x34 + 1] = (uint8_t)~w[1];   /* the mask */
+            row[0] = w[2]; row[1] = w[3];
+            row[0x34] = w[4]; row[0x34 + 1] = w[5];
+            row[2 * 0x34] = w[6]; row[2 * 0x34 + 1] = w[7];
+            row[3 * 0x34] = 0; row[3 * 0x34 + 1] = 0;
+        }
+    }
+}
+
 void obj_bonus_install(void) {
     object_init_table[81] = obj_cup_piece_init;        object_update_table[81] = obj_cup_piece_update;
     object_init_table[82] = obj_alien_init;            object_update_table[82] = obj_alien_update;
     object_init_table[83] = obj_alien_shot_init;       object_update_table[83] = obj_alien_shot_update;
+    object_init_table[85] = obj_tokens_left_init;      object_update_table[85] = obj_tokens_left_update;
     object_init_table[84] = obj_alien_piece_init;      object_update_table[84] = obj_alien_piece_update;
 }

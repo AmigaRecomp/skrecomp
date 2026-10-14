@@ -90,6 +90,10 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     if (a->cup >= 0) p->game.cup_pieces = (uint8_t)a->cup;
     if (a->level < 0) { play_advance(p); if (p->load_failed) { *e = p->load_err; play_close(p); return false; } return true; }   /* the whole game */
     if (pos >= 0) p->game.level_number = pos;
+    if (a->level >= 36 && a->level <= 40) {                         /* a bonus level started directly: as bonus_check would */
+        static const int after[5] = { 10, 20, 29, 38, 48 };        /* the position each world's last scoreboard leads to */
+        p->game.timeout_armed = true; p->game.timer_rate = 0x32; p->game.fulltime_level = after[a->level - 36];
+    }
     if (a->has_start) { p->has_start = true; p->start_level = a->level; p->start_x = a->start_x; p->start_y = a->start_y; }
     if (!play_start_level(p, pos, a->level, e)) { play_close(p); return false; }
     if (a->near_type > 0 && !a->has_start) {                        /* --near: find the marker, then restart there */
@@ -215,7 +219,15 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
     case SK_OUTCOME_GAME_OVER:
         if (p->game_over_frames == 0) sound_fade_out(&p->snd);       /* fade_music_out 0x1040F2 (the statistics go: a new game follows) */
         if (++p->game_over_frames >= GAME_OVER_FRAMES) {
+            int idx = p->scene.level_index, back = p->game.fulltime_level;
             game_new_game(&p->game);
+            if (idx >= 36 && idx <= 40) {                           /* a bonus level is not replayed untimed: on from its board */
+                if (p->cup_arg >= 0) p->game.cup_pieces = (uint8_t)p->cup_arg;
+                p->game.level_number = back;
+                p->game_over_frames = 0;
+                play_advance(p);
+                break;
+            }
             if (p->cup_arg >= 0) p->game.cup_pieces = (uint8_t)p->cup_arg;   /* --cup holds through a game over */
             if (p->level_pos >= 0) p->game.level_number = p->level_pos;
             if (!play_start_level(p, p->level_pos, p->scene.level_index, &e)) { p->load_failed = true; p->load_err = e; }
