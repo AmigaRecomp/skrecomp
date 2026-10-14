@@ -15,6 +15,9 @@ typedef struct {
     size_t len[SK_DISKS];
     sk_adf vol[SK_DISKS];
     char path[SK_DISKS][512];
+    const uint8_t *archive;     /* soccerkid.dat instead of the images (not owned), NULL none */
+    size_t archive_len;
+    uint32_t archive_count;
 } sk_disks;
 
 /* Scans dir; returns false naming the first missing SKDisk<n>, but keeps whatever was found. */
@@ -25,6 +28,13 @@ bool disks_read(sk_disks *d, int disk, const char *name, uint8_t **out, size_t *
 
 /* Reads "file%03d" from disk n; with unpack, the ByteKiller container is decompressed. */
 bool disks_read_file_no(sk_disks *d, int disk, int file_no, bool unpack, uint8_t **out, size_t *len, sk_err *e);
+
+/* soccerkid.dat: "SKDATA01", a big-endian count, entries of 32 bytes (disk byte, name[23], offset, size), then the files.
+   The data is not copied: it must outlive d (the embedded copy does). */
+bool disks_open_archive(sk_disks *d, const uint8_t *data, size_t len, sk_err *e);
+/* Every file the port reads (sk.pak, anim, animfil1/2.pak, language.pak, the five .bin files, file000..file255 on each disk)
+   into one archive (malloc'ed). */
+bool disks_extract(sk_disks *d, uint8_t **out, size_t *len, sk_err *e);
 
 void disks_close(sk_disks *d);
 

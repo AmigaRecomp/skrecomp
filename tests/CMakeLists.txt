@@ -519,7 +519,9 @@ set(SK_TEST_NAMES
   controls_stick_press_needs_a_dominant_axis_and_a_return
   remap_ignores_the_fixed_keys
   remap_text_fits_the_screen
-  remap_help_stays_above_the_hud)
+  remap_help_stays_above_the_hud
+  disks_read_from_an_archive
+  disks_extract_matches_the_disks)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -452,6 +452,8 @@ void test_controls_stick_press_needs_a_dominant_axis_and_a_return(void);
 void test_remap_ignores_the_fixed_keys(void);
 void test_remap_text_fits_the_screen(void);
 void test_remap_help_stays_above_the_hud(void);
+void test_disks_read_from_an_archive(void);
+void test_disks_extract_matches_the_disks(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -901,6 +903,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "remap_ignores_the_fixed_keys", test_remap_ignores_the_fixed_keys },
     { "remap_text_fits_the_screen", test_remap_text_fits_the_screen },
     { "remap_help_stays_above_the_hud", test_remap_help_stays_above_the_hud },
+    { "disks_read_from_an_archive", test_disks_read_from_an_archive },
+    { "disks_extract_matches_the_disks", test_disks_extract_matches_the_disks },
 };
 
 int main(int argc, char **argv) {

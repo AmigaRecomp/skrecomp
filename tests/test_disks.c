@@ -92,3 +92,54 @@ void test_disks_real_images(void) {                    /* ROM-backed */
     free(f);
     disks_close(&d);
 }
+
+#include "core/bytes.h"
+static size_t make_archive(uint8_t *a, const char *name, int disk, const char *body) {   /* one entry */
+    memset(a, 0, 256);
+    memcpy(a, "SKDATA01", 8);
+    put_be32(a + 8, 1);
+    uint8_t *e = a + 12;
+    e[0] = (uint8_t)disk; snprintf((char *)e + 1, 23, "%s", name);
+    put_be32(e + 24, 12 + 32); put_be32(e + 28, (uint32_t)strlen(body));
+    memcpy(a + 44, body, strlen(body));
+    return 44 + strlen(body);
+}
+
+void test_disks_read_from_an_archive(void) {
+    uint8_t a[256]; size_t n = make_archive(a, "file078", 1, "hello");
+    sk_disks d; sk_err e = {0};
+    CHECK(disks_open_archive(&d, a, n, &e));
+    uint8_t *f = NULL; size_t fn = 0;
+    CHECK(disks_read(&d, 1, "FILE078", &f, &fn, &e));            /* names as AmigaDOS: any case */
+    CHECK_EQ(fn, 5); CHECK(f && memcmp(f, "hello", 5) == 0);
+    free(f);
+    CHECK(!disks_read(&d, 2, "file078", &f, &fn, &e));           /* another disk */
+    CHECK_STR(e.msg, "file078");
+    disks_close(&d);
+    a[0] = 'X';
+    CHECK(!disks_open_archive(&d, a, n, &e)); CHECK_STR(e.msg, "soccerkid.dat");
+    a[0] = 'S';
+    CHECK(!disks_open_archive(&d, a, 30, &e));                   /* the table runs past the end */
+    put_be32(a + 12 + 28, 9999);
+    CHECK(!disks_open_archive(&d, a, n, &e));                    /* an entry runs past the end */
+}
+
+void test_disks_extract_matches_the_disks(void) {                   /* ROM-backed */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}, ar = {0}; sk_err e = {0};
+    CHECK(disks_open(&d, roms, &e));
+    uint8_t *data = NULL; size_t n = 0;
+    CHECK(disks_extract(&d, &data, &n, &e));
+    CHECK(disks_open_archive(&ar, data, n, &e));
+    static const struct { int disk; const char *name; } files[] = {
+        { 0, "sk.pak" }, { 0, "anim" }, { 0, "animfil2.pak" }, { 0, "german.bin" }, { 1, "file078" }, { 3, "file250" }, { 4, "file141" } };
+    for (size_t i = 0; i < sizeof files / sizeof *files; i++) {
+        uint8_t *x = NULL, *y = NULL; size_t xn = 0, yn = 0;
+        CHECK(disks_read(&d, files[i].disk, files[i].name, &x, &xn, &e));
+        CHECK(disks_read(&ar, files[i].disk, files[i].name, &y, &yn, &e));
+        CHECK(xn == yn && x && y && memcmp(x, y, xn) == 0);
+        free(x); free(y);
+    }
+    disks_close(&ar); free(data); disks_close(&d);
+}
