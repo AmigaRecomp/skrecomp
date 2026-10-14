@@ -334,6 +334,8 @@ void test_flyer_14_patrols_drops_and_falls_apart(void);
 void test_pot_13_drops_on_a_kid_below(void);
 void test_rat_15_rests_then_runs(void);
 void test_jumper_17_jumps_onto_a_wall(void);
+void test_final_boss_9_brings_its_parts(void);
+void test_final_boss_9_last_phase_ends_the_game(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -665,6 +667,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "pot_13_drops_on_a_kid_below", test_pot_13_drops_on_a_kid_below },
     { "rat_15_rests_then_runs", test_rat_15_rests_then_runs },
     { "jumper_17_jumps_onto_a_wall", test_jumper_17_jumps_onto_a_wall },
+    { "final_boss_9_brings_its_parts", test_final_boss_9_brings_its_parts },
+    { "final_boss_9_last_phase_ends_the_game", test_final_boss_9_last_phase_ends_the_game },
 };
 
 int main(int argc, char **argv) {

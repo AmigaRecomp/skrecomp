@@ -196,3 +196,36 @@ void test_jumper_17_jumps_onto_a_wall(void) {                        /* type 17 
     CHECK_EQ(aux_c(s), 2); CHECK(s->flags & 4);                      /* the wall ahead: up it goes */
     drop_game();
 }
+
+static sk_slot *find_type(int type) { for (int k = 0; k < 16; k++) if (g_g.objs.slot[k].x >= 0 && (g_g.objs.slot[k].type4 & 0x1FF) == type * 4) return &g_g.objs.slot[k]; return NULL; }
+
+void test_final_boss_9_brings_its_parts(void) {                     /* types 9, 120, 121 */
+    CHECK(make_game());
+    g_g.camera_x = 100;
+    sk_slot *s = spawn(300, 11 * 16, 9, 0);
+    CHECK_EQ(s->x, 284); CHECK_EQ(s->y, 11 * 16 - 48); CHECK_EQ(s->hits, 30); CHECK_EQ(s->draw->w, 64);
+    CHECK_EQ(g_g.push_x, 284 - 160);
+    sk_slot *carried = find_type(121), *arm = find_type(120);
+    CHECK(carried != NULL); CHECK(arm != NULL); CHECK_EQ(count_type(118), 1);
+    if (!carried || !arm) { drop_game(); return; }
+    CHECK_EQ(carried->flags_b, 2); CHECK_EQ(carried->draw->x, 284 + 40);
+    tick(1);
+    CHECK_EQ(s->frame, 13); CHECK(arm->draw->dflags & 4);            /* its intro frames hide the arm (table entry 13: -1) */
+    tick(150);
+    CHECK_EQ(s->t1, 4);                                              /* phase 1: hits count from here */
+    s->hits = 11;
+    g_g.ball.x = (s->draw->x + 30) << 16; g_g.ball.y = (s->draw->y + 30) << 16; g_g.ball.vx = 6 << 16; g_g.player.ball_free = 1;
+    tick(1);
+    CHECK_EQ(s->hits, 10); CHECK(aux_c(s) & 2); CHECK(arm->flags & 2);   /* ten left: the arm falls away */
+    drop_game();
+}
+
+void test_final_boss_9_last_phase_ends_the_game(void) {             /* phase 22 -> motion 0x34 */
+    CHECK(make_game());
+    sk_slot *s = spawn(300, 11 * 16, 9, 0);
+    s->hits = 0xFF;                                                  /* beaten */
+    int i = 0;
+    while (!(g_g.level_outcome & 0x80) && i++ < 1000) tick(1);     /* the intro, then the fall (100 + 200 frames) */
+    CHECK_EQ(g_g.level_outcome, 0x81); CHECK(g_g.curtain_flags & 0x10);
+    drop_game();
+}

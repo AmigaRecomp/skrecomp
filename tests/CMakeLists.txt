@@ -385,7 +385,9 @@ set(SK_TEST_NAMES
   flyer_14_patrols_drops_and_falls_apart
   pot_13_drops_on_a_kid_below
   rat_15_rests_then_runs
-  jumper_17_jumps_onto_a_wall)
+  jumper_17_jumps_onto_a_wall
+  final_boss_9_brings_its_parts
+  final_boss_9_last_phase_ends_the_game)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
