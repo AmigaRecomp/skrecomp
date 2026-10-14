@@ -339,6 +339,9 @@ void test_final_boss_9_last_phase_ends_the_game(void);
 void test_ladder_3_catches_a_standing_kid(void);
 void test_spikes_4_hurt_the_kid(void);
 void test_hoop_36_scores_baskets_and_an_extra_life(void);
+void test_usa_markers_spawn_real_types(void);
+void test_usa_slots_cover_the_frames(void);
+void test_usa_run_without_a_crash(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -675,6 +678,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "ladder_3_catches_a_standing_kid", test_ladder_3_catches_a_standing_kid },
     { "spikes_4_hurt_the_kid", test_spikes_4_hurt_the_kid },
     { "hoop_36_scores_baskets_and_an_extra_life", test_hoop_36_scores_baskets_and_an_extra_life },
+    { "usa_markers_spawn_real_types", test_usa_markers_spawn_real_types },
+    { "usa_slots_cover_the_frames", test_usa_slots_cover_the_frames },
+    { "usa_run_without_a_crash", test_usa_run_without_a_crash },
 };
 
 int main(int argc, char **argv) {

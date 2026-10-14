@@ -229,3 +229,77 @@ void test_final_boss_9_last_phase_ends_the_game(void) {             /* phase 22 
     CHECK_EQ(g_g.level_outcome, 0x81); CHECK(g_g.curtain_flags & 0x10);
     drop_game();
 }
+
+static bool usa_open(sk_disks *d, sk_image *img, sk_tables *t) {
+    sk_err e = {0}; uint8_t *f = NULL; size_t n = 0;
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!disks_open(d, roms, &e) || !disks_read(d, 0, "sk.pak", &f, &n, &e)) return false;
+    bool ok = hunk_load(f, n, img, &e) && tables_load(t, img, &e);
+    free(f);
+    return ok;
+}
+
+void test_usa_markers_spawn_real_types(void) {                    /* ROM-backed, indices 23..28 */
+    if (!getenv("SOCCERKID_ROMS")) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}; sk_image img = {0}; sk_tables t = {0}; sk_err e = {0};
+    CHECK(usa_open(&d, &img, &t));
+    static sk_game g; memset(&g, 0, sizeof g); objects_reset(&g); attrs_reset(&g);   /* install the handler tables */
+    for (int idx = 23; idx <= 28; idx++) {
+        uint8_t *f = NULL; size_t n = 0;
+        CHECK(disks_read_file_no(&d, t.record[idx].disk + 1, idx, false, &f, &n, &e));
+        sk_level lv = {0}; sk_world w = {0};
+        CHECK(level_parse(f, n, &lv, &e)); free(f);
+        CHECK(world_build(&w, &lv));
+        for (int cy = 0; cy < w.h; cy++)
+            for (int cx = 0; cx < w.w; cx++) {
+                int param = 0, type = world_marker_type(&w, cx, cy, &param);
+                if (type <= 0) continue;
+                bool real = type < 128 && object_init_table[type] && object_init_table[type] != obj_stub_init;
+                if (!real) printf("level %d: type %d at (%d, %d) is a stub\n", idx, type, cx, cy);
+                CHECK(real);
+            }
+        for (int i = 0; i < w.w * w.h; i++) {                        /* every attribute the cells carry has a handler */
+            int a = world_attr(&w, i % w.w, i / w.w);
+            if (a < 0) continue;
+            if (!attr_table[a]) printf("level %d: attribute %d has no handler\n", idx, a);
+            CHECK(attr_table[a] != NULL);
+        }
+        world_free(&w); level_free(&lv);
+    }
+    tables_free(&t); image_free(&img); disks_close(&d);
+}
+
+void test_usa_slots_cover_the_frames(void) {                      /* ROM-backed */
+    if (!getenv("SOCCERKID_ROMS")) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}; sk_image img = {0}; sk_tables t = {0}; sk_err e = {0};
+    CHECK(usa_open(&d, &img, &t));
+    static const struct { int type, slot, frames, frame_bytes; } need[] = {   /* the highest frame each type indexes, + 1 (w / 8 * h * 5) */
+        { 3, 121, 10, 540 }, { 3, 122, 1, 620 }, { 47, 63, 4, 640 }, { 69, 118, 12, 1920 }, { 69, 119, 7, 2560 }, { 69, 120, 8, 500 },
+        { 73, 110, 3, 160 }, { 7, 1, 20, 880 }, { 29, 30, 8, 420 }, { 30, 77, 2, 520 }, { 30, 78, 2, 120 }, { 30, 76, 8, 390 },
+        { 14, 6, 2, 1590 }, { 14, 75, 1, 640 }, { 13, 5, 2, 540 }, { 15, 7, 14, 480 }, { 17, 7, 14, 480 }, { 9, 10, 21, 2560 }, { 9, 11, 17, 640 },
+    };
+    int seen = 0;
+    for (int idx = 23; idx <= 28; idx++) {
+        uint8_t *f = NULL; size_t n = 0;
+        CHECK(disks_read_file_no(&d, t.record[idx].disk + 1, idx, false, &f, &n, &e));
+        sk_level lv = {0}; sk_world w = {0};
+        CHECK(level_parse(f, n, &lv, &e)); free(f);
+        CHECK(world_build(&w, &lv));
+        bool present[128] = {0};
+        for (int cy = 0; cy < w.h; cy++)
+            for (int cx = 0; cx < w.w; cx++) { int param = 0, type = world_marker_type(&w, cx, cy, &param); if (type > 0 && type < 128) present[type] = true; }
+        static sk_resources r;
+        CHECK(resources_load(&r, &d, &t, idx, &e));
+        for (size_t k = 0; k < sizeof need / sizeof *need; k++) {
+            if (!present[need[k].type]) continue;
+            size_t len = 0;
+            CHECK(resource_slot(&r, need[k].slot, &len) != NULL);
+            seen++;
+            if (len < (size_t)need[k].frames * (size_t)need[k].frame_bytes) printf("level %d type %d slot %d: %zu bytes\n", idx, need[k].type, need[k].slot, len);
+            CHECK(len >= (size_t)need[k].frames * (size_t)need[k].frame_bytes);
+        }
+        resources_free(&r); world_free(&w); level_free(&lv);
+    }
+    CHECK(seen >= 15);
+    tables_free(&t); image_free(&img); disks_close(&d);
+}

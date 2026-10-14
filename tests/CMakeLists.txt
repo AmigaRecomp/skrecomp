@@ -391,7 +391,10 @@ set(SK_TEST_NAMES
   final_boss_9_last_phase_ends_the_game
   ladder_3_catches_a_standing_kid
   spikes_4_hurt_the_kid
-  hoop_36_scores_baskets_and_an_extra_life)
+  hoop_36_scores_baskets_and_an_extra_life
+  usa_markers_spawn_real_types
+  usa_slots_cover_the_frames
+  usa_run_without_a_crash)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
