@@ -34,6 +34,7 @@ typedef struct sk_play {
     sk_err load_err;
     sk_pictures pic;                /* a picture mode (loading strip, world map, ending) runs instead of the level when on */
     sk_run next;                    /* what follows the loading strip */
+    int cup_arg;                    /* --cup, -1 none */
 } sk_play;
 
 bool play_open(sk_play *p, const sk_args *a, sk_err *e);

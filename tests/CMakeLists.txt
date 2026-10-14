@@ -436,7 +436,8 @@ set(SK_TEST_NAMES
   alien_82_with_the_cup_fights_and_dies
   alien_82_starts_over_after_the_kid_dies
   alien_shot_83_flies_along_the_arm_and_clamps_its_frame
-  bonus_levels_and_alien_load_and_run)
+  bonus_levels_and_alien_load_and_run
+  args_cup_sets_the_pieces)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -7,6 +7,7 @@
 static const char *USAGE =
     "usage: soccerkid --roms <dir> [options]\n"
     "  --roms <dir>            directory holding the five disk images (.adf or .zip)\n"
+    "  --cup MASK              the cup pieces already held (31 = all five: the ALIEN fights, the good ending)\n"
     "  --level N               play one level, data index 0..41 (default: the whole game from world map 0)\n"
     "  --section fileNNN:S[:WxH]  show the frames of graphics-set file NNN section S (size estimated unless given)\n"
     "  --cam X,Y               camera position in pixels (default 0,0)\n"
@@ -39,6 +40,7 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
     memset(a, 0, sizeof *a);
     a->section = -1;
     a->level = -1;
+    a->cup = -1;
     a->scale = 3;
     a->near_type = -1;
     for (int i = 1; i < argc; i++) {
@@ -53,12 +55,13 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
         bool takes_value = strcmp(opt, "--roms") == 0 || strcmp(opt, "--level") == 0 || strcmp(opt, "--section") == 0 ||
                            strcmp(opt, "--cam") == 0 || strcmp(opt, "--screenshot") == 0 || strcmp(opt, "--scale") == 0 ||
                            strcmp(opt, "--exit-after") == 0 || strcmp(opt, "--frames") == 0 || strcmp(opt, "--script") == 0 ||
-                           strcmp(opt, "--start") == 0 || strcmp(opt, "--near") == 0;
+                           strcmp(opt, "--start") == 0 || strcmp(opt, "--near") == 0 || strcmp(opt, "--cup") == 0;
         if (!takes_value) return sk_fail(e, "unknown option %s", opt);
         if (!val) return sk_fail(e, "%s needs a value", opt);
         i++;
         if (strcmp(opt, "--roms") == 0) a->roms = val;
         else if (strcmp(opt, "--screenshot") == 0) a->screenshot = val;
+        else if (strcmp(opt, "--cup") == 0) { if (!parse_int(val, &a->cup) || a->cup < 0 || a->cup > 31) return sk_fail(e, "--cup: a mask 0..31, got %s", val); }
         else if (strcmp(opt, "--level") == 0) { if (!parse_int(val, &a->level)) return sk_fail(e, "--level: not a number: %s", val); }
         else if (strcmp(opt, "--scale") == 0) { if (!parse_int(val, &a->scale) || a->scale < 1) return sk_fail(e, "--scale: bad value %s", val); }
         else if (strcmp(opt, "--exit-after") == 0) { if (!parse_int(val, &a->exit_after)) return sk_fail(e, "--exit-after: not a number: %s", val); }

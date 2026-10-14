@@ -105,3 +105,13 @@ void test_args_start_near_and_markers(void) {
     const char *bad2[] = { "soccerkid", "--roms", "d", "--start", "12" };
     CHECK(!parse(&a, &e, 5, bad2));
 }
+
+void test_args_cup_sets_the_pieces(void) {
+    sk_args a; sk_err e = {0};
+    const char *none[] = { "soccerkid", "--roms", "d" };
+    CHECK(parse(&a, &e, 3, none)); CHECK_EQ(a.cup, -1);
+    const char *all[] = { "soccerkid", "--roms", "d", "--cup", "31" };
+    CHECK(parse(&a, &e, 5, all)); CHECK_EQ(a.cup, 31);
+    const char *bad[] = { "soccerkid", "--roms", "d", "--cup", "32" };
+    CHECK(!parse(&a, &e, 5, bad)); CHECK_STR(e.msg, "--cup");
+}

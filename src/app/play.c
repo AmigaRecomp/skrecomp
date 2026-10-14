@@ -86,6 +86,8 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     int pos = -1;
     for (int i = 0; i < SK_LEVEL_SEQUENCE_LEN; i++) if (p->scene.tables.sequence[i] == a->level) { pos = i; break; }
     game_new_game(&p->game);
+    p->cup_arg = a->cup;
+    if (a->cup >= 0) p->game.cup_pieces = (uint8_t)a->cup;
     if (a->level < 0) { play_advance(p); if (p->load_failed) { *e = p->load_err; play_close(p); return false; } return true; }   /* the whole game */
     if (pos >= 0) p->game.level_number = pos;
     if (a->has_start) { p->has_start = true; p->start_level = a->level; p->start_x = a->start_x; p->start_y = a->start_y; }
@@ -214,6 +216,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
         if (p->game_over_frames == 0) sound_fade_out(&p->snd);       /* fade_music_out 0x1040F2 (the statistics go: a new game follows) */
         if (++p->game_over_frames >= GAME_OVER_FRAMES) {
             game_new_game(&p->game);
+            if (p->cup_arg >= 0) p->game.cup_pieces = (uint8_t)p->cup_arg;   /* --cup holds through a game over */
             if (p->level_pos >= 0) p->game.level_number = p->level_pos;
             if (!play_start_level(p, p->level_pos, p->scene.level_index, &e)) { p->load_failed = true; p->load_err = e; }
         }

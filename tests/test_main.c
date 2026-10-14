@@ -379,6 +379,7 @@ void test_alien_82_with_the_cup_fights_and_dies(void);
 void test_alien_82_starts_over_after_the_kid_dies(void);
 void test_alien_shot_83_flies_along_the_arm_and_clamps_its_frame(void);
 void test_bonus_levels_and_alien_load_and_run(void);
+void test_args_cup_sets_the_pieces(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -755,6 +756,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "alien_82_starts_over_after_the_kid_dies", test_alien_82_starts_over_after_the_kid_dies },
     { "alien_shot_83_flies_along_the_arm_and_clamps_its_frame", test_alien_shot_83_flies_along_the_arm_and_clamps_its_frame },
     { "bonus_levels_and_alien_load_and_run", test_bonus_levels_and_alien_load_and_run },
+    { "args_cup_sets_the_pieces", test_args_cup_sets_the_pieces },
 };
 
 int main(int argc, char **argv) {
