@@ -65,7 +65,8 @@ add_executable(sk_tests
   test_savescreen.c
   test_anim.c
   test_intro.c
-  test_controls.c)
+  test_controls.c
+  test_remap.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -509,7 +510,10 @@ set(SK_TEST_NAMES
   pause_only_in_a_running_level
   controls_defaults_map_keys_and_pad_to_the_five_inputs
   controls_file_round_trips_and_keeps_defaults_for_unknown_lines
-  controls_set_replaces_one_device_and_keeps_the_other)
+  controls_set_replaces_one_device_and_keeps_the_other
+  remap_walks_the_actions_and_sets_each
+  remap_escape_cancels_and_f5_restores_defaults
+  controls_file_is_created_with_the_defaults_and_read_back)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -443,6 +443,9 @@ void test_pause_only_in_a_running_level(void);
 void test_controls_defaults_map_keys_and_pad_to_the_five_inputs(void);
 void test_controls_file_round_trips_and_keeps_defaults_for_unknown_lines(void);
 void test_controls_set_replaces_one_device_and_keeps_the_other(void);
+void test_remap_walks_the_actions_and_sets_each(void);
+void test_remap_escape_cancels_and_f5_restores_defaults(void);
+void test_controls_file_is_created_with_the_defaults_and_read_back(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -883,6 +886,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "controls_defaults_map_keys_and_pad_to_the_five_inputs", test_controls_defaults_map_keys_and_pad_to_the_five_inputs },
     { "controls_file_round_trips_and_keeps_defaults_for_unknown_lines", test_controls_file_round_trips_and_keeps_defaults_for_unknown_lines },
     { "controls_set_replaces_one_device_and_keeps_the_other", test_controls_set_replaces_one_device_and_keeps_the_other },
+    { "remap_walks_the_actions_and_sets_each", test_remap_walks_the_actions_and_sets_each },
+    { "remap_escape_cancels_and_f5_restores_defaults", test_remap_escape_cancels_and_f5_restores_defaults },
+    { "controls_file_is_created_with_the_defaults_and_read_back", test_controls_file_is_created_with_the_defaults_and_read_back },
 };
 
 int main(int argc, char **argv) {

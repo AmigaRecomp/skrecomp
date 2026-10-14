@@ -58,3 +58,23 @@ void test_controls_set_replaces_one_device_and_keeps_the_other(void) {
     memset(keys, 0, sizeof keys); pad.present = true; pad.button[SDL_GAMEPAD_BUTTON_EAST] = true;
     CHECK(controls_held(&c, SK_ACT_FIRE, keys, &pad));           /* the pad's B still fires */
 }
+
+#include <stdio.h>
+#include <stdlib.h>
+void test_controls_file_is_created_with_the_defaults_and_read_back(void) {
+    char path[256];
+    snprintf(path, sizeof path, "%s/sk_test_controls.cfg", getenv("TMPDIR") ? getenv("TMPDIR") : "/tmp");
+    remove(path);
+    sk_controls c;
+    CHECK(controls_load(&c, path));                              /* missing: the defaults, written out */
+    FILE *f = fopen(path, "r"); CHECK(f != NULL); if (f) fclose(f);
+    controls_set(&c, SK_ACT_FIRE, (sk_bind){ SK_BIND_KEY, SDL_SCANCODE_K, 0 });
+    CHECK(controls_save(&c, path));
+    sk_controls d;
+    CHECK(controls_load(&d, path));
+    memset(keys, 0, sizeof keys); memset(&pad, 0, sizeof pad);
+    keys[SDL_SCANCODE_K] = true;
+    CHECK(controls_held(&d, SK_ACT_FIRE, keys, &pad));
+    remove(path);
+    CHECK(!controls_save(&c, "/nonexistent/dir/controls.cfg"));
+}

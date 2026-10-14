@@ -151,3 +151,24 @@ bool controls_parse(sk_controls *c, const char *text, sk_err *e) {
     }
     return true;
 }
+bool controls_save(const sk_controls *c, const char *path) {
+    char text[4096];
+    controls_format(c, text, sizeof text);
+    FILE *f = path ? fopen(path, "w") : NULL;
+    if (!f) return false;
+    bool ok = fputs("# Soccer Kid controls: action = key:<name>, pad:<button>, pad:<axis>+ or - (F12 in the game remaps)\n", f) >= 0 &&
+              fputs(text, f) >= 0;
+    return fclose(f) == 0 && ok;
+}
+
+bool controls_load(sk_controls *c, const char *path) {
+    controls_defaults(c);
+    FILE *f = path ? fopen(path, "r") : NULL;
+    if (!f) return controls_save(c, path);
+    char text[8192];
+    size_t n = fread(text, 1, sizeof text - 1, f);
+    fclose(f);
+    text[n] = 0;
+    sk_err e = {0};
+    return controls_parse(c, text, &e);
+}

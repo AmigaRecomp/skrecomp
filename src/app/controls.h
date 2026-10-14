@@ -27,5 +27,7 @@ void controls_set(sk_controls *c, sk_action a, sk_bind b);
 void controls_format(const sk_controls *c, char *out, size_t n);   /* "fire = key:Space, pad:b" lines */
 bool controls_parse(sk_controls *c, const char *text, sk_err *e);  /* each known line replaces that action; bad entries skipped */
 void controls_bind_name(sk_bind b, char *out, size_t n);           /* "key:Space", "pad:a", "pad:leftx-" */
+bool controls_load(sk_controls *c, const char *path);              /* the defaults, then the file; a missing file is written */
+bool controls_save(const sk_controls *c, const char *path);
 
 #endif
