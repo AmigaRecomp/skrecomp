@@ -343,6 +343,8 @@ void test_usa_markers_spawn_real_types(void);
 void test_usa_slots_cover_the_frames(void);
 void test_usa_run_without_a_crash(void);
 void test_jumper_17_ignores_a_low_step(void);
+void test_play_level_entry_runs_maps_and_endings_on_their_own_slot(void);
+void test_play_level_entry_walks_the_games_tail(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -683,6 +685,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "usa_slots_cover_the_frames", test_usa_slots_cover_the_frames },
     { "usa_run_without_a_crash", test_usa_run_without_a_crash },
     { "jumper_17_ignores_a_low_step", test_jumper_17_ignores_a_low_step },
+    { "play_level_entry_runs_maps_and_endings_on_their_own_slot", test_play_level_entry_runs_maps_and_endings_on_their_own_slot },
+    { "play_level_entry_walks_the_games_tail", test_play_level_entry_walks_the_games_tail },
 };
 
 int main(int argc, char **argv) {

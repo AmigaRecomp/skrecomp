@@ -51,7 +51,8 @@ add_executable(sk_tests
   test_obj_usa.c
   test_attr_usa.c
   test_attr_country_london.c
-  test_obj_russia.c)
+  test_obj_russia.c
+  test_between.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -395,7 +396,9 @@ set(SK_TEST_NAMES
   usa_markers_spawn_real_types
   usa_slots_cover_the_frames
   usa_run_without_a_crash
-  jumper_17_ignores_a_low_step)
+  jumper_17_ignores_a_low_step
+  play_level_entry_runs_maps_and_endings_on_their_own_slot
+  play_level_entry_walks_the_games_tail)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
