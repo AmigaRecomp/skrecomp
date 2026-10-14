@@ -37,6 +37,9 @@ typedef struct {
     int option;                         /* the OPTIONS cursor */
     bool *music_off, *sfx_muted;        /* the options' toggles (0x300367 / 0x300368), NULL in tests */
     bool tutorial, resume;              /* 0x300393 / 0x300390 */
+    bool version_box;                   /* TAB held: show_version */
+    bool music_changed;                 /* OPTIONS toggled the music: the app stops it or starts it again */
+    uint8_t panel_save[144 * 70];       /* blit_save_rect: x 144..287, y 116..185 */
     bool fire_released;                 /* ruling: START GAME needs fire let go once since the menu opened */
     const uint16_t *hiscore_kits;       /* F1..F10: 10 x (shirt, shorts), NULL none */
 } sk_frontend;
@@ -48,6 +51,7 @@ bool frontend_menu(sk_frontend *f, const sk_image *sk, sk_disks *d, sk_err *e);
 /* One frame: input = the joystick bits (game/input.h), keys = SK_FE_KEY_*. */
 sk_fe_result frontend_step(sk_frontend *f, uint8_t input, unsigned keys);
 void frontend_present(const sk_frontend *f, uint32_t *out);
+void frontend_text(sk_frontend *f, const char *s, int x, int y);   /* draw_text_8x8 0x11DC86 into the picture */
 void frontend_free(sk_frontend *f);
 
 #endif

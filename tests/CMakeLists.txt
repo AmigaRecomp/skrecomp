@@ -458,7 +458,11 @@ set(SK_TEST_NAMES
   savegame_slot_round_trips_through_the_xor_and_checksum
   savegame_names_show_empty_slots
   hiscore_insert_shifts_the_table_down
-  window_frontend_keys_map_tab_and_f_keys)
+  window_frontend_keys_map_tab_and_f_keys
+  kit_design_grows_its_panel_and_changes_the_kit
+  options_toggle_music_and_ask_for_the_tutorial
+  panel_text_draws_body_and_outline_colours
+  tab_shows_the_version_box_and_holds_the_menu)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

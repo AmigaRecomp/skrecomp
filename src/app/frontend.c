@@ -20,6 +20,8 @@ static const int16_t menu_arrows[3][4] = { { 0xA8, 0x84, 0x10A, 0x84 }, { 0xA8, 
 static const uint8_t sparkle_seq[11] = { 0, 1, 3, 5, 6, 6, 6, 5, 3, 1, 0 };                                                     /* 0x11CF86 */
 static const uint16_t sparkle_waits[4] = { 100, 150, 20, 150 };                                                                    /* 0x11CF7E */
 
+static void panel_open(sk_frontend *f, sk_fe_mode mode);
+
 static uint8_t edges(sk_frontend *f, uint8_t in) {              /* input_edges 0x11CEBC */
     uint8_t n = (uint8_t)(in & ~f->prev_input);
     f->prev_input = in;
@@ -105,6 +107,17 @@ static void title_sparkle_tick(sk_frontend *f) {                 /* 0x11CEFC */
     }
 }
 
+static void draw_version(sk_frontend *f) {                     /* show_version: x 232..319, y 248..255, "A1200 V1.13" */
+    uint8_t keep[8 * 96];
+    for (int y = 0; y < 8; y++) memcpy(keep + y * 96, f->base + (248 + y) * 320 + 224, 96);
+    for (int y = 248; y < 256; y++) memset(f->base + y * 320 + 232, 255, 88);
+    char t[16] = "A1200 V1.13";
+    if (f->sk) { for (int i = 0; i < 11; i++) t[i] = (char)image_u8(f->sk, 0x11CDDEu + (uint32_t)i); t[11] = 0; }
+    frontend_text(f, t, 232, 248);
+    for (int y = 248; y < 256; y++) memcpy(f->px + y * 320 + 224, f->base + y * 320 + 224, 96);
+    for (int y = 0; y < 8; y++) memcpy(f->base + (248 + y) * 320 + 224, keep + y * 96, 96);   /* blit_restore_rect */
+}
+
 static void draw_title(sk_frontend *f) {
     memcpy(f->px, f->base, sizeof f->px);
     const uint8_t *sp = f->title + TITLE_SPARKLE + 0x400 * sparkle_seq[f->sparkle_step];   /* blit_sparkle at (49, 69) */
@@ -115,7 +128,7 @@ static void draw_title(sk_frontend *f) {
             f->px[(69 + r) * 320 + 49 + c] = (uint8_t)v;
         }
     const uint8_t *mask = f->title + TITLE_ARROW, *img = mask + 24;                          /* blit_menu_arrow, twice */
-    for (int k = 0; k < 2; k++) {
+    for (int k = 0; k < 2 && f->mode == SK_FE_MENU; k++) {
         int ax = menu_arrows[f->item][2 * k], ay = menu_arrows[f->item][2 * k + 1];
         for (int r = 0; r < 12; r++)
             for (int c = 0; c < 16; c++) {
@@ -130,12 +143,14 @@ static void draw_title(sk_frontend *f) {
 
 static sk_fe_result menu_step(sk_frontend *f, uint8_t input, unsigned keys) {   /* the loop of title_menu */
     title_sparkle_tick(f);                                       /* menu_wait_frame (game_flags set in the frontend) */
+    f->version_box = (keys & SK_FE_KEY_TAB) != 0;                /* show_version waits until TAB is released */
+    if (f->version_box) return SK_FE_STAY;
     uint8_t n = edges(f, input);
     if (n & SK_IN_UP) { f->attract_counter = 0; if (--f->item < 0) f->item = 2; }
     if (n & SK_IN_DOWN) { f->attract_counter = 0; if (++f->item >= 3) f->item = 0; }
     if (n & SK_IN_FIRE) {
-        if (f->item == 1) { f->attract_counter = 0; f->mode = SK_FE_KIT; f->panel_step = 0; return SK_FE_STAY; }
-        if (f->item == 2) { f->attract_counter = 0; f->mode = SK_FE_OPTIONS; f->panel_step = 0; f->option = 4; return SK_FE_STAY; }
+        if (f->item == 1) { f->attract_counter = 0; panel_open(f, SK_FE_KIT); return SK_FE_STAY; }
+        if (f->item == 2) { f->attract_counter = 0; panel_open(f, SK_FE_OPTIONS); f->option = 4; return SK_FE_STAY; }
     }
     if (keys & SK_FE_KEY_QUIT) return SK_FE_QUIT;                /* CTRL + ESC: jmp 0x1001C6 */
     if (f->resume) { f->attract_counter = -1; return SK_FE_RESUME; }
@@ -144,6 +159,121 @@ static sk_fe_result menu_step(sk_frontend *f, uint8_t input, unsigned keys) {   
     if (!(input & SK_IN_FIRE)) f->fire_released = true;
     if ((input & SK_IN_FIRE) && f->fire_released && f->item == 0) { f->attract_counter = -1; return SK_FE_START; }
     return SK_FE_STAY;
+}
+
+/* ---- KIT DESIGN and OPTIONS: a box grown over the picture, 8x8 text ---- */
+#define FONT_8 0x204148u                /* 16 bytes a glyph: 8 rows of (body, outline) */
+#define KIT_TEXTS 0x11D102u             /* 5 languages x 5 string pointers */
+#define OPTION_TEXTS 0x11D744u          /* 5 languages x 8 string pointers */
+#define HISCORES 0x200934u              /* +0xC shirt, +0xE shorts */
+#define PANEL_X 144                     /* blit_save_rect(0x90, 0x74, 9 words, 0x46 rows) */
+#define PANEL_Y 116
+#define PANEL_W 144
+#define PANEL_H 70
+
+void frontend_text(sk_frontend *f, const char *s, int x, int y) {   /* draw_text_8x8 0x11DC86 */
+    for (int i = 0; s[i]; i++) {
+        uint8_t c = (uint8_t)s[i];
+        const uint8_t *g = f->sk && c >= 0x20 ? image_ptr(f->sk, FONT_8 + (uint32_t)(c - 0x20) * 16u, 16) : NULL;
+        for (int r = 0; r < 8; r++) {
+            int py = y + r;
+            if (py < 0 || py >= 256) continue;
+            uint8_t body = g ? g[2 * r] : 0, outline = g ? g[2 * r + 1] : 0;
+            for (int k = 0; k < 8; k++) {
+                int px = x + 8 * i + k;
+                if (px < 0 || px >= 320) continue;
+                uint8_t *v = &f->base[py * 320 + px];
+                int bit = 7 - k;
+                *v = (uint8_t)(*v | 3);                          /* planes 0 and 1 set, then ANDed with ~body, ~outline */
+                if ((body >> bit) & 1) *v &= (uint8_t)~1;
+                if ((outline >> bit) & 1) *v &= (uint8_t)~2;
+            }
+        }
+    }
+}
+
+static void image_string(const sk_frontend *f, uint32_t table, int per_language, int k, char *out, size_t n) {
+    out[0] = 0;
+    if (!f->sk) return;
+    uint32_t a = image_u32(f->sk, table + 4u * (uint32_t)(f->language * per_language + k));
+    size_t i = 0;
+    for (; i + 1 < n; i++) { uint8_t c = image_u8(f->sk, a + (uint32_t)i); if (!c) break; out[i] = (char)c; }
+    out[i] = 0;
+}
+
+static void panel_open(sk_frontend *f, sk_fe_mode mode) {
+    for (int y = 0; y < PANEL_H; y++) memcpy(f->panel_save + y * PANEL_W, f->base + (PANEL_Y + y) * 320 + PANEL_X, PANEL_W);
+    f->mode = mode;
+    f->panel_step = 0;
+}
+
+static void panel_close(sk_frontend *f) {                       /* blit_restore_rect */
+    for (int y = 0; y < PANEL_H; y++) memcpy(f->base + (PANEL_Y + y) * 320 + PANEL_X, f->panel_save + y * PANEL_W, PANEL_W);
+    f->mode = SK_FE_MENU;
+}
+
+static bool panel_grow(sk_frontend *f) {                        /* fill_box 0x11D322: 16 frames, centred on (220, 152) */
+    if (f->panel_step >= 16) return false;
+    int w = 0x26 + 6 * f->panel_step, h = 8 + 4 * f->panel_step;
+    for (int y = 152 - (h >> 1); y < 152 - (h >> 1) + h; y++)
+        for (int x = 220 - (w >> 1); x < 220 - (w >> 1) + w; x++) f->base[y * 320 + x] = 255;
+    f->panel_step++;
+    return true;
+}
+
+static void kit_texts(sk_frontend *f) {
+    static const int16_t at[5][2] = { { 168, 122 }, { 160, 136 }, { 160, 146 }, { 160, 158 }, { 160, 168 } };
+    char t[40];
+    for (int k = 0; k < 5; k++) { image_string(f, KIT_TEXTS, 5, k, t, sizeof t); frontend_text(f, t, at[k][0], at[k][1]); }
+}
+
+static void kit_step(sk_frontend *f, uint8_t input, unsigned keys) {   /* kit_design 0x11CF92 */
+    if (panel_grow(f)) { if (f->panel_step == 16) kit_texts(f); return; }
+    for (int k = 0; k < 10; k++)                                 /* F1..F10: a hi-score entry's kit */
+        if ((keys & (SK_FE_KEY_F1 << k)) && f->sk) {
+            f->shirt = image_u16(f->sk, HISCORES + 16u * (uint32_t)k + 12) % 14;
+            f->shorts = image_u16(f->sk, HISCORES + 16u * (uint32_t)k + 14) % 14;
+        }
+    uint8_t n = edges(f, input);
+    if (n & SK_IN_UP) f->shirt = f->shirt == 0 ? 13 : f->shirt - 1;
+    if (n & SK_IN_DOWN) f->shirt = f->shirt == 13 ? 0 : f->shirt + 1;
+    if (n & SK_IN_LEFT) f->shorts = f->shorts == 0 ? 13 : f->shorts - 1;
+    if (n & SK_IN_RIGHT) f->shorts = f->shorts == 13 ? 0 : f->shorts + 1;
+    title_colours(f);                                            /* apply_kit_preview each frame */
+    if (n & SK_IN_FIRE) panel_close(f);
+}
+
+static void option_items(sk_frontend *f) {                      /* items 0 and 1 follow the flags */
+    char t[40];
+    image_string(f, OPTION_TEXTS, 8, f->music_off && *f->music_off ? 2 : 1, t, sizeof t); frontend_text(f, t, 168, 132);
+    image_string(f, OPTION_TEXTS, 8, f->sfx_muted && *f->sfx_muted ? 4 : 3, t, sizeof t); frontend_text(f, t, 168, 142);
+}
+
+static void options_step(sk_frontend *f, uint8_t input) {       /* options_menu 0x11D504 */
+    if (panel_grow(f)) {
+        if (f->panel_step == 16) {
+            char t[40];
+            image_string(f, OPTION_TEXTS, 8, 0, t, sizeof t); frontend_text(f, t, 192, 120);
+            for (int k = 2; k < 5; k++) { image_string(f, OPTION_TEXTS, 8, k + 3, t, sizeof t); frontend_text(f, t, 168, 132 + 10 * k); }
+            option_items(f);
+            frontend_text(f, "t", 160, 132 + 10 * f->option);
+        }
+        return;
+    }
+    option_items(f);
+    frontend_text(f, " ", 160, 132 + 10 * f->option);
+    uint8_t n = edges(f, input);
+    if (n & SK_IN_UP) f->option = f->option == 0 ? 4 : f->option - 1;
+    if (n & SK_IN_DOWN) f->option = f->option == 4 ? 0 : f->option + 1;
+    frontend_text(f, "t", 160, 132 + 10 * f->option);
+    if (!(n & SK_IN_FIRE)) return;
+    switch (f->option) {
+    case 0: if (f->music_off) *f->music_off = !*f->music_off; f->music_changed = true; option_items(f); break;
+    case 1: if (f->sfx_muted) *f->sfx_muted = !*f->sfx_muted; option_items(f); break;
+    case 2: f->tutorial = true; panel_close(f); break;
+    case 3: f->resume = true; panel_close(f); break;
+    default: panel_close(f); break;
+    }
 }
 
 sk_fe_result frontend_step(sk_frontend *f, uint8_t input, unsigned keys) {
@@ -156,6 +286,8 @@ sk_fe_result frontend_step(sk_frontend *f, uint8_t input, unsigned keys) {
         return SK_FE_STAY;
     }
     case SK_FE_MENU: return menu_step(f, input, keys);
+    case SK_FE_KIT: title_sparkle_tick(f); kit_step(f, input, keys); return SK_FE_STAY;
+    case SK_FE_OPTIONS: title_sparkle_tick(f); options_step(f, input); return SK_FE_STAY;
     default: return SK_FE_STAY;
     }
 }
@@ -163,7 +295,7 @@ sk_fe_result frontend_step(sk_frontend *f, uint8_t input, unsigned keys) {
 void frontend_present(const sk_frontend *f, uint32_t *out) {
     sk_frontend *m = (sk_frontend *)f;                           /* the frame is composed on the way out */
     if (f->mode == SK_FE_LANGUAGE) draw_language(m);
-    else if (f->mode != SK_FE_OFF) draw_title(m);
+    else if (f->mode != SK_FE_OFF) { draw_title(m); if (f->version_box && f->mode == SK_FE_MENU) draw_version(m); }
     for (int i = 0; i < SK_SCREEN_W * SK_SCREEN_H; i++) out[i] = f->pal[f->px[i]];
 }
 

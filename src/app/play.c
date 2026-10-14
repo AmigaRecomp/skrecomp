@@ -183,6 +183,7 @@ static void session_start(sk_play *p) {                             /* level_ses
     p->fade_wait = 0; p->game_over_frames = 0;
     p->game.game_flags = 0xFF;
     title_music(p, true);
+    p->fe.music_off = &p->snd.music_off; p->fe.sfx_muted = &p->snd.sfx_muted;
     if (!frontend_menu(&p->fe, &p->scene.sk, &p->scene.disks, &e)) fail(p, &e);
 }
 
@@ -199,7 +200,13 @@ static void start_game(sk_play *p) {                                /* START GAM
 
 static void frontend_frame(sk_play *p, uint8_t in) {
     sk_err e = {0};
-    switch (frontend_step(&p->fe, in, p->fe_keys)) {
+    sk_fe_result r = frontend_step(&p->fe, in, p->fe_keys);
+    if (p->fe.music_changed) {                                      /* OPTIONS: music_stop when off, then music_request(module, 0) */
+        p->fe.music_changed = false;
+        if (p->snd.music_off) sound_stop(&p->snd);
+        sound_music(&p->snd, SK_MUSIC_LEVEL, 0);
+    }
+    switch (r) {
     case SK_FE_LANGUAGE_CHOSEN: {                                   /* the language's message texts, then the session */
         uint8_t *bin = NULL; size_t n = 0;
         if (disks_read(&p->scene.disks, 0, language_file(p->fe.language), &bin, &n, &e)) language_apply(&p->scene.sk, bin, n);

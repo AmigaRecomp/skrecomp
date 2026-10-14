@@ -398,6 +398,10 @@ void test_savegame_slot_round_trips_through_the_xor_and_checksum(void);
 void test_savegame_names_show_empty_slots(void);
 void test_hiscore_insert_shifts_the_table_down(void);
 void test_window_frontend_keys_map_tab_and_f_keys(void);
+void test_kit_design_grows_its_panel_and_changes_the_kit(void);
+void test_options_toggle_music_and_ask_for_the_tutorial(void);
+void test_panel_text_draws_body_and_outline_colours(void);
+void test_tab_shows_the_version_box_and_holds_the_menu(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -793,6 +797,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "savegame_names_show_empty_slots", test_savegame_names_show_empty_slots },
     { "hiscore_insert_shifts_the_table_down", test_hiscore_insert_shifts_the_table_down },
     { "window_frontend_keys_map_tab_and_f_keys", test_window_frontend_keys_map_tab_and_f_keys },
+    { "kit_design_grows_its_panel_and_changes_the_kit", test_kit_design_grows_its_panel_and_changes_the_kit },
+    { "options_toggle_music_and_ask_for_the_tutorial", test_options_toggle_music_and_ask_for_the_tutorial },
+    { "panel_text_draws_body_and_outline_colours", test_panel_text_draws_body_and_outline_colours },
+    { "tab_shows_the_version_box_and_holds_the_menu", test_tab_shows_the_version_box_and_holds_the_menu },
 };
 
 int main(int argc, char **argv) {
