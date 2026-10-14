@@ -513,7 +513,11 @@ set(SK_TEST_NAMES
   controls_set_replaces_one_device_and_keeps_the_other
   remap_walks_the_actions_and_sets_each
   remap_escape_cancels_and_f5_restores_defaults
-  controls_file_is_created_with_the_defaults_and_read_back)
+  controls_file_is_created_with_the_defaults_and_read_back
+  controls_set_takes_the_input_from_other_actions
+  controls_file_keeps_comma_keys_bad_lines_and_a_bom
+  controls_stick_press_needs_a_dominant_axis_and_a_return
+  remap_ignores_the_fixed_keys)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

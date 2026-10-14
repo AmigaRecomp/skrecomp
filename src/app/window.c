@@ -117,36 +117,52 @@ static void pad_state(const sk_window *w, sk_pad *pad) {
     for (int a = 0; a < SDL_GAMEPAD_AXIS_COUNT; a++) pad->axis[a] = SDL_GetGamepadAxis(w->pad, (SDL_GamepadAxis)a);
 }
 
-/* The remap screen takes every key and pad press while it is open; on DONE the file is written. */
-static void remap_event(sk_window *w, sk_play *p, const SDL_Event *ev) {
-    sk_bind b = { SK_BIND_NONE, 0, 0 };
-    if (ev->type == SDL_EVENT_KEY_DOWN && !ev->key.repeat) { b.kind = SK_BIND_KEY; b.code = (int16_t)ev->key.scancode; }
-    else if (ev->type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) { b.kind = SK_BIND_BUTTON; b.code = (int16_t)ev->gbutton.button; }
-    else if (ev->type == SDL_EVENT_GAMEPAD_AXIS_MOTION && ev->gaxis.axis < SDL_GAMEPAD_AXIS_COUNT) {
-        int v = ev->gaxis.value, was = w->prev_axis[ev->gaxis.axis];
-        w->prev_axis[ev->gaxis.axis] = (int16_t)v;
-        bool now_out = v >= SK_AXIS_THRESHOLD || v <= -SK_AXIS_THRESHOLD, was_out = was >= SK_AXIS_THRESHOLD || was <= -SK_AXIS_THRESHOLD;
-        if (!now_out || was_out) return;
-        b.kind = SK_BIND_AXIS; b.code = (int16_t)ev->gaxis.axis; b.sign = (int8_t)(v < 0 ? -1 : 1);
-    }
-    if (b.kind == SK_BIND_NONE) return;
-    if (remap_input(&w->remap, b) == SK_REMAP_DONE && p && p->controls_path[0] && !controls_save(&w->controls, p->controls_path))
+/* The remap screen takes one key or pad press at a time, each after everything was let go; on DONE the file is written. */
+static void remap_take(sk_window *w, sk_play *p, sk_bind b) {
+    sk_remap_result r = remap_input(&w->remap, b);
+    w->remap_wait = true;
+    if (r == SK_REMAP_STAY) return;
+    if (r == SK_REMAP_DONE && p && p->controls_path[0] && !controls_save(&w->controls, p->controls_path))
         fprintf(stderr, "soccerkid: could not write %s\n", p->controls_path);
+    const bool *keys = SDL_GetKeyboardState(NULL);              /* closed: what is held now is not a new press */
+    sk_pad pad; pad_state(w, &pad);
+    w->prev_pause = controls_held(&w->controls, SK_ACT_PAUSE, keys, &pad);
+    w->prev_back = controls_held(&w->controls, SK_ACT_BACK, keys, &pad);
+}
+
+static void remap_event(sk_window *w, sk_play *p, const SDL_Event *ev) {
+    if (w->remap_wait) return;
+    if (ev->type == SDL_EVENT_KEY_DOWN && !ev->key.repeat) remap_take(w, p, (sk_bind){ SK_BIND_KEY, (int16_t)ev->key.scancode, 0 });
+    else if (ev->type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) remap_take(w, p, (sk_bind){ SK_BIND_BUTTON, (int16_t)ev->gbutton.button, 0 });
+}
+
+static void remap_frame(sk_window *w, sk_play *p) {             /* the release wait and the sticks, once a frame */
+    const bool *keys = SDL_GetKeyboardState(NULL);
+    sk_pad pad; pad_state(w, &pad);
+    if (w->remap_wait) {
+        if (controls_any_held(keys, &pad)) return;
+        w->remap_wait = false;
+        controls_axes_arm(&w->axes, pad.present ? pad.axis : NULL);
+        return;
+    }
+    sk_bind b;
+    if (pad.present && controls_axis_press(&w->axes, pad.axis, &b)) remap_take(w, p, b);
 }
 
 static bool poll_events(sk_window *w, sk_scene *s, sk_play *p) {
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
         if (ev.type == SDL_EVENT_QUIT) return false;
-        if (ev.type == SDL_EVENT_GAMEPAD_ADDED && !w->pad) { w->pad = SDL_OpenGamepad(ev.gdevice.which); continue; }
+        if (ev.type == SDL_EVENT_GAMEPAD_ADDED && !w->pad) { w->pad = SDL_OpenGamepad(ev.gdevice.which); w->remap_wait = true; continue; }
         if (ev.type == SDL_EVENT_GAMEPAD_REMOVED) {
             if (w->pad && SDL_GetGamepadID(w->pad) == ev.gdevice.which) { SDL_CloseGamepad(w->pad); w->pad = NULL; open_first_pad(w); }
+            w->remap_wait = true;                               /* a new pad's sticks start from rest */
             continue;
         }
         if (p && w->remap.open) { remap_event(w, p, &ev); continue; }
-        if (p && ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_F12) {   /* the remap screen */
+        if (p && ev.type == SDL_EVENT_KEY_DOWN && ev.key.scancode == SDL_SCANCODE_F12) {   /* the remap screen */
             remap_open(&w->remap, &w->controls);
-            memset(w->prev_axis, 0, sizeof w->prev_axis);
+            w->remap_wait = true;                               /* F12 and anything held are let go first */
             continue;
         }
         if (p && p->intro && ev.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) { play_type(p, 1); continue; }   /* a pad button skips the intro */
@@ -163,12 +179,15 @@ static bool poll_events(sk_window *w, sk_scene *s, sk_play *p) {
         if (ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat) {
             switch (ev.key.key) {
             case SDLK_ESCAPE: if (!p) return false; p->esc_key = true; break;
-            case SDLK_M: if (w->audio) audio_out_mute(w->audio, !w->audio->muted); break;
             case SDLK_PAGEUP: if (s) change_level(s, -1); break;
             case SDLK_PAGEDOWN: if (s) change_level(s, 1); break;
             case SDLK_LEFTBRACKET: if (s) change_section(s, -1); break;
             case SDLK_RIGHTBRACKET: if (s) change_section(s, 1); break;
-            case SDLK_F: {
+            default: break;
+            }
+            switch (ev.key.scancode) {                          /* the fixed keys by position, as the bindings */
+            case SDL_SCANCODE_M: if (w->audio) audio_out_mute(w->audio, !w->audio->muted); break;
+            case SDL_SCANCODE_F: {
                 bool full = (SDL_GetWindowFlags(w->win) & SDL_WINDOW_FULLSCREEN) != 0;
                 SDL_SetWindowFullscreen(w->win, !full);
                 break;
@@ -230,15 +249,16 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
         int steps = window_steps_for(&acc, now - last);
         last = now;
         running = poll_events(w, NULL, p);
+        if (w->remap.open) remap_frame(w, p);
         for (int i = 0; i < steps && !w->remap.open; i++) {        /* the remap screen holds the game */
-            const bool *keys = SDL_GetKeyboardState(NULL);
+            const bool *keys = p->save.mode != SK_SAVE_OFF ? NULL : SDL_GetKeyboardState(NULL);   /* typing a name drives nothing */
             sk_pad pad;
             pad_state(w, &pad);
             bool pause = controls_held(&w->controls, SK_ACT_PAUSE, keys, &pad), back = controls_held(&w->controls, SK_ACT_BACK, keys, &pad);
             if (pause && !w->prev_pause) p->pause_key = true;
             if (back && !w->prev_back) p->esc_key = true;
             w->prev_pause = pause; w->prev_back = back;
-            p->fe_keys = window_frontend_keys(keys);
+            p->fe_keys = keys ? window_frontend_keys(keys) : 0;
             play_step(p, controls_bits(&w->controls, keys, &pad));
         }
         if (p->load_failed) { fprintf(stderr, "soccerkid: %s\n", p->load_err.msg); running = false; rc = 1; }

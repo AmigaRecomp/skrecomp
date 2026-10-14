@@ -14,8 +14,11 @@ sk_remap_result remap_input(sk_remap *r, sk_bind b) {
     if (!r->open) return SK_REMAP_STAY;
     if (b.kind == SK_BIND_KEY && b.code == SDL_SCANCODE_ESCAPE) { *r->live = r->before; r->open = false; return SK_REMAP_CANCEL; }
     if (b.kind == SK_BIND_KEY && b.code == SDL_SCANCODE_F5) { controls_defaults(r->live); r->open = false; return SK_REMAP_DONE; }
-    if (b.kind == SK_BIND_KEY && b.code == SDL_SCANCODE_F12) return SK_REMAP_STAY;   /* the key that opened it */
-    if (!(b.kind == SK_BIND_KEY && b.code == SDL_SCANCODE_BACKSPACE)) controls_set(r->live, (sk_action)r->step, b);
+    if (b.kind == SK_BIND_KEY && (b.code == SDL_SCANCODE_F12 || b.code == SDL_SCANCODE_F || b.code == SDL_SCANCODE_M ||
+                                  b.code == SDL_SCANCODE_TAB || (b.code >= SDL_SCANCODE_F1 && b.code <= SDL_SCANCODE_F10)))
+        return SK_REMAP_STAY;                                    /* the fixed keys keep their own meaning */
+    bool keep = (b.kind == SK_BIND_KEY && b.code == SDL_SCANCODE_BACKSPACE) || (b.kind == SK_BIND_BUTTON && b.code == SDL_GAMEPAD_BUTTON_BACK);
+    if (!keep) controls_set(r->live, (sk_action)r->step, b);
     if (++r->step < SK_ACTIONS) return SK_REMAP_STAY;
     r->open = false;
     return SK_REMAP_DONE;
@@ -64,5 +67,5 @@ void remap_draw(const sk_remap *r, const sk_image *sk, uint32_t *out) {
     }
     char ask[64]; snprintf(ask, sizeof ask, "PRESS A KEY OR BUTTON FOR %s", controls_action_name((sk_action)r->step));
     text(sk, out, ask, 24, 172, yellow);
-    text(sk, out, "BACKSPACE KEEP  F5 DEFAULTS  ESC CANCEL", 8, 192, grey);
+    text(sk, out, "BACKSPACE/PAD BACK KEEP F5 RESET ESC CANCEL", 8, 192, grey);
 }

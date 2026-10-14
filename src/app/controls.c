@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "app/controls.h"
 #include "game/input.h"
@@ -56,7 +57,16 @@ uint8_t controls_bits(const sk_controls *c, const bool *keys, const sk_pad *pad)
     return in;
 }
 
+static bool same(sk_bind x, sk_bind y) { return x.kind == y.kind && x.code == y.code && (x.kind != SK_BIND_AXIS || x.sign == y.sign); }
+
 void controls_set(sk_controls *c, sk_action a, sk_bind b) {
+    for (int o = 0; o < SK_ACTIONS; o++) {                       /* one input, one action (up and jump may share) */
+        if (o == (int)a || ((o == SK_ACT_UP || o == SK_ACT_JUMP) && (a == SK_ACT_UP || a == SK_ACT_JUMP))) continue;
+        sk_bind keep[SK_BINDS]; int n = 0;
+        for (int i = 0; i < SK_BINDS; i++) if (c->b[o][i].kind != SK_BIND_NONE && !same(c->b[o][i], b)) keep[n++] = c->b[o][i];
+        memset(c->b[o], 0, sizeof c->b[o]);
+        for (int i = 0; i < n; i++) c->b[o][i] = keep[i];
+    }
     bool key_kind = b.kind == SK_BIND_KEY;
     sk_bind keep[SK_BINDS]; int n = 0;
     for (int i = 0; i < SK_BINDS; i++) {
@@ -71,7 +81,12 @@ void controls_set(sk_controls *c, sk_action a, sk_bind b) {
 
 void controls_bind_name(sk_bind b, char *out, size_t n) {
     switch (b.kind) {
-    case SK_BIND_KEY: snprintf(out, n, "key:%s", SDL_GetScancodeName((SDL_Scancode)b.code)); break;
+    case SK_BIND_KEY: {
+        const char *name = SDL_GetScancodeName((SDL_Scancode)b.code);
+        if (!name[0] || strchr(name, ',') || strchr(name, '#')) snprintf(out, n, "key:#%d", b.code);   /* the file's separators */
+        else snprintf(out, n, "key:%s", name);
+        break;
+    }
     case SK_BIND_BUTTON: snprintf(out, n, "pad:%s", SDL_GetGamepadStringForButton((SDL_GamepadButton)b.code)); break;
     case SK_BIND_AXIS: snprintf(out, n, "pad:%s%c", SDL_GetGamepadStringForAxis((SDL_GamepadAxis)b.code), b.sign < 0 ? '-' : '+'); break;
     default: if (n) out[0] = 0; break;
@@ -108,6 +123,11 @@ static void trim(char *s) {
 }
 
 static bool parse_bind(const char *t, sk_bind *b) {
+    if (!strncmp(t, "key:#", 5)) {
+        int code = atoi(t + 5);
+        if (code <= 0 || code >= SDL_SCANCODE_COUNT) return false;
+        *b = key((SDL_Scancode)code); return true;
+    }
     if (!strncmp(t, "key:", 4)) {
         SDL_Scancode sc = SDL_GetScancodeFromName(t + 4);
         if (sc == SDL_SCANCODE_UNKNOWN) return false;
@@ -131,10 +151,13 @@ static bool parse_bind(const char *t, sk_bind *b) {
 bool controls_parse(sk_controls *c, const char *text, sk_err *e) {
     (void)e;
     char line[512];
+    if (!strncmp(text, "\xEF\xBB\xBF", 3)) text += 3;              /* a UTF-8 byte order mark */
     while (*text) {
         size_t l = strcspn(text, "\n");
-        snprintf(line, sizeof line, "%.*s", (int)(l < sizeof line - 1 ? l : sizeof line - 1), text);
+        bool too_long = l >= sizeof line;
+        snprintf(line, sizeof line, "%.*s", (int)(too_long ? 0 : l), text);
         text += l + (text[l] == '\n');
+        if (too_long) continue;                                  /* skipped whole: a cut entry could read as another */
         char *eq = strchr(line, '=');
         if (line[0] == '#' || !eq) continue;
         *eq = 0;
@@ -142,12 +165,15 @@ bool controls_parse(sk_controls *c, const char *text, sk_err *e) {
         int a = -1;
         for (int k = 0; k < SK_ACTIONS; k++) if (!strcmp(name, names[k])) a = k;
         if (a < 0) continue;
-        memset(c->b[a], 0, sizeof c->b[a]);
+        sk_bind got[SK_BINDS]; int n = 0;
         for (char *tok = strtok(eq + 1, ","); tok; tok = strtok(NULL, ",")) {
             char t[64]; snprintf(t, sizeof t, "%s", tok); trim(t);
             sk_bind b;
-            if (parse_bind(t, &b)) add(c, (sk_action)a, b);
+            if (n < SK_BINDS && parse_bind(t, &b)) got[n++] = b;
         }
+        if (!n) continue;                                        /* nothing valid: the action keeps what it had */
+        memset(c->b[a], 0, sizeof c->b[a]);
+        for (int i = 0; i < n; i++) c->b[a][i] = got[i];
     }
     return true;
 }
@@ -171,4 +197,40 @@ bool controls_load(sk_controls *c, const char *path) {
     text[n] = 0;
     sk_err e = {0};
     return controls_parse(c, text, &e);
+}
+static int iabs(int v) { return v < 0 ? -v : v; }
+static int partner(int a) {                                      /* the other axis of the same stick, -1 for a trigger */
+    switch (a) {
+    case SDL_GAMEPAD_AXIS_LEFTX: return SDL_GAMEPAD_AXIS_LEFTY;
+    case SDL_GAMEPAD_AXIS_LEFTY: return SDL_GAMEPAD_AXIS_LEFTX;
+    case SDL_GAMEPAD_AXIS_RIGHTX: return SDL_GAMEPAD_AXIS_RIGHTY;
+    case SDL_GAMEPAD_AXIS_RIGHTY: return SDL_GAMEPAD_AXIS_RIGHTX;
+    default: return -1;
+    }
+}
+
+void controls_axes_arm(sk_axis_arm *arm, const int16_t *axes) {
+    for (int a = 0; a < SDL_GAMEPAD_AXIS_COUNT; a++) arm->armed[a] = axes && iabs(axes[a]) < SK_AXIS_REST;
+}
+
+bool controls_axis_press(sk_axis_arm *arm, const int16_t *axes, sk_bind *out) {
+    for (int a = 0; a < SDL_GAMEPAD_AXIS_COUNT; a++) if (iabs(axes[a]) < SK_AXIS_REST) arm->armed[a] = true;
+    for (int a = 0; a < SDL_GAMEPAD_AXIS_COUNT; a++) {
+        if (!arm->armed[a] || iabs(axes[a]) < SK_AXIS_THRESHOLD) continue;
+        int o = partner(a);
+        if (o >= 0 && iabs(axes[o]) >= iabs(axes[a])) continue;  /* the stick's dominant direction only */
+        arm->armed[a] = false;
+        if (o >= 0) arm->armed[o] = false;
+        *out = axis((SDL_GamepadAxis)a, axes[a] < 0 ? -1 : 1);
+        return true;
+    }
+    return false;
+}
+
+bool controls_any_held(const bool *keys, const sk_pad *pad) {
+    for (int k = 0; keys && k < SDL_SCANCODE_COUNT; k++) if (keys[k]) return true;
+    if (!pad || !pad->present) return false;
+    for (int b = 0; b < SDL_GAMEPAD_BUTTON_COUNT; b++) if (pad->button[b]) return true;
+    for (int a = 0; a < SDL_GAMEPAD_AXIS_COUNT; a++) if (iabs(pad->axis[a]) >= SK_AXIS_REST) return true;
+    return false;
 }

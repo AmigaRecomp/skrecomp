@@ -22,7 +22,8 @@ typedef struct {
     sk_controls controls;       /* the bindings (controls.cfg) */
     sk_remap remap;             /* F12 */
     bool prev_pause, prev_back; /* the pause and back actions act on a press */
-    int16_t prev_axis[SDL_GAMEPAD_AXIS_COUNT];   /* the remap screen takes a stick crossing its threshold */
+    sk_axis_arm axes;           /* the remap screen takes a stick pushed out from rest */
+    bool remap_wait;            /* the remap screen waits until every key and pad input is released */
 } sk_window;
 
 bool window_open(sk_window *w, int scale, sk_err *e);

@@ -37,3 +37,13 @@ void test_remap_escape_cancels_and_f5_restores_defaults(void) {
     controls_format(&c, a, sizeof a);
     CHECK(strcmp(a, b) == 0);                                    /* the defaults again */
 }
+
+void test_remap_ignores_the_fixed_keys(void) {
+    sk_controls c; controls_defaults(&c);
+    sk_remap r; remap_open(&r, &c);
+    static const SDL_Scancode fixed[] = { SDL_SCANCODE_F, SDL_SCANCODE_M, SDL_SCANCODE_TAB, SDL_SCANCODE_F1, SDL_SCANCODE_F10, SDL_SCANCODE_F12 };
+    for (size_t i = 0; i < sizeof fixed / sizeof *fixed; i++) CHECK_EQ(remap_input(&r, k(fixed[i])), SK_REMAP_STAY);
+    CHECK_EQ(r.step, SK_ACT_UP);                                 /* none of them was taken */
+    CHECK_EQ(remap_input(&r, btn(SDL_GAMEPAD_BUTTON_BACK)), SK_REMAP_STAY);
+    CHECK_EQ(r.step, SK_ACT_DOWN);                               /* the pad's Back keeps, as Backspace */
+}

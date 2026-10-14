@@ -446,6 +446,10 @@ void test_controls_set_replaces_one_device_and_keeps_the_other(void);
 void test_remap_walks_the_actions_and_sets_each(void);
 void test_remap_escape_cancels_and_f5_restores_defaults(void);
 void test_controls_file_is_created_with_the_defaults_and_read_back(void);
+void test_controls_set_takes_the_input_from_other_actions(void);
+void test_controls_file_keeps_comma_keys_bad_lines_and_a_bom(void);
+void test_controls_stick_press_needs_a_dominant_axis_and_a_return(void);
+void test_remap_ignores_the_fixed_keys(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -889,6 +893,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "remap_walks_the_actions_and_sets_each", test_remap_walks_the_actions_and_sets_each },
     { "remap_escape_cancels_and_f5_restores_defaults", test_remap_escape_cancels_and_f5_restores_defaults },
     { "controls_file_is_created_with_the_defaults_and_read_back", test_controls_file_is_created_with_the_defaults_and_read_back },
+    { "controls_set_takes_the_input_from_other_actions", test_controls_set_takes_the_input_from_other_actions },
+    { "controls_file_keeps_comma_keys_bad_lines_and_a_bom", test_controls_file_keeps_comma_keys_bad_lines_and_a_bom },
+    { "controls_stick_press_needs_a_dominant_axis_and_a_return", test_controls_stick_press_needs_a_dominant_axis_and_a_return },
+    { "remap_ignores_the_fixed_keys", test_remap_ignores_the_fixed_keys },
 };
 
 int main(int argc, char **argv) {
