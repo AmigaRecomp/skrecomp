@@ -491,7 +491,10 @@ set(SK_TEST_NAMES
   intro_fade_steps_floor_toward_the_target
   intro_types_text_one_and_ends_on_a_key
   intro_plays_through_in_about_111_seconds
-  play_starts_with_the_intro_and_fire_skips_it)
+  play_starts_with_the_intro_and_fire_skips_it
+  resume_waits_for_fire_to_be_let_go
+  tutorial_survives_the_fire_that_chose_it
+  savegame_rejects_a_level_past_the_sequence)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

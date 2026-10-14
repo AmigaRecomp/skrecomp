@@ -32,3 +32,12 @@ void test_savegame_names_show_empty_slots(void) {               /* load_save_nam
     savegame_names(NULL, 0, rows);                               /* no file at all */
     CHECK(strcmp(rows[4], "5. EMPTY           ") == 0);
 }
+
+void test_savegame_rejects_a_level_past_the_sequence(void) {
+    uint8_t file[SK_SAVE_SIZE];
+    memset(file, 0, sizeof file);
+    sk_save_slot in = { "X", 0, 58, 3, 0, 0, 0, 0 };
+    savegame_put(file, 0, &in);
+    sk_save_slot out;
+    CHECK(!savegame_get(file, sizeof file, 0, &out));
+}

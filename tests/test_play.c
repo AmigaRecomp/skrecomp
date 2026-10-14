@@ -623,3 +623,45 @@ void test_play_starts_with_the_intro_and_fire_skips_it(void) {     /* ROM-backed
     CHECK(!p.snd.music_use4);                                       /* the intro's music stopped and let go */
     play_close(&p);
 }
+
+static void open_options(sk_play *p) {
+    play_step(p, SK_IN_UP); play_step(p, 0); play_step(p, SK_IN_FIRE); play_step(p, 0);
+    for (int i = 0; i < 20; i++) play_step(p, 0);
+}
+
+void test_resume_waits_for_fire_to_be_let_go(void) {               /* level_session 0x104F2E: fire released before resume_game_screen */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .no_intro = true, .scale = 1, .section = -1, .save_path = "/nonexistent/x" };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    to_title(&p);
+    p.game.player.score = 0x95000;                                  /* a finished game's score, already entered */
+    open_options(&p);
+    play_step(&p, SK_IN_UP); play_step(&p, 0);                      /* RESUME GAME */
+    for (int i = 0; i < 8; i++) play_step(&p, SK_IN_FIRE);          /* a normal press, held */
+    CHECK_EQ(p.save.mode, SK_SAVE_LIST);                            /* not taken by the held press */
+    CHECK_EQ(p.game.player.score, 0);                               /* 0x103FD4: the score cleared after the session */
+    play_step(&p, 0);
+    p.esc_key = true; play_step(&p, 0);                             /* cancel: back to the title, no name entry */
+    CHECK_EQ(p.fe.mode, SK_FE_MENU); CHECK_EQ(p.attract, SK_ATTRACT_NONE);
+    play_close(&p);
+}
+
+void test_tutorial_survives_the_fire_that_chose_it(void) {
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .no_intro = true, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    to_title(&p);
+    p.game.player.score = 0x1234; p.game.cards = 5;
+    open_options(&p);
+    play_step(&p, SK_IN_UP); play_step(&p, 0); play_step(&p, SK_IN_UP); play_step(&p, 0);   /* TUTORIAL */
+    for (int i = 0; i < 8; i++) play_step(&p, SK_IN_FIRE);
+    CHECK_EQ(p.attract, SK_ATTRACT_TUTORIAL);                       /* the held press does not end it */
+    CHECK_EQ(p.game.player.score, 0); CHECK_EQ(p.game.cards, 0);   /* 0x104FB2: score and cards cleared */
+    play_step(&p, 0); play_step(&p, SK_IN_FIRE); play_step(&p, 0);
+    CHECK_EQ(p.attract, SK_ATTRACT_NONE);                           /* a new press does */
+    play_close(&p);
+}

@@ -258,6 +258,8 @@ static void attract_start(sk_play *p, sk_attract kind) {
         return;
     }
     g->game_flags = 0xFE;                                           /* run_demo_level / run_demo_level_b */
+    g->demo_fire_released = false;
+    g->player.score = 0; g->cards = 0;                              /* 0x10511C / 0x104FB2: score, reset_card_count */
     p->saved_muted = p->snd.sfx_muted;
     p->snd.sfx_muted = true;
     if (kind == SK_ATTRACT_DEMO) { if (!attract_load(p, 0, 0, 0)) return; spawn_object(g, 0, 0, 102); }
@@ -386,6 +388,7 @@ static void frontend_frame(sk_play *p, uint8_t in) {
     case SK_FE_IDLE: attract_start(p, SK_ATTRACT_PAN); break;       /* attract_loop */
     case SK_FE_TUTORIAL: attract_start(p, SK_ATTRACT_TUTORIAL); break;
     case SK_FE_RESUME: {                                            /* the session ends; the outer loop's resume_game_screen */
+        game_new_game(&p->game);                                    /* 0x103FD4: the new-game clears come first */
         char rows[5][24];
         save_rows(p, rows);
         p->fe.mode = SK_FE_OFF;

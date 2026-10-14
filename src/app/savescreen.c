@@ -34,6 +34,7 @@ bool savescreen_open(sk_savescreen *s, sk_save_mode mode, const sk_image *sk, in
     memcpy(s->rows, rows, sizeof s->rows);
     s->resume = mode == SK_SAVE_RESUME;
     s->mode = s->resume ? SK_SAVE_LIST : SK_SAVE_ASK;
+    s->wait_release = s->resume;                                 /* level_session 0x104F2E: fire let go before resume_game_screen */
     s->prev_input = 0xFF;
     return true;
 }
@@ -130,6 +131,7 @@ sk_save_result savescreen_step(sk_savescreen *s, uint8_t input, int key, bool es
         }
         return SK_SAVE_RESULT_STAY;
     case SK_SAVE_LIST:                                          /* save_slot_select 0x11E014 */
+        if (s->wait_release) { if (input & SK_IN_FIRE) return SK_SAVE_RESULT_STAY; s->wait_release = false; }
         if (edge & SK_IN_UP) s->slot = s->slot == 0 ? 4 : s->slot - 1;
         if (edge & SK_IN_DOWN) s->slot = s->slot == 4 ? 0 : s->slot + 1;
         if (esc) return SK_SAVE_RESULT_NONE;

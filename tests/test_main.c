@@ -426,6 +426,9 @@ void test_intro_fade_steps_floor_toward_the_target(void);
 void test_intro_types_text_one_and_ends_on_a_key(void);
 void test_intro_plays_through_in_about_111_seconds(void);
 void test_play_starts_with_the_intro_and_fire_skips_it(void);
+void test_resume_waits_for_fire_to_be_let_go(void);
+void test_tutorial_survives_the_fire_that_chose_it(void);
+void test_savegame_rejects_a_level_past_the_sequence(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -849,6 +852,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "intro_types_text_one_and_ends_on_a_key", test_intro_types_text_one_and_ends_on_a_key },
     { "intro_plays_through_in_about_111_seconds", test_intro_plays_through_in_about_111_seconds },
     { "play_starts_with_the_intro_and_fire_skips_it", test_play_starts_with_the_intro_and_fire_skips_it },
+    { "resume_waits_for_fire_to_be_let_go", test_resume_waits_for_fire_to_be_let_go },
+    { "tutorial_survives_the_fire_that_chose_it", test_tutorial_survives_the_fire_that_chose_it },
+    { "savegame_rejects_a_level_past_the_sequence", test_savegame_rejects_a_level_past_the_sequence },
 };
 
 int main(int argc, char **argv) {

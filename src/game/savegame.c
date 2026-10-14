@@ -36,6 +36,7 @@ bool savegame_get(const uint8_t *file, size_t n, int slot, sk_save_slot *s) {   
     for (int i = 15; i >= 0 && s->name[i] == ' '; i--) s->name[i] = 0;
     s->score = be32(d + 16);
     s->level_number = be16(d + 20);
+    if (s->level_number >= 58) return false;                     /* port guard: past level_sequence */
     s->lives = (int8_t)d[22]; s->cup_pieces = d[23];
     s->shorts = d[24]; s->shirt = d[25]; s->extra_heart = d[26];
     return true;

@@ -228,7 +228,8 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     step(g, 27); update_objects(g);
     step(g, 29); run_curtain(g);
     step(g, 32);                                                 /* request flags: the window handles Escape */
-    if ((g->game_flags & 4) && (input & SK_IN_FIRE)) {           /* 0x1044F4: a demo ends at once on fire */
+    if ((g->game_flags & 4) && !(input & SK_IN_FIRE)) g->demo_fire_released = true;
+    if ((g->game_flags & 4) && (input & SK_IN_FIRE) && g->demo_fire_released) {   /* 0x1044F4: a demo ends at once on fire (ruling: a new press) */
         g->level_end = true;
         g->game_flags &= (uint8_t)~2;
     }
