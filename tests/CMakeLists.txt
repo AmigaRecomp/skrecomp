@@ -49,6 +49,7 @@ add_executable(sk_tests
   test_attr_japan.c
   test_scroll_modes.c
   test_obj_usa.c
+  test_attr_usa.c
   test_attr_country_london.c
   test_obj_russia.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
@@ -387,7 +388,10 @@ set(SK_TEST_NAMES
   rat_15_rests_then_runs
   jumper_17_jumps_onto_a_wall
   final_boss_9_brings_its_parts
-  final_boss_9_last_phase_ends_the_game)
+  final_boss_9_last_phase_ends_the_game
+  ladder_3_catches_a_standing_kid
+  spikes_4_hurt_the_kid
+  hoop_36_scores_baskets_and_an_extra_life)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

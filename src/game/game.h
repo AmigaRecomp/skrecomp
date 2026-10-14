@@ -80,6 +80,7 @@ struct sk_game {
     int8_t train_fade;                  /* 0x30035D: JAPAN TRAIN's palette fade in progress (sub_1049C8) */
     int train_timer;                    /* 0x30026C: frames to TRAIN's next phase (bright / tunnel) */
     int train_level;                    /* the brightness step apply_fade_step last copied: 4..15 (15 = the level's own colours) */
+    int16_t hoop_count;                 /* 0x30028C: CITY 2's baskets (attribute 36); negative after the eighth */
     int bg_speed;                       /* 0x3002DE: the self-scrolling backdrop's speed, px per frame (scroll modes 1, 2) */
     struct { int last, cursor, width, base; uint16_t col[32]; } stream;   /* 0x3002CE / D2 / D4 / D6 and the strip cache (0x3007E2) as a column ring */
     uint8_t post_flag;                  /* 0x300379: bit 7 the side of attribute 78 / 79 the kid is on; nonzero, the oncoming train (type 23) runs */

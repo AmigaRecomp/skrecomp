@@ -42,7 +42,8 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     ball_world_init(&g->bw);
     g->frame_ticks = 0;
     g->push_x = 0; g->shake_amplitude = 0; g->powerup_timer = 0; g->scroll_mode = 0; g->cam_ease = 4;
-    g->death_flags = 0;                                          /* free_level_data clears it (0x10374C) */
+    g->death_flags = 0;
+    g->hoop_count = 0;                                           /* 0x104942 */                                          /* free_level_data clears it (0x10374C) */
     platforms_reset(g);                                          /* sub_118136 */
     g->mask.merge = merge_kid_platforms; g->mask.merge_ctx = g;
     g->flutter_max = 5; g->flutter_count = 0; g->flutter_last_cell = 0;   /* 0x1003DE, 0x10491E */
