@@ -171,3 +171,32 @@ void test_press_19_rises_slams_and_fills_its_column(void) {         /* type 19 *
     CHECK_EQ(g_g.world.tile[cell] & SK_INDEX_MASK, 0x17F);           /* its shaft filled on the way down */
     drop_game();
 }
+
+void test_bubble_21_blinks_then_rises(void) {                       /* type 21 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 10 * 16, 21, 0);
+    CHECK_EQ(s->timer, 100); CHECK_EQ(s->t0, 4); CHECK_EQ(s->draw->w, 16); CHECK_EQ(s->draw->h, 15);
+    tick(1);
+    CHECK(s->draw->dflags & 2); CHECK_EQ(s->timer, 99);              /* blinking */
+    tick(99);
+    CHECK_EQ(s->timer, 0); CHECK_EQ(s->vy, -4); CHECK(s->flags & 4); CHECK_EQ(s->draw->dflags & 2, 0);
+    int y = s->draw->y;
+    tick(4);
+    CHECK_EQ(s->draw->y, y - 8);                                     /* rising 2 px a frame */
+    drop_game();
+}
+
+void test_tube_22_carries_the_kid_up(void) {                        /* type 22 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 22, 3);                         /* 2 + 1 rows of animated tube */
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->t0, 16); CHECK_EQ(s->t1, 2); CHECK(s->draw == NULL);
+    sk_player *p = &g_g.player;
+    p->x = (int16_t)(s->x0 + 16 + 4 - 2); p->y = s->y0;              /* at its mouth */
+    tick(1);
+    CHECK_EQ(aux_c(s), 2); CHECK_EQ(p->state, 0x40); CHECK_EQ(s->vy, -16); CHECK_EQ(g_g.cam_ease, 8);
+    tick(1);
+    CHECK_EQ(p->y, s->y0); CHECK_EQ(p->x, s->x0 + 16); CHECK_EQ(s->y0, s->y - 16);  /* carried up 8 px a frame, from the frame it caught him */
+    tick(5);
+    CHECK_EQ(p->exit_walk, 0xFF);                                    /* 40 px up: out of sight */
+    drop_game();
+}

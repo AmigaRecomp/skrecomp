@@ -37,6 +37,8 @@ static const uint8_t popper_data[0x60] = {                                      
 
 static const uint8_t walker80_script[] = { 0, 4, 0, 6, 4, 5, 6, 7, 0, 1, 2, 3 };              /* 0x119E88 */
 
+static const uint8_t bubble_script[] = { 0, 4, 0, 4, 0, 1, 2, 3 };                            /* 0x1104CC */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -436,12 +438,113 @@ static void obj_press_update(sk_game *g, sk_slot *s, int index) {             /*
     free_object(g, s);
 }
 
+/* ---- type 21: the bubble (slot 22): blinks 100 frames, rises until an attribute-52 cell sends it back ---- */
+static void obj_bubble_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x110418 */
+    init_object_slot(g, s, x, y, s->type4);
+    s->t0 = 4; s->vx = 0; s->vy = 0;
+    s->timer = 100;
+    const uint8_t *f = res(g, 22);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 15, f, 1);                                  /* sub_107906 */
+}
+static void obj_bubble_update(sk_game *g, sk_slot *s, int index) {            /* 0x110448 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    step_animation_simple(s, bubble_script, 0);
+    bool probe = true;
+    if (s->timer) {
+        d->dflags ^= 2;
+        if (--s->timer) probe = false;
+        else { d->dflags &= (uint8_t)~2; s->vx = 0; s->vy = (int16_t)-s->t0; s->flags |= 4; }
+    }
+    if (probe) {
+        g->attrs.probe_slot = s;
+        probe_tile_attr(g, d->x + 8, d->y + 8);                     /* probe_tile_attr_saved */
+        if (s->flags & 0x10) {
+            s->flags &= ~0x10;
+            d->x = s->x; d->y = s->y;
+            s->vx = 0; s->vy = 0;
+            s->timer = 100;
+        } else touch_player(g, d->x, d->y, 16, 16);
+    }
+    apply_velocity_nograv(s);
+    despawn_if_far(g, s);
+}
+
+/* ---- type 22: the lift tube (tiles only): opens and closes every 100 frames; open, it carries the kid up to an attribute-52 cell ---- */
+static void tube_tiles(sk_game *g, sk_slot *s, int x, int y, bool open) {   /* sub_110636 / sub_11067C */
+    if (open) {
+        set_tile_at(g, x, y, 0x153, 0);
+        set_tile_at(g, x, y + 16, 0x156, 0);
+    } else {
+        set_tile_at(g, x, y, 0x154, 0);
+        set_tile_at(g, x, y + 16, 0x155, 0);
+    }
+    x -= 32; y += 32;
+    int state = open ? 3 : 0;
+    for (int k = 0; k <= s->t1; k++) {
+        set_tile_at(g, x, y, open ? 0x1AF : 0, state);
+        if (open) state ^= 0x80;                                    /* bchg #7: the two halves animate mirrored */
+        set_tile_at(g, x + 16, y, open ? 0x1AF : 0, state);
+        y += 16;
+    }
+}
+static void obj_tube_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x1104D4 */
+    init_object_slot_shared(g, s, x, y, s->type4, &g->objs.chain[7]);
+    s->draw = NULL;
+    set_aux_c(s, 1);
+    s->t0 = 16;
+    s->t1 = (int16_t)((g->objs.marker_param & 7) - 1);
+    s->vx = 0; s->vy = 0;
+}
+static void obj_tube_update(sk_game *g, sk_slot *s, int index) {              /* 0x1104FE */
+    (void)index;
+    sk_player *p = &g->player;
+    bool close_and_free = false;
+    if (aux_c(s) != 2) {
+        if (++s->timer >= 100) {
+            s->timer = 0;
+            set_aux_c(s, aux_c(s) ^ 1);
+            tube_tiles(g, s, s->x + 32, s->y - 16, aux_c(s) != 0);
+        }
+        if (aux_c(s) != 0 && (uint16_t)iabs((int16_t)(s->y0 - p->y)) < 0x30
+            && (uint16_t)(s->x0 - p->x + 16 + 4) < 8) {             /* the kid at its mouth: in he goes */
+            set_aux_c(s, 2);
+            p->state = 0x40;
+            s->vy = (int16_t)-s->t0;
+            g->cam_ease = 8;
+        }
+    }
+    if (aux_c(s) == 2) {
+        int dx = (uint16_t)s->vx >> 1;
+        s->x0 = (int16_t)(s->x0 + ((s->flags & 1) ? dx : -dx));
+        s->y0 = (int16_t)(s->y0 + (s->vy >> 1));
+        p->anim = 0x11;
+        if ((uint16_t)(-(int16_t)(s->y0 - s->y)) >= 0x28) p->exit_walk = 0xFF;   /* inside the tube: out of sight */
+        p->x = (int16_t)(s->x0 + 16);
+        p->y = s->y0;
+        g->attrs.probe_slot = s;
+        probe_tile_attr(g, s->x0 + 8, s->y0 + 8);
+        if (s->flags & 0x10) {                                      /* the top: let him out */
+            g->cam_ease = 4;
+            p->state = 0; p->speed = 0; p->exit_walk = 0;
+            close_and_free = true;
+        }
+    }
+    if (!close_and_free && object_offscreen(g, s->x0, s->y0, 64) >= 0) return;
+    tube_tiles(g, s, s->x + 32, s->y - 16, true);                   /* 0x11061A: left open */
+    free_object(g, s);
+}
+
 void obj_japan_install(void) {
     object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
     object_init_table[18] = obj_crab_init;             object_update_table[18] = obj_crab_update;
     object_init_table[33] = obj_popper_init;           object_update_table[33] = obj_popper_update;
     object_init_table[80] = obj_walker80_init;         object_update_table[80] = obj_walker80_update;
     object_init_table[19] = obj_press_init;            object_update_table[19] = obj_press_update;
+    object_init_table[21] = obj_bubble_init;           object_update_table[21] = obj_bubble_update;
+    object_init_table[22] = obj_tube_init;             object_update_table[22] = obj_tube_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;

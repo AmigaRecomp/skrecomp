@@ -169,7 +169,7 @@ void test_freeing_level_effects_stops_channel_four(void) {          /* no read o
     sound_play_sfx(&s, 21);
     sound_free_level_sfx(&s);
     for (int i = 0; i < 5; i++) sound_frame(&s, out, 960);
-    CHECK(s.paula.ch[3].cur != (const int8_t *)b2);
+    CHECK(!s.paula.ch[3].on || s.paula.ch[3].cur != (const int8_t *)b2);   /* off: nothing reads it (b2 may reuse buf's address) */
     sound_free(&s);
 }
 

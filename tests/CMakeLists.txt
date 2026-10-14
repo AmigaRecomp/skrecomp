@@ -345,7 +345,9 @@ set(SK_TEST_NAMES
   random_matches_the_shift_register
   popper_33_appears_throws_and_sinks
   walker_80_walks_and_turns
-  press_19_rises_slams_and_fills_its_column)
+  press_19_rises_slams_and_fills_its_column
+  bubble_21_blinks_then_rises
+  tube_22_carries_the_kid_up)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
