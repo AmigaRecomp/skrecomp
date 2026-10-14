@@ -289,6 +289,8 @@ void test_russia_slots_cover_the_frames(void);
 void test_russia_run_without_a_crash(void);
 void test_kid_occluder_reference_is_sx_minus_16(void);
 void test_cannon_without_a_fixed_record(void);
+void test_insect_25_homes_on_the_kid(void);
+void test_thrower_67_wakes_and_throws(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -575,6 +577,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "russia_run_without_a_crash", test_russia_run_without_a_crash },
     { "kid_occluder_reference_is_sx_minus_16", test_kid_occluder_reference_is_sx_minus_16 },
     { "cannon_without_a_fixed_record", test_cannon_without_a_fixed_record },
+    { "insect_25_homes_on_the_kid", test_insect_25_homes_on_the_kid },
+    { "thrower_67_wakes_and_throws", test_thrower_67_wakes_and_throws },
 };
 
 int main(int argc, char **argv) {

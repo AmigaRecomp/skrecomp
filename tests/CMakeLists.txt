@@ -43,6 +43,7 @@ add_executable(sk_tests
   test_sound.c
   test_obj_italy.c
   test_obj_russia.c
+  test_obj_japan.c
   test_attr_italy.c
   test_attr_russia.c
   test_attr_country_london.c
@@ -336,7 +337,9 @@ set(SK_TEST_NAMES
   russia_slots_cover_the_frames
   russia_run_without_a_crash
   kid_occluder_reference_is_sx_minus_16
-  cannon_without_a_fixed_record)
+  cannon_without_a_fixed_record
+  insect_25_homes_on_the_kid
+  thrower_67_wakes_and_throws)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
