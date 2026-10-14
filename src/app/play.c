@@ -154,7 +154,12 @@ static void picture_step(sk_play *p, uint8_t in) {
     if (p->pic.fading && !was_fading) sound_fade_out(&p->snd);     /* the ending: fade_music_out */
     if (!done) return;
     if (kind == SK_PIC_LOADING) { start_next(p); return; }
-    if (kind == SK_PIC_ENDING) { sound_stop(&p->snd); p->snd.music_use4 = false; sound_set_module(&p->snd, 0, NULL, 0); }
+    if (kind == SK_PIC_ENDING) {                                    /* music_stop, 0x200314 = 0, the module freed */
+        sound_stop(&p->snd);
+        sound_free_level_sfx(&p->snd);                              /* port: channel 4 lets go of the module before it is freed */
+        p->snd.music_use4 = false;
+        sound_set_module(&p->snd, 0, NULL, 0);
+    }
     play_advance(p);
 }
 
