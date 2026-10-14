@@ -438,6 +438,18 @@ static void sound_step(sk_play *p) {                                /* the VBL's
 void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->load_failed) return;
     p->game.snd = &p->snd;
+    bool esc = p->esc_key && p->save.mode == SK_SAVE_OFF, pause = p->pause_key;
+    p->pause_key = false;
+    if (esc) {
+        p->esc_key = false;
+        if (p->intro || p->fe.mode != SK_FE_OFF || p->attract != SK_ATTRACT_NONE) { p->quit = true; return; }   /* ruling: ESC leaves from the frontend */
+        if (p->pic.kind == SK_PIC_OFF && !p->fade_wait) {           /* frame step 32: the curtain closes */
+            if (p->with_frontend) game_request_escape(&p->game);
+            else { p->quit = true; return; }
+        }
+    }
+    if (pause && p->pic.kind == SK_PIC_OFF && p->fe.mode == SK_FE_OFF && p->attract == SK_ATTRACT_NONE && !p->intro && !p->fade_wait)
+        game_request_pause(&p->game);
     if (p->intro) {                                                 /* the intro: any key or fire ends it at its polling points */
         uint8_t in = p->script ? script_input(p) : keyboard_input;
         intro_step(p->intro, in != 0 || p->typed_key != 0 || p->fe_keys != 0);
@@ -476,6 +488,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->fade_wait > 0) {                                         /* fade_music_out blocks the game for 64 frames */
         sound_step(p);
         if (--p->fade_wait > 0) return;
+        if (p->leaving) { p->leaving = false; session_start(p); return; }   /* play_level returned: the outer loop, the title */
         play_advance(p);                                            /* play_level loops: level_number moved on by the exit */
         return;
     }
@@ -492,6 +505,10 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
         level_end_stats(&p->game);                                  /* the frame loop's exit (0x104558) */
         sound_fade_out(&p->snd);
         p->fade_wait = 64;
+        break;
+    case SK_OUTCOME_LEFT:                                           /* ESC: fade_music_out, then the title */
+        sound_fade_out(&p->snd);
+        p->fade_wait = 64; p->leaving = true;
         break;
     case SK_OUTCOME_GAME_OVER:
         if (p->game_over_frames == 0) sound_fade_out(&p->snd);       /* fade_music_out 0x1040F2 (the statistics go: a new game follows) */

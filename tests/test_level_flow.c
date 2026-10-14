@@ -129,3 +129,43 @@ void test_animated_cells_draw_the_next_tile(void) {
     fb_free(&fb);
     drop_game();
 }
+
+void test_escape_closes_the_curtain_and_leaves_the_level(void) {   /* frame step 32: ESC (0x30280B) */
+    CHECK(make_game());
+    static sk_sprite kid;
+    g_g.curtain_flags = 0;
+    game_request_escape(&g_g);
+    CHECK(g_g.curtain_flags & 0x10);
+    for (int i = 0; i < 80 && !g_g.level_end; i++) game_frame_step(&g_g, 0, &kid);
+    CHECK(g_g.level_end); CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_LEFT);
+    drop_game();
+}
+
+void test_escape_is_ignored_in_a_demo_or_while_the_curtain_moves(void) {
+    CHECK(make_game());
+    g_g.curtain_flags = 0; g_g.game_flags = 0xFE;
+    game_request_escape(&g_g);
+    CHECK_EQ(g_g.curtain_flags, 0);
+    g_g.game_flags = 0; g_g.curtain_flags = 4;
+    game_request_escape(&g_g);
+    CHECK_EQ(g_g.curtain_flags, 4);
+    drop_game();
+}
+
+void test_f10_pauses_with_the_help_box(void) {                    /* sub_1045E4 */
+    CHECK(make_game());
+    static sk_sprite kid;
+    g_g.timer_flags |= 0x80;
+    int x = g_g.player.x, ticks = g_g.frame_ticks;
+    game_request_pause(&g_g);
+    CHECK(g_g.paused); CHECK(!(g_g.timer_flags & 0x80));          /* the clock stops */
+    for (int i = 0; i < 99; i++) game_frame_step(&g_g, SK_IN_RIGHT, &kid);
+    CHECK_EQ(g_g.player.x, x); CHECK_EQ(g_g.frame_ticks, ticks);  /* nothing moves */
+    CHECK_EQ(g_g.message_box_shown_kind, 0x38);
+    game_frame_step(&g_g, 0, &kid);
+    CHECK(!g_g.msg_visible);                                     /* the box goes after 100 frames, the pause stays */
+    CHECK(g_g.paused);
+    game_request_pause(&g_g);
+    CHECK(!g_g.paused); CHECK(g_g.timer_flags & 0x80);
+    drop_game();
+}

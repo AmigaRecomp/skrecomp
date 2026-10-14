@@ -24,5 +24,7 @@ int  curtain_rows(const sk_game *g);             /* play-area rows hidden at the
 void timer_tick(sk_game *g);                     /* the VBL's level_timer decrement */
 void timeout_check(sk_game *g);                  /* frame-loop step 8 */
 sk_outcome game_outcome(const sk_game *g);
+void game_request_escape(sk_game *g);            /* frame step 32: ESC closes the curtain (not in a demo) */
+void game_request_pause(sk_game *g);             /* F10 (sub_1045E4): pause with the help box, F10 again resumes */
 
 #endif

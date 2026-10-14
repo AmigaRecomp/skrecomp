@@ -55,7 +55,9 @@ typedef struct sk_play {
     char save_path[512];
     bool resuming; sk_save_slot resume_slot;   /* RESUME GAME: the slot load_game_slot puts over the new game */
     int typed_key;                  /* last_ascii_key: the window's last typed character, consumed each step */
-    bool esc_key;                   /* Escape, for the save screens */
+    bool esc_key;                   /* Escape: a save screen cancels, a level closes its curtain, the frontend quits */
+    bool pause_key;
+    bool leaving;                   /* the fade before the title after ESC */                 /* F10 or P: the pause */
     unsigned fe_keys;               /* SK_FE_KEY_* held this frame (the window sets them) */
 } sk_play;
 

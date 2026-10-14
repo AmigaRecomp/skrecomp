@@ -190,6 +190,10 @@ uint16_t fade_colour(uint16_t from, uint16_t to, int step) {     /* sub_104E40: 
 }
 
 void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
+    if (g->paused) {                                             /* sub_1045E4's loop: the box for 100 frames */
+        if (g->msg_visible && ++g->pause_frames >= 0x64) g->msg_visible = 0;
+        return;
+    }
     if (g->message_wait) {                                       /* step 31 (sub_11C816): the game waits for fire */
         g->input_state = input;
         if (!(input & SK_IN_FIRE)) return;
@@ -240,6 +244,7 @@ sk_outcome game_outcome(const sk_game *g) {
     if (g->game_flags && g->level_end) return SK_OUTCOME_LEFT;   /* a demo, the tutorial: back to the title */
     if (g->level_end && (g->level_outcome & 0x80)) return SK_OUTCOME_NEXT_LEVEL;
     if (g->player.state == 64 && g->player.lives < 0) return SK_OUTCOME_GAME_OVER;   /* state 64 alone is "frozen": the lift tube uses it */
+    if (g->level_end) return SK_OUTCOME_LEFT;                    /* ESC: the loop ends with level_outcome >= 0, play_level returns */
     return SK_OUTCOME_RUNNING;
 }
 
@@ -248,4 +253,24 @@ uint32_t game_random(sk_game *g) {                              /* sub_102B42 */
     g->rng <<= 1;
     if (!c) g->rng ^= 0x1D872B41u;
     return g->rng;
+}
+void game_request_escape(sk_game *g) {                          /* frame step 32 (0x10450A) */
+    if (g->game_flags || g->curtain_flags) return;
+    g->curtain_flags |= 0x10;
+}
+
+void game_request_pause(sk_game *g) {                           /* F10: sub_1045E4 */
+    if (g->game_flags || g->level_data_index == 12) return;
+    if (!g->paused) {
+        g->paused = true; g->pause_frames = 0;
+        g->pause_timer_flags = g->timer_flags; g->timer_flags = 0;   /* the clock stops */
+        g->pause_box_kind = g->message_box_shown_kind;
+        g->message_box_shown_kind = 0x38;                        /* message 7 of the level: the help box */
+        message_box_build(g, 7);
+        return;
+    }
+    g->paused = false;                                           /* 0x1046EC: F10 again */
+    g->msg_visible = 0;
+    g->timer_flags = g->pause_timer_flags;
+    g->message_box_shown_kind = g->pause_box_kind;
 }

@@ -117,7 +117,8 @@ static bool poll_events(sk_window *w, sk_scene *s, sk_play *p) {
         }
         if (ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat) {
             switch (ev.key.key) {
-            case SDLK_ESCAPE: return false;
+            case SDLK_ESCAPE: if (!p) return false; p->esc_key = true; break;
+            case SDLK_F10: case SDLK_P: if (p) p->pause_key = true; break;
             case SDLK_M: if (w->audio) audio_out_mute(w->audio, !w->audio->muted); break;
             case SDLK_PAGEUP: if (s) change_level(s, -1); break;
             case SDLK_PAGEDOWN: if (s) change_level(s, 1); break;
@@ -186,6 +187,7 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
             p->fe_keys = window_frontend_keys(SDL_GetKeyboardState(NULL));
             play_step(p, window_input_bits(SDL_GetKeyboardState(NULL)));
         }
+        if (p->load_failed) { fprintf(stderr, "soccerkid: %s\n", p->load_err.msg); running = false; }
         if (p->quit) running = false;
         play_draw(p);
         play_present(p, w->pixels);

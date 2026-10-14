@@ -102,7 +102,9 @@ struct sk_game {
     uint8_t token_digits[2];            /* 0x11A3DE: type 85's two characters (0x5D + digit) */
     uint8_t token_bits[0x104];
     uint8_t demo_banner[0x208];
-    bool demo_fire_released;            /* port: fire seen up since the demo began (the original's load gave time to let go) */         /* dat_300058: type 102's 64 x 13 bob, four planes and the mask */          /* dat_300070: type 85's 32 x 13 bob, four planes and the mask */
+    bool demo_fire_released;
+    bool paused; int pause_frames;      /* F10: sub_1045E4's loop (0x3002E8 counts the box's 100 frames) */
+    uint8_t pause_timer_flags; int pause_box_kind;            /* port: fire seen up since the demo began (the original's load gave time to let go) */         /* dat_300058: type 102's 64 x 13 bob, four planes and the mask */          /* dat_300070: type 85's 32 x 13 bob, four planes and the mask */
     struct {                            /* the ALIEN's parts (type 82): 0x300090 / 0x30007C / 0x300084 and their draw records */
         sk_slot *head, *piece_a, *piece_b;
         sk_draw *head_draw, *pa_draw, *pb_draw;

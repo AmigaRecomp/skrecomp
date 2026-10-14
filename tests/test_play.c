@@ -665,3 +665,26 @@ void test_tutorial_survives_the_fire_that_chose_it(void) {
     CHECK_EQ(p.attract, SK_ATTRACT_NONE);                           /* a new press does */
     play_close(&p);
 }
+
+void test_escape_leaves_a_game_for_the_title_and_quits_from_the_title(void) {   /* ROM-backed */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .no_intro = true, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    to_title(&p);
+    play_step(&p, SK_IN_FIRE);                                      /* START GAME */
+    for (int i = 0; i < 25 + 201 + 25 + 200; i++) play_step(&p, 0);
+    CHECK_EQ(p.scene.level_index, 0);
+    p.pause_key = true; play_step(&p, 0);
+    CHECK(p.game.paused);
+    p.pause_key = true; play_step(&p, 0);
+    CHECK(!p.game.paused);
+    p.esc_key = true; play_step(&p, 0);                             /* the curtain closes */
+    CHECK(p.game.curtain_flags & 0x11);                             /* requested, or already closing */
+    for (int i = 0; i < 200 && p.fe.mode == SK_FE_OFF; i++) play_step(&p, 0);
+    CHECK_EQ(p.fe.mode, SK_FE_MENU); CHECK(!p.quit);
+    p.esc_key = true; play_step(&p, 0);
+    CHECK(p.quit);                                                  /* on the title: the program ends */
+    play_close(&p);
+}
