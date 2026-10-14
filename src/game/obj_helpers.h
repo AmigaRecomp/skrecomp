@@ -26,6 +26,8 @@ void frames_wh(sk_game *g, sk_slot *s, int w, int h, const uint8_t *frames, int 
 SK_FRAMES(16, 10) SK_FRAMES(16, 16) SK_FRAMES(16, 32) SK_FRAMES(32, 20) SK_FRAMES(32, 24) SK_FRAMES(32, 27) SK_FRAMES(32, 30)
 SK_FRAMES(48, 28) SK_FRAMES(48, 32) SK_FRAMES(48, 49) SK_FRAMES(48, 64) SK_FRAMES(64, 32) SK_FRAMES(64, 56) SK_FRAMES(64, 64)
 #undef SK_FRAMES
+int  step_animation_offset(sk_slot *s, const uint8_t *script, int facing, int *wrapped);   /* 0x10DEEA: (frame, dx) pairs; anim keeps the dx */
+void despawn_if_far_640(sk_game *g, sk_slot *s);   /* 0x10E1C8 */
 void step_animation_simple(sk_slot *s, const uint8_t *script, int facing);   /* 0x10DEA0: no hidden frames */
 void apply_velocity_halfstep(const sk_game *g, sk_slot *s);   /* 0x10E0B6: odd frames add the whole word (as the original) */
 void apply_velocity_sym(sk_slot *s);                            /* 0x10E046: halves rounded toward zero */

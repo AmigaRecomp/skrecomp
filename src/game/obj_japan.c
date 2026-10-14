@@ -39,6 +39,15 @@ static const uint8_t walker80_script[] = { 0, 4, 0, 6, 4, 5, 6, 7, 0, 1, 2, 3 };
 
 static const uint8_t bubble_script[] = { 0, 4, 0, 4, 0, 1, 2, 3 };                            /* 0x1104CC */
 
+static const uint8_t kicker_walk_script[] = { 0, 6, 0, 6, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13 };   /* 0x11131E */
+static const uint8_t kicker_kick_script[] = { 0, 5, 0, 9, 0, 0, 14, 2, 14, 2, 15, 248, 0, 0, 7, 0, 16, 254, 16, 254, 17, 8, 7, 0 };   /* 0x11132E: (frame, dx) */
+static const uint8_t fireball_data[0x3A] = {                                                     /* 0x1114F0: the scripts overlap */
+    0, 3, 0, 4, 0, 1, 2, 3, 0, 1, 2, 3, 0, 15, 0, 2, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,
+    4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 0, 4, 0, 3, 0, 1, 2, 3, 0, 1, 2, 3 };
+#define FIREBALL_FLY (fireball_data + 0)      /* 0x1114F0 */
+#define FIREBALL_FIRE (fireball_data + 0x0C)  /* 0x1114FC */
+#define FIREBALL_BURST (fireball_data + 0x2E) /* 0x11151E */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -537,6 +546,102 @@ static void obj_tube_update(sk_game *g, sk_slot *s, int index) {              /*
     free_object(g, s);
 }
 
+/* ---- type 32: the kicker (slot 33): kicks a fireball (type 110) at the kid on its level, and one as it is knocked out ---- */
+static void obj_kicker_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x11119E */
+    init_object_slot(g, s, x, y - 27, s->type4);
+    s->vx = 2; s->vy = 0; s->hits = 3;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 33);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 43, f, 1);                                  /* sub_107C7A */
+}
+static void obj_kicker_update(sk_game *g, sk_slot *s, int index) {            /* 0x1111D4 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (g->ball_kicked_flag) ball_kill_check(g, s, 19, 0x400);
+    if (!(s->flags & 2)) {
+        bool walk = true;
+        if (aux_c(s) != 1) {
+            if (s->t0) s->t0--;
+            else if (d->y + 2 == g->player.y) {
+                int k = (int16_t)(g->player.x - d->x - 16);
+                if (!(s->flags & 1)) k = -k;
+                if ((uint16_t)k < 0x5A) { s->vx = 0; set_aux_c(s, 1); reset_animation(s); walk = false; }
+            }
+            if (walk) {
+                step_animation_simple(s, kicker_walk_script, s->flags);
+                if (ground_ahead(g, s, s->flags)) s->flags ^= 1;
+            }
+        } else walk = false;
+        if (!walk) {
+            int wrapped = 0;
+            int changed = step_animation_offset(s, kicker_kick_script, s->flags, &wrapped);
+            if (wrapped) { s->vx = 2; set_aux_c(s, 0); reset_animation(s); }
+            else if (changed && s->anim_index == 3) {
+                g->objs.marker_param = s->flags & 0xFF & ~2;
+                spawn_object(g, d->x + 16, d->y, 110);
+                s->t0 = 100;
+            }
+        }
+        touch_player(g, d->x, d->y, 32, 43);
+        if (ball_hits_object(g, s, 0, 0, 32, 43, 19, 0x400) >= 0 && s->t0 == 0) {   /* knocked out: a last lob */
+            int p = (int16_t)(g->player.x - d->x - 16) >= 0 ? 1 : 0;
+            g->objs.marker_param = p | 2;
+            spawn_object(g, d->x + 16, d->y, 110);
+        }
+    }
+    despawn_if_far_640(g, s);
+}
+
+/* ---- type 110: the fireball (slot 34; the burst from slot 35, the fires type 114): lands, then lays 8 fires along the floor ---- */
+static void obj_fireball_init(sk_game *g, sk_slot *s, int x, int y) {         /* 0x111346 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->timer = 0;
+    if (g->objs.marker_param & 1) s->flags |= 1;
+    s->vy = 6; s->vx = 10;
+    if (g->objs.marker_param & 2) { s->vy = -4; s->vx = 0; s->t0 = 1; }   /* a lob under gravity */
+    s->flags |= 4;
+    const uint8_t *f = res(g, 34);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 16, f, 1);                                  /* frames_16x16 */
+}
+static void obj_fireball_update(sk_game *g, sk_slot *s, int index) {          /* 0x1113A2 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    if (s->t0 == 0) apply_velocity_nograv(s); else apply_velocity(s);
+    sk_objects *o = &g->objs;
+    if (!aux_c(s)) {
+        step_animation_simple(s, FIREBALL_FLY, 0);
+        int r = probe_rows_below2(g, s, 8, 0);
+        if (r >= 0) { despawn_if_far(g, s); return; }
+        d->y = (int16_t)(d->y + r);                                 /* landed: the burst */
+        reset_animation(s);
+        set_aux_c(s, 1);
+        s->vx = 0; s->flags &= ~4; s->t0 = 9;
+        d->dflags |= 4;
+        o->child_frames = res(g, 35); o->child_script = FIREBALL_BURST;
+        o->child_vx = 0; o->child_vy = 0; o->child_w = 32; o->child_h = 22;
+        spawn_object(g, d->x - 8, d->y - 6, 114);
+        play_sfx(g, 0x17);
+        despawn_if_far(g, s);
+        return;
+    }
+    if (--s->t0) { despawn_if_far(g, s); return; }
+    if (!s->timer) play_sfx(g, 0x18);
+    o->child_frames = res(g, 34); o->child_script = FIREBALL_FIRE;
+    o->child_vx = (s->flags & 1) ? (int16_t)0x8000 : 0;
+    o->child_vy = 0; o->child_w = 16; o->child_h = 16;
+    spawn_object(g, d->x, d->y, 114);
+    s->t0 = 10;
+    if (++s->timer == 8) { free_object(g, s); return; }
+    d->x = (int16_t)(d->x + ((s->flags & 1) ? 16 : -16));
+    if (ground_ahead(g, s, s->flags)) { free_object(g, s); return; }
+    despawn_if_far(g, s);
+}
+
 void obj_japan_install(void) {
     object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
     object_init_table[18] = obj_crab_init;             object_update_table[18] = obj_crab_update;
@@ -545,6 +650,8 @@ void obj_japan_install(void) {
     object_init_table[19] = obj_press_init;            object_update_table[19] = obj_press_update;
     object_init_table[21] = obj_bubble_init;           object_update_table[21] = obj_bubble_update;
     object_init_table[22] = obj_tube_init;             object_update_table[22] = obj_tube_update;
+    object_init_table[32] = obj_kicker_init;           object_update_table[32] = obj_kicker_update;
+    object_init_table[110] = obj_fireball_init;        object_update_table[110] = obj_fireball_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;

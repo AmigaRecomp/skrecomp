@@ -347,7 +347,8 @@ set(SK_TEST_NAMES
   walker_80_walks_and_turns
   press_19_rises_slams_and_fills_its_column
   bubble_21_blinks_then_rises
-  tube_22_carries_the_kid_up)
+  tube_22_carries_the_kid_up
+  kicker_32_shoots_a_fire_trail)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

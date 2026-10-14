@@ -200,3 +200,21 @@ void test_tube_22_carries_the_kid_up(void) {                        /* type 22 *
     CHECK_EQ(p->exit_walk, 0xFF);                                    /* 40 px up: out of sight */
     drop_game();
 }
+
+void test_kicker_32_shoots_a_fire_trail(void) {                     /* types 32 and 110 */
+    CHECK(make_game());
+    sk_slot *s = spawn(100, 11 * 16, 32, 0);
+    CHECK_EQ(s->vx, 2); CHECK_EQ(s->hits, 3); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 43); CHECK_EQ(s->y, 11 * 16 - 27);
+    g_g.player.y = (int16_t)(s->draw->y + 2);
+    g_g.player.x = (int16_t)(s->draw->x + 16 - 50);                  /* level with it, 50 px in front (it faces left) */
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->vx, 0);
+    int i = 0;
+    while (count_type(110) == 0 && i++ < 60) tick(1);
+    CHECK_EQ(count_type(110), 1); CHECK_EQ(s->t0, 100);
+    g_g.player.x = 1000;
+    i = 0;
+    while (count_type(114) < 2 && i++ < 200) tick(1);
+    CHECK(count_type(114) >= 2);                                     /* the burst, then fires along the floor */
+    drop_game();
+}

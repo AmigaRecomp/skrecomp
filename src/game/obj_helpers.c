@@ -374,3 +374,33 @@ void script_start(sk_slot *s, int idx, const sk_phase *ph, const sk_motion *mo) 
 void script_end_next(sk_slot *s, const sk_phase *ph) {   /* sub_10E772 */
     s->t0 = (int16_t)(ph[(uint16_t)s->t1 >> 2].frames - 1);
 }
+
+int step_animation_offset(sk_slot *s, const uint8_t *script, int facing, int *wrapped) {   /* sub_10DEEA */
+    int count = script[0] << 8 | script[1], ticks = script[2] << 8 | script[3];
+    const uint8_t *frames = script + 4;
+    int changed = 0;
+    s->anim_tick++;
+    if (s->anim_tick == ticks) {
+        s->anim_tick = 0;
+        s->anim_index++;
+        changed = -1;
+        if (s->anim_index == count) { s->anim_index = 0; *wrapped = -1; }
+    }
+    if (facing & 1) frames += 2 * count;
+    const uint8_t *e = frames + 2 * s->anim_index;
+    sk_draw *d = s->draw;
+    if (e[0] & 0x80) { if (d) d->dflags |= 4; return changed; }
+    if (d) d->dflags &= (uint8_t)~4;
+    if (d) d->x = (int16_t)(d->x - (int8_t)s->anim + (int8_t)e[1]);
+    s->anim = e[1];
+    set_object_frame(s, e[0]);
+    return changed;
+}
+
+void despawn_if_far_640(sk_game *g, sk_slot *s) {               /* sub_10E1C8 */
+    const sk_draw *d = s->draw;
+    if (!(s->flags & 2) && object_offscreen(g, s->x, s->y, 0x280) >= 0) return;
+    if (object_offscreen(g, d ? d->x : s->x, d ? d->y : s->y, 0x280) >= 0) return;
+    if ((s->flags & 2) && (s->flags & 8)) free_object_deferred(g, s);
+    else free_object(g, s);
+}
