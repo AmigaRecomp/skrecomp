@@ -53,7 +53,8 @@ add_executable(sk_tests
   test_attr_country_london.c
   test_obj_russia.c
   test_between.c
-  test_mapsprites.c)
+  test_mapsprites.c
+  test_pictures.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -405,7 +406,12 @@ set(SK_TEST_NAMES
   flight_wraps_east_from_japan_to_the_usa
   masked8_draws_the_index_where_the_mask_is_set
   mapsprites_parse_rejects_a_short_pack
-  mapsprites_real_pack_and_pictures)
+  mapsprites_real_pack_and_pictures
+  world_map_zero_holds_201_frames
+  world_map_draws_the_collected_pieces_only
+  world_map_one_waits_flies_and_holds
+  loading_strip_shows_25_frames_in_lines_58_to_141
+  ending_waits_for_fire_then_fades_64_frames)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

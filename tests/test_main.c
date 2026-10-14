@@ -351,6 +351,11 @@ void test_flight_wraps_east_from_japan_to_the_usa(void);
 void test_masked8_draws_the_index_where_the_mask_is_set(void);
 void test_mapsprites_parse_rejects_a_short_pack(void);
 void test_mapsprites_real_pack_and_pictures(void);
+void test_world_map_zero_holds_201_frames(void);
+void test_world_map_draws_the_collected_pieces_only(void);
+void test_world_map_one_waits_flies_and_holds(void);
+void test_loading_strip_shows_25_frames_in_lines_58_to_141(void);
+void test_ending_waits_for_fire_then_fades_64_frames(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -699,6 +704,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "masked8_draws_the_index_where_the_mask_is_set", test_masked8_draws_the_index_where_the_mask_is_set },
     { "mapsprites_parse_rejects_a_short_pack", test_mapsprites_parse_rejects_a_short_pack },
     { "mapsprites_real_pack_and_pictures", test_mapsprites_real_pack_and_pictures },
+    { "world_map_zero_holds_201_frames", test_world_map_zero_holds_201_frames },
+    { "world_map_draws_the_collected_pieces_only", test_world_map_draws_the_collected_pieces_only },
+    { "world_map_one_waits_flies_and_holds", test_world_map_one_waits_flies_and_holds },
+    { "loading_strip_shows_25_frames_in_lines_58_to_141", test_loading_strip_shows_25_frames_in_lines_58_to_141 },
+    { "ending_waits_for_fire_then_fades_64_frames", test_ending_waits_for_fire_then_fades_64_frames },
 };
 
 int main(int argc, char **argv) {
