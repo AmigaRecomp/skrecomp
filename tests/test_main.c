@@ -417,6 +417,7 @@ void test_save_prompt_saves_a_typed_name_in_a_slot(void);
 void test_resume_list_escape_cancels_and_fire_picks(void);
 void test_save_before_a_map_and_resume_it(void);
 void test_window_typed_keys_for_the_save_name(void);
+void test_replay_master_volume_ramps_two_a_tick(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -831,6 +832,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "resume_list_escape_cancels_and_fire_picks", test_resume_list_escape_cancels_and_fire_picks },
     { "save_before_a_map_and_resume_it", test_save_before_a_map_and_resume_it },
     { "window_typed_keys_for_the_save_name", test_window_typed_keys_for_the_save_name },
+    { "replay_master_volume_ramps_two_a_tick", test_replay_master_volume_ramps_two_a_tick },
 };
 
 int main(int argc, char **argv) {

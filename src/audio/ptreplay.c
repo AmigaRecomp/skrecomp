@@ -55,7 +55,10 @@ static sk_amem at(const sk_pt *pt, uint32_t off) {
     return (sk_amem){ (const int8_t *)pt->mod + off, (const int8_t *)pt->mod + pt->n };
 }
 static int ci(const sk_pt *pt, const sk_ptch *c) { return (int)(c - pt->ch); }
-static uint16_t faded(const sk_pt *pt, int v) { v -= pt->fade; return (uint16_t)(v < 0 ? 0 : v); }
+static uint16_t faded(const sk_pt *pt, int v) {
+    if (pt->master_on) return (uint16_t)(pt->master == 100 ? v : pt->master == 0 ? 0 : v * pt->master / 100);   /* set_channel_volume (anim) */
+    v -= pt->fade; return (uint16_t)(v < 0 ? 0 : v);
+}
 static uint16_t note_word(const sk_ptch *c) { return (uint16_t)(c->note[0] << 8 | c->note[1]); }
 static uint16_t cmd_word(const sk_ptch *c) { return (uint16_t)(c->note[2] << 8 | c->note[3]); }
 static void set_per(sk_pt *pt, sk_ptch *c, unsigned v) { paula_set_per(pt->paula, ci(pt, c), (uint16_t)v); }
@@ -414,6 +417,11 @@ static void all_checkfx(sk_pt *pt) { for (int i = 0; i < nch(pt); i++) checkfx(p
 
 void pt_phase1(sk_pt *pt) {                                         /* 0x101180 */
     if (!pt->playing || !pt->paula) return;
+    if (pt->master_on && pt->master != pt->master_target) {          /* anim's master_volume_ramp: 2 a tick, then the four volumes */
+        int d = pt->master_target - pt->master;
+        pt->master += d > 2 ? 2 : d < -2 ? -2 : d;
+        for (int i = 0; i < 4; i++) paula_set_vol(pt->paula, i, faded(pt, pt->ch[i].volume));
+    }
     pt->counter++;
     if (pt->counter < pt->speed) { all_checkfx(pt); posjump_check(pt); return; }
     pt->counter = 0;
@@ -437,3 +445,4 @@ void pt_phase3(sk_pt *pt) {                                         /* 0x10140C 
     }
     dskip(pt);
 }
+void pt_master(sk_pt *pt, bool on) { pt->master_on = on; pt->master = pt->master_target = 100; }

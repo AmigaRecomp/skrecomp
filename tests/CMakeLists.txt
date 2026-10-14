@@ -480,7 +480,8 @@ set(SK_TEST_NAMES
   save_prompt_saves_a_typed_name_in_a_slot
   resume_list_escape_cancels_and_fire_picks
   save_before_a_map_and_resume_it
-  window_typed_keys_for_the_save_name)
+  window_typed_keys_for_the_save_name
+  replay_master_volume_ramps_two_a_tick)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

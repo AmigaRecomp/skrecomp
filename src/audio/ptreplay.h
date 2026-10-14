@@ -32,6 +32,8 @@ typedef struct {
     bool playing;                    /* music_playing 0x200308 */
     bool use4;                       /* 0x200314: the music has channel 4 too */
     int fade;                        /* 0x200316: subtracted from every volume */
+    bool master_on;                  /* the intro's replay: volume * master / 100 instead of the fade */
+    int master, master_target;       /* anim 0x102920 / 0x102922, 0..100 */
     uint8_t speed, counter, songpos, pbreakpos, posjump, pbreak, lowmask, pattdelay, pattdelay2;   /* 0x200452.. */
     uint16_t patternpos, dmacontemp; /* 0x20045C, 0x20045E */
     uint8_t phases;                  /* 0x200309: bit 0 phase 2 pending, bit 1 phase 3 */
@@ -42,6 +44,7 @@ typedef struct {
 void pt_init(sk_pt *pt, sk_paula *paula);   /* the static channel records (DMA bits 1 2 4 8) */
 /* music_start: tune = the start position. False (nothing plays) when the buffer is too short for a module. */
 bool pt_start(sk_pt *pt, sk_paula *paula, uint8_t *mod, size_t n, int tune, bool use4);
+void pt_master(sk_pt *pt, bool on);         /* anim's music_start: master = target = 100 */
 void pt_stop(sk_pt *pt);                    /* music_stop 0x10113C */
 void pt_phase1(sk_pt *pt);                  /* 0x101180 */
 void pt_phase2(sk_pt *pt);                  /* 0x1013EE */

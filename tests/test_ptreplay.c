@@ -128,3 +128,20 @@ void test_all_modules_play(void) {                                   /* ROM-back
     CHECK(played >= 30);
     disks_close(&d);
 }
+
+void test_replay_master_volume_ramps_two_a_tick(void) {          /* anim: master_volume_ramp 0x10226C, set_channel_volume 0x102302 */
+    make_mod(1);
+    cell(0, 0, 0, 1, 428, 0, 0);
+    paula_init(&g_p, 48000);
+    CHECK(pt_start(&g_pt, &g_p, g_mod, g_n, 0, true));
+    pt_master(&g_pt, true);
+    CHECK_EQ(g_pt.master, 100);
+    g_pt.master_target = 0;
+    frame();
+    CHECK_EQ(g_pt.master, 98); CHECK_EQ(g_p.ch[0].vol, 64 * 98 / 100);
+    for (int i = 0; i < 49; i++) frame();
+    CHECK_EQ(g_pt.master, 0); CHECK_EQ(g_p.ch[0].vol, 0);
+    g_pt.master_target = 100;
+    for (int i = 0; i < 50; i++) frame();
+    CHECK_EQ(g_pt.master, 100); CHECK_EQ(g_p.ch[0].vol, 64);
+}
