@@ -51,7 +51,12 @@ and `--no-frames` reduce the picture to one layer.
 Playing: arrows or WASD move, up jumps, down crouches (down while running slides), Space,
 Left Ctrl or X is fire, `F` toggles fullscreen, `M` mutes the sound, F10 or `P` pauses (with the level's help box).
 Escape in a game closes the curtain and goes back to the title (as the original); on the title, the intro or the attract
-screens it quits the program. On the title, TAB shows the version
+screens it quits the program.
+
+Gamepads (any controller SDL knows: Xbox, PlayStation, Switch Pro, ...) work out of the box: d-pad or left stick to move,
+A to jump, B or X for fire, Start to pause, Back to leave. F12 opens the remap screen: press a key or pad button for each
+action in turn (Backspace keeps one, F5 restores the defaults, Escape cancels). The bindings are kept in `controls.cfg`
+in your user data folder (or `--controls FILE`), a text file you can also edit. On the title, TAB shows the version
 and F1..F10 in KIT DESIGN copy a hi-score's kit; typing names a save. The game runs at the original's
 50 frames per second with the original's movement, camera, collision and level flow
 (`../re/docs/notes/gameplay.md`, `player.md`); the kid and the ball are drawn as the hardware
