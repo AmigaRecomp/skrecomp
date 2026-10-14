@@ -387,6 +387,11 @@ void test_bonus_level_game_over_and_direct_start(void);
 void test_image_write_stays_inside_a_segment(void);
 void test_kit_apply_writes_the_rows_into_the_kid_palette(void);
 void test_language_texts_load_into_the_message_tables(void);
+void test_language_screen_moves_without_wrapping_and_fire_chooses(void);
+void test_title_menu_wraps_and_starts_on_fire(void);
+void test_title_menu_times_out_after_750_frames(void);
+void test_title_menu_shows_the_kit_on_the_kid(void);
+void test_title_sparkle_plays_eleven_steps_after_fifty_frames(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -771,6 +776,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "image_write_stays_inside_a_segment", test_image_write_stays_inside_a_segment },
     { "kit_apply_writes_the_rows_into_the_kid_palette", test_kit_apply_writes_the_rows_into_the_kid_palette },
     { "language_texts_load_into_the_message_tables", test_language_texts_load_into_the_message_tables },
+    { "language_screen_moves_without_wrapping_and_fire_chooses", test_language_screen_moves_without_wrapping_and_fire_chooses },
+    { "title_menu_wraps_and_starts_on_fire", test_title_menu_wraps_and_starts_on_fire },
+    { "title_menu_times_out_after_750_frames", test_title_menu_times_out_after_750_frames },
+    { "title_menu_shows_the_kit_on_the_kid", test_title_menu_shows_the_kit_on_the_kid },
+    { "title_sparkle_plays_eleven_steps_after_fifty_frames", test_title_sparkle_plays_eleven_steps_after_fifty_frames },
 };
 
 int main(int argc, char **argv) {

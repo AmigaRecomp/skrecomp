@@ -57,7 +57,8 @@ add_executable(sk_tests
   test_pictures.c
   test_scoreboard.c
   test_obj_bonus.c
-  test_front.c)
+  test_front.c
+  test_frontend.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -445,7 +446,12 @@ set(SK_TEST_NAMES
   bonus_level_game_over_and_direct_start
   image_write_stays_inside_a_segment
   kit_apply_writes_the_rows_into_the_kid_palette
-  language_texts_load_into_the_message_tables)
+  language_texts_load_into_the_message_tables
+  language_screen_moves_without_wrapping_and_fire_chooses
+  title_menu_wraps_and_starts_on_fire
+  title_menu_times_out_after_750_frames
+  title_menu_shows_the_kit_on_the_kid
+  title_sparkle_plays_eleven_steps_after_fifty_frames)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
