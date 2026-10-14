@@ -330,3 +330,33 @@ void test_japan_slots_cover_the_frames(void) {                      /* ROM-backe
     CHECK(seen >= 8);
     tables_free(&t); image_free(&img); disks_close(&d);
 }
+
+void test_tube_ride_is_not_a_game_over(void) {                      /* review C1: state 0x40 is only "frozen" */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 22, 3);
+    sk_player *p = &g_g.player;
+    p->x = (int16_t)(s->x0 + 16 + 4 - 2); p->y = s->y0;
+    tick(1);
+    CHECK_EQ(p->state, 0x40);
+    CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_RUNNING);
+    p->lives = -1;
+    CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_GAME_OVER);              /* the real one: no lives left */
+    drop_game();
+}
+
+void test_press_despawn_keeps_its_marker_and_attribute(void) {      /* review I1: ori.b #$c0 hits fg_cell_table */
+    CHECK(make_game());
+    int cell = 11 * g_g.world.w + 10;
+    g_g.world.tile[cell] |= SK_MARKER_BIT;
+    g_g.objs.spawn_cell = cell;
+    sk_slot *s = spawn(168, 11 * 16, 19, 3);
+    g_g.objs.spawn_cell = -1;
+    uint16_t live = g_g.world.live[cell];
+    int attr = world_attr(&g_g.world, 10, 11);
+    g_g.camera_x = 3000;                                             /* off the view: it fills its shaft and goes */
+    tick(1);
+    CHECK(s->x < 0 || (s->type4 & 0x1FF) != 19 * 4);
+    CHECK_EQ(g_g.world.live[cell] >> 9, live >> 9); CHECK_EQ(world_attr(&g_g.world, 10, 11), attr);
+    CHECK(g_g.world.tile[cell] & SK_MARKER_BIT); CHECK_EQ(g_g.world.tile[cell] & SK_SPAWNED_BIT, 0);   /* it can come back */
+    drop_game();
+}

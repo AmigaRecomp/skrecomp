@@ -83,8 +83,9 @@ void test_level_setup_and_outcome(void) {
     CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_RUNNING);
     g_g.level_outcome = 0x81; g_g.level_end = true;
     CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_NEXT_LEVEL);
-    g_g.level_outcome = 0; g_g.player.state = 64;
+    g_g.level_outcome = 0; g_g.player.state = 64; g_g.player.lives = -1;   /* the last life lost (0x10BBCA) */
     CHECK_EQ(game_outcome(&g_g), SK_OUTCOME_GAME_OVER);
+    g_g.player.lives = 3;
     CHECK(game_setup_level(&g_g, &g_lv, 0));                     /* a second setup frees the first world */
     CHECK_EQ(g_g.player.state, 68); CHECK_EQ(g_g.player.lives, 3);   /* KICK OFF holds the kid (type 105) */
     drop_game();

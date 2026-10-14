@@ -368,7 +368,9 @@ set(SK_TEST_NAMES
   train_exit_walks_left_once_stopped
   japan_markers_spawn_real_types
   japan_slots_cover_the_frames
-  japan_run_without_a_crash)
+  japan_run_without_a_crash
+  tube_ride_is_not_a_game_over
+  press_despawn_keeps_its_marker_and_attribute)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

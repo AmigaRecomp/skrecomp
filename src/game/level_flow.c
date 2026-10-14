@@ -229,7 +229,7 @@ int play_level_next(const sk_tables *t, int level_number) {
 
 sk_outcome game_outcome(const sk_game *g) {
     if (g->level_end && (g->level_outcome & 0x80)) return SK_OUTCOME_NEXT_LEVEL;
-    if (g->player.state == 64) return SK_OUTCOME_GAME_OVER;
+    if (g->player.state == 64 && g->player.lives < 0) return SK_OUTCOME_GAME_OVER;   /* state 64 alone is "frozen": the lift tube uses it */
     return SK_OUTCOME_RUNNING;
 }
 

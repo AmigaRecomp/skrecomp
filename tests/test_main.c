@@ -318,6 +318,8 @@ void test_train_exit_walks_left_once_stopped(void);
 void test_japan_markers_spawn_real_types(void);
 void test_japan_slots_cover_the_frames(void);
 void test_japan_run_without_a_crash(void);
+void test_tube_ride_is_not_a_game_over(void);
+void test_press_despawn_keeps_its_marker_and_attribute(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -633,6 +635,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "japan_markers_spawn_real_types", test_japan_markers_spawn_real_types },
     { "japan_slots_cover_the_frames", test_japan_slots_cover_the_frames },
     { "japan_run_without_a_crash", test_japan_run_without_a_crash },
+    { "tube_ride_is_not_a_game_over", test_tube_ride_is_not_a_game_over },
+    { "press_despawn_keeps_its_marker_and_attribute", test_press_despawn_keeps_its_marker_and_attribute },
 };
 
 int main(int argc, char **argv) {

@@ -276,7 +276,7 @@ void test_game_over_fades_the_music(void) {                          /* ROM-back
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     for (int i = 0; i < 300; i++) play_step(&p, 0);
-    p.game.player.state = 64;                                        /* GAME OVER */
+    p.game.player.state = 64; p.game.player.lives = -1;              /* GAME OVER */
     for (int i = 0; i < 70; i++) play_step(&p, 0);
     CHECK(p.snd.fading >= 64);
     for (int i = 0; i < 3; i++) CHECK_EQ(p.snd.paula.ch[i].vol, 0);

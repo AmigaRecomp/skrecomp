@@ -466,10 +466,8 @@ static void obj_press_update(sk_game *g, sk_slot *s, int index) {             /*
     }
     if (object_offscreen(g, d->x, d->y, 160) >= 0) return;
     fill_cells(g, s->x + 8, s->y - s->t0, 0x17F, 1, (uint16_t)s->t0 >> 4);   /* off the view: the whole shaft solid */
-    if (s->marker_cell >= 0) {                                      /* ori.b #$c0 on the marker cell: it never comes back */
-        g->world.live[s->marker_cell] |= 0xC000;
-        g->world.tile[s->marker_cell] &= (uint16_t)~SK_MARKER_BIT;
-    }
+    if (s->marker_cell >= 0)                                        /* ori.b #$c0 on the cell long (fg_cell_table); free_object clears bit 6 */
+        g->world.tile[s->marker_cell] |= SK_MARKER_BIT | SK_SPAWNED_BIT;
     free_object(g, s);
 }
 
