@@ -396,6 +396,7 @@ void test_play_starts_at_the_language_screen_and_the_title(void);
 void test_title_menu_needs_fire_released_once(void);
 void test_savegame_slot_round_trips_through_the_xor_and_checksum(void);
 void test_savegame_names_show_empty_slots(void);
+void test_hiscore_insert_shifts_the_table_down(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -789,6 +790,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "title_menu_needs_fire_released_once", test_title_menu_needs_fire_released_once },
     { "savegame_slot_round_trips_through_the_xor_and_checksum", test_savegame_slot_round_trips_through_the_xor_and_checksum },
     { "savegame_names_show_empty_slots", test_savegame_names_show_empty_slots },
+    { "hiscore_insert_shifts_the_table_down", test_hiscore_insert_shifts_the_table_down },
 };
 
 int main(int argc, char **argv) {

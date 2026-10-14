@@ -49,3 +49,21 @@ void test_language_texts_load_into_the_message_tables(void) {    /* language_sel
     CHECK_STR(language_file(2), "german.bin"); CHECK(language_file(5) == NULL);
     image_free(&img); memset(&img, 0, sizeof img);
 }
+
+void test_hiscore_insert_shifts_the_table_down(void) {          /* attract_hiscores 0x1053B6 */
+    make_image();
+    for (int k = 0; k < 10; k++) {                               /* scores 100000, 90000, ... 10000 BCD */
+        uint8_t e[16]; memset(e, 'A' + k, 8);
+        put_be32(e + 8, (uint32_t)(10 - k) << 16); put_be16(e + 12, (uint16_t)k); put_be16(e + 14, 0);
+        image_write(&img, SK_HISCORES_ADDR + 16u * (uint32_t)k, e, 16);
+    }
+    CHECK_EQ(hiscore_insert(&img, 0, 1, 2), -1);                 /* below the table */
+    CHECK_EQ(hiscore_insert(&img, 0x85000, 3, 4), 2);            /* between 90000 and 80000 */
+    CHECK_EQ(image_u32(&img, SK_HISCORES_ADDR + 2 * 16 + 8), 0x85000u);
+    CHECK_EQ(image_u8(&img, SK_HISCORES_ADDR + 2 * 16), ' ');
+    CHECK_EQ(image_u16(&img, SK_HISCORES_ADDR + 2 * 16 + 12), 3); CHECK_EQ(image_u16(&img, SK_HISCORES_ADDR + 2 * 16 + 14), 4);
+    CHECK_EQ(image_u32(&img, SK_HISCORES_ADDR + 3 * 16 + 8), 0x80000u);   /* the old third, one down */
+    CHECK_EQ(image_u32(&img, SK_HISCORES_ADDR + 9 * 16 + 8), 0x20000u);   /* the old last is gone */
+    CHECK_EQ(hiscore_insert(&img, 0x100000, 0, 0), 0);           /* equal to the top: takes it (bcc) */
+    image_free(&img); memset(&img, 0, sizeof img);
+}

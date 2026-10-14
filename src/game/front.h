@@ -14,6 +14,9 @@
 
 void kit_apply(sk_image *img, int shirt, int shorts);          /* 0x11CCFE: the rows into kit_palette_base */
 bool language_apply(sk_image *img, const uint8_t *bin, size_t n);
-const char *language_file(int language);                         /* 0x10085A: english french german italian spanish */
+const char *language_file(int language);
+
+#define SK_HISCORES_ADDR 0x200934u      /* default_hiscores: 10 x (name 8, BCD score, shirt word, shorts word), kept in memory */
+int  hiscore_insert(sk_image *img, uint32_t score, int shirt, int shorts);   /* the rank, -1 none */                         /* 0x10085A: english french german italian spanish */
 
 #endif
