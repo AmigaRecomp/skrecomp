@@ -22,7 +22,8 @@ Point the program at a directory holding the five disk images, either as `.adf` 
 `SKDisk0` to `SKDisk4`, not by file name.
 
 ```sh
-build/soccerkid --roms ../SourceROMS                                  # the game: language screen, title, then the whole game
+build/soccerkid --roms ../SourceROMS                                  # the game: the intro, the language screen, the title
+build/soccerkid --roms ../SourceROMS --no-intro                       # start at the language screen
 build/soccerkid --roms ../SourceROMS --new-game                       # straight into a new game at the first world map
 build/soccerkid --roms ../SourceROMS --level 0                        # play level 0 in a window
 build/soccerkid --roms ../SourceROMS --level 0 --frames 300 --script R150,RU20,R130 --screenshot out.png
@@ -32,7 +33,8 @@ build/soccerkid --roms ../SourceROMS --level 17 --viewer --section file036:0   #
 build/soccerkid --help                                                # every option
 ```
 
-Without `--level` the program starts as the original does after its intro: the language screen (the language
+Without `--level` the program starts as the original does: the intro (the alien Scab's story, about two minutes;
+any key, the mouse or fire skips it at its next text or animation), then the language screen (the language
 of the in-game messages), then the title with START GAME, KIT DESIGN (the kid's shirt and shorts) and OPTIONS (music,
 sound, the tutorial, RESUME GAME). Left alone, the title shows the hi-score table and the demo level; a good score asks
 for a name; before each new world the game offers to save (the file is kept in your user data folder, or `--save FILE`).
@@ -62,7 +64,7 @@ audio device the game runs silent.
 The ball (all five worlds are complete, every level of the game: England's streets, country and London with LONDON2's boss;
 Italy's Ruins, Venice and the Riviera with RIVIERA2's boss; Russia's forest, the rocking battle ship with its rope and RED SQUARE
 with its boss; Japan's TRAIN whose scenery streams past through tunnels and the FACTORY with FACTORY2's boss; the USA's Wild West,
-the beach and the city with the last boss, the five bonus levels and the ALIEN. The intro is not done yet):
+the beach and the city with the last boss, the five bonus levels and the ALIEN.):
 - **Kick:** fire with left or right kicks the ball at your feet; kicked into an enemy it knocks
   it out for points. Jumping onto the ball with down held stands you on it.
 - **Tricks:** with the ball at your feet, hold fire still for a moment: the kid flicks it up and
