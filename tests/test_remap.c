@@ -47,3 +47,14 @@ void test_remap_ignores_the_fixed_keys(void) {
     CHECK_EQ(remap_input(&r, btn(SDL_GAMEPAD_BUTTON_BACK)), SK_REMAP_STAY);
     CHECK_EQ(r.step, SK_ACT_DOWN);                               /* the pad's Back keeps, as Backspace */
 }
+
+void test_remap_text_fits_the_screen(void) {
+    for (int i = 0; i < SK_REMAP_HELP_LINES; i++) {
+        CHECK(remap_help[i].x >= 0);
+        CHECK(remap_help[i].x + 8 * (int)strlen(remap_help[i].text) <= 320);
+    }
+}
+
+void test_remap_help_stays_above_the_hud(void) {               /* the HUD panel starts at frame line 201 */
+    for (int i = 0; i < SK_REMAP_HELP_LINES; i++) CHECK(remap_help[i].y + 8 <= 200);
+}

@@ -16,6 +16,10 @@ typedef struct {
     sk_controls *live, before;
 } sk_remap;
 
+#define SK_REMAP_HELP_LINES 2
+typedef struct { int x, y; const char *text; } sk_remap_line;
+extern const sk_remap_line remap_help[SK_REMAP_HELP_LINES];   /* the key help at the bottom of the screen */
+
 void remap_open(sk_remap *r, sk_controls *live);
 sk_remap_result remap_input(sk_remap *r, sk_bind b);
 /* The screen over the game's frame: dimmed, the actions and their bindings in the game's 8x8 font (sk may be NULL). */

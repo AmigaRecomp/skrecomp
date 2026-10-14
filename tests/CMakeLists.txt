@@ -517,7 +517,9 @@ set(SK_TEST_NAMES
   controls_set_takes_the_input_from_other_actions
   controls_file_keeps_comma_keys_bad_lines_and_a_bom
   controls_stick_press_needs_a_dominant_axis_and_a_return
-  remap_ignores_the_fixed_keys)
+  remap_ignores_the_fixed_keys
+  remap_text_fits_the_screen
+  remap_help_stays_above_the_hud)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

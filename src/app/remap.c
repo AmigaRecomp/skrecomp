@@ -6,6 +6,10 @@
 
 #define FONT_8 0x204148u                /* the game's 8x8 font: 16 bytes a glyph, the first of each pair the face */
 
+const sk_remap_line remap_help[SK_REMAP_HELP_LINES] = {
+    { 160 - 8 * 36 / 2, 176, "BACKSPACE OR PAD BACK: KEEP THIS ONE" },
+    { 160 - 8 * 32 / 2, 187, "F5: ALL DEFAULTS     ESC: CANCEL" } };
+
 void remap_open(sk_remap *r, sk_controls *live) {
     r->open = true; r->step = 0; r->live = live; r->before = *live;
 }
@@ -66,6 +70,6 @@ void remap_draw(const sk_remap *r, const sk_image *sk, uint32_t *out) {
         text(sk, out, line, 24, 64 + 12 * a, a == r->step ? yellow : white);
     }
     char ask[64]; snprintf(ask, sizeof ask, "PRESS A KEY OR BUTTON FOR %s", controls_action_name((sk_action)r->step));
-    text(sk, out, ask, 24, 172, yellow);
-    text(sk, out, "BACKSPACE/PAD BACK KEEP F5 RESET ESC CANCEL", 8, 192, grey);
+    text(sk, out, ask, 24, 162, yellow);
+    for (int i = 0; i < SK_REMAP_HELP_LINES; i++) text(sk, out, remap_help[i].text, remap_help[i].x, remap_help[i].y, grey);
 }
