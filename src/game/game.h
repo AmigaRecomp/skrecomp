@@ -78,6 +78,10 @@ struct sk_game {
     int occl_count;                     /* 0x30038A */
     uint32_t rng;                       /* 0x30000C: sub_102B42's shift register, seeded once at start-up */
     int8_t train_fade;                  /* 0x30035D: JAPAN TRAIN's palette fade in progress (sub_1049C8) */
+    int train_timer;                    /* 0x30026C: frames to TRAIN's next phase (bright / tunnel) */
+    int train_level;                    /* the brightness step apply_fade_step last copied: 4..15 (15 = the level's own colours) */
+    int bg_speed;                       /* 0x3002DE: the self-scrolling backdrop's speed, px per frame (scroll modes 1, 2) */
+    struct { int last, cursor, width, base; uint16_t col[32]; } stream;   /* 0x3002CE / D2 / D4 / D6 and the strip cache (0x3007E2) as a column ring */
     uint8_t post_flag;                  /* 0x300379: bit 7 the side of attribute 78 / 79 the kid is on; nonzero, the oncoming train (type 23) runs */
     uint8_t fboss_wobble, fboss_drop;   /* 0x300383 / 0x300384: FACTORY 2's boss shakes the rocks loose (type 106) */
     uint8_t train_flags;                /* 0x30035B */               /* the sound driver; NULL plays nothing (tests) */

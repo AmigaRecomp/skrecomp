@@ -309,6 +309,12 @@ void test_rail_arrows_48_to_51_steer_an_object(void);
 void test_rail_turn_21_turns_a_platform_a_quarter(void);
 void test_hide_56_to_59_by_half_cell(void);
 void test_train_trigger_78_starts_one_train(void);
+void test_train_setup_starts_the_ramp(void);
+void test_train_speeds_up_to_ten_and_rattles(void);
+void test_train_tunnel_fades_down_and_back(void);
+void test_backdrop_streams_new_columns_from_the_window(void);
+void test_battle_ship_rocks_and_drifts(void);
+void test_train_exit_walks_left_once_stopped(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -615,6 +621,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "rail_turn_21_turns_a_platform_a_quarter", test_rail_turn_21_turns_a_platform_a_quarter },
     { "hide_56_to_59_by_half_cell", test_hide_56_to_59_by_half_cell },
     { "train_trigger_78_starts_one_train", test_train_trigger_78_starts_one_train },
+    { "train_setup_starts_the_ramp", test_train_setup_starts_the_ramp },
+    { "train_speeds_up_to_ten_and_rattles", test_train_speeds_up_to_ten_and_rattles },
+    { "train_tunnel_fades_down_and_back", test_train_tunnel_fades_down_and_back },
+    { "backdrop_streams_new_columns_from_the_window", test_backdrop_streams_new_columns_from_the_window },
+    { "battle_ship_rocks_and_drifts", test_battle_ship_rocks_and_drifts },
+    { "train_exit_walks_left_once_stopped", test_train_exit_walks_left_once_stopped },
 };
 
 int main(int argc, char **argv) {

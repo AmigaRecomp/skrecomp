@@ -4,6 +4,7 @@
 #include "game/attr_england.h"
 #include "game/game.h"
 #include "game/level_flow.h"
+#include "game/scroll_modes.h"
 #include "game/objects.h"
 #include "game/player.h"
 
@@ -65,6 +66,7 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     g->camera_x = g->camera_y = g->camera_y_raw = 0;
     g->scan_col_left = g->scan_row_left = 0;
     g->scrolled_right = g->scrolled_down = false;
+    scroll_modes_setup(g, data_index);                           /* 0x104190: BATTLE SHIP and TRAIN */
     init_player(g);
     g->player.top_speed = 16;                                    /* move.w #$10, player (0x104188) */
     g->timer_tick = 0;
@@ -195,6 +197,7 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
         g->shake_amplitude = -g->shake_amplitude;
         if (g->shake_amplitude > 0) g->shake_amplitude--;
     }
+    scroll_modes_frame(g);                                       /* 0x104338: sub_1049C8 / sub_104BF0 */
     step(g, 8); if (g->timeout_armed) timeout_check(g);
     step(g, 10); update_camera(g);
     step(g, 11); update_player(g, kid);
@@ -202,6 +205,7 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     step(g, 14); process_tile_queue(g);
     step(g, 15); edge_scan_rows(g);
     step(g, 16); edge_scan_columns(g);
+    step(g, 18); backdrop_stream_step(g);                        /* backdrop_scroll's sub_1068EE; the app places the rest */
     step(g, 19); tile_anim_step(g);                              /* blit_fg_strips' first call */
     step(g, 21);                                                 /* draw_all_objects: the app draws after the step */
     step(g, 23); if (g->ball_sprite) ball_sprites(g, g->ball_sprite);

@@ -61,6 +61,7 @@ add_library(skcore STATIC
   src/game/attr_italy.c
   src/game/attr_russia.c
   src/game/attr_japan.c
+  src/game/scroll_modes.c
   src/audio/paula.c
   src/audio/ptreplay.c
   src/audio/sound.c

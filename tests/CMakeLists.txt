@@ -47,6 +47,7 @@ add_executable(sk_tests
   test_attr_italy.c
   test_attr_russia.c
   test_attr_japan.c
+  test_scroll_modes.c
   test_attr_country_london.c
   test_obj_russia.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
@@ -358,7 +359,13 @@ set(SK_TEST_NAMES
   rail_arrows_48_to_51_steer_an_object
   rail_turn_21_turns_a_platform_a_quarter
   hide_56_to_59_by_half_cell
-  train_trigger_78_starts_one_train)
+  train_trigger_78_starts_one_train
+  train_setup_starts_the_ramp
+  train_speeds_up_to_ten_and_rattles
+  train_tunnel_fades_down_and_back
+  backdrop_streams_new_columns_from_the_window
+  battle_ship_rocks_and_drifts
+  train_exit_walks_left_once_stopped)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

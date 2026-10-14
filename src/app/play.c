@@ -5,6 +5,7 @@
 #include "game/player.h"
 #include "game/world.h"
 #include "app/play.h"
+#include "game/scroll_modes.h"
 #include "game/camera.h"
 #include "game/level_flow.h"
 #include "game/objects.h"
@@ -174,11 +175,21 @@ void play_draw(sk_play *p) {
         for (int k = 0; k < 15 && p->game.sk; k++)
             p->scene.palette.xrgb[49 + k] = rgb12_to_xrgb(fade_colour(image_u16(p->game.sk, SK_KIT_BASE_ADDR + 2u * (uint32_t)k), 0xFFF, p->game.flash_timer));
     }
+    if (p->game.train_level < 15) {                              /* apply_fade_step: TRAIN's tunnel, playfield and sprite colours */
+        for (int k = 1; k < 16; k++)
+            p->scene.palette.xrgb[k] = rgb12_to_xrgb(train_scale_colour(lv->tiles_a.colours[k], p->game.train_level));
+        for (int k = 0; k < 15 && p->game.sk; k++)
+            p->scene.palette.xrgb[49 + k] = rgb12_to_xrgb(train_scale_colour(image_u16(p->game.sk, SK_KIT_BASE_ADDR + 2u * (uint32_t)k), p->game.train_level));
+    }
     int bg_x, bg_y;
     scene_backdrop_pos(lv, p->game.camera_x, p->game.camera_y, &bg_x, &bg_y);
+    if (p->game.scroll_mode) bg_x = p->game.view.bg_x;          /* the backdrop streams by itself (backdrop_stream_step) */
     p->game.view.bg_x = bg_x;
     p->game.view.bg_y = bg_y;
-    if (p->scene.backdrop) scene_draw_backdrop_cells(lv, p->game.world.bg, fb, bg_x, bg_y);
+    if (p->scene.backdrop) {
+        if (p->game.scroll_mode) scene_draw_backdrop_stream(lv, p->game.world.bg, p->game.stream.col, fb, bg_x, bg_y);
+        else scene_draw_backdrop_cells(lv, p->game.world.bg, fb, bg_x, bg_y);
+    }
     scene_draw_tiles_anim(lv, fb, p->game.world.tile, p->game.world.state, p->game.tile_anim, p->game.camera_x, p->game.camera_y);
     draw_all_objects(&p->game, fb, p->game.camera_x + SK_BUFFER_WORLD_X, p->game.camera_y);
     const sk_game *g = &p->game;

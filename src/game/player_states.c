@@ -143,15 +143,31 @@ static void player_state_bounce(sk_game *g) {                    /* 0x10C1BC */
 
 static void player_state_carried(sk_game *g) { g->player.x = (int16_t)(g->player.x + g->player.carry_dx); }   /* 0x10BB1E */
 
-static void player_state_exit_walk(sk_game *g) {                 /* 0x10C04C, scroll mode 0 */
+static void player_state_exit_walk(sk_game *g) {                 /* 0x10C04C */
     sk_player *p = &g->player;
     p->run_chain = 1;
     p->input = 0;
-    g->level_outcome |= 1;
-    if (g->level_data_index != 12) {
-        p->input = SK_IN_RIGHT;
-        if (p->x - g->camera_x <= 320) return;
-        p->exit_walk = 1;
+    if (g->scroll_mode == 1) {                                   /* TRAIN: the train pulls in, then out to the left */
+        if (!(g->train_flags & 0x10)) {
+            g->train_flags |= 0x10;
+            p->timer = 10;
+            g->train_timer = 150;
+        }
+        if (p->timer) {
+            p->input = SK_IN_LEFT;
+            if (--p->timer == 0) { p->input = 0; p->speed = 0; }
+        }
+        g->level_outcome |= 1;
+        if (g->bg_speed) return;
+        p->input = SK_IN_LEFT;
+        if (p->x - g->camera_x > 32) return;
+    } else {
+        g->level_outcome |= 1;
+        if (g->level_data_index != 12) {
+            p->input = SK_IN_RIGHT;
+            if (p->x - g->camera_x <= 320) return;
+            p->exit_walk = 1;
+        }
     }
     if (!(g->level_outcome & 0x80)) {
         g->level_outcome = 0x81;

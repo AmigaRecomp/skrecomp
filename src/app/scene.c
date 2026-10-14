@@ -72,6 +72,21 @@ void scene_draw_backdrop(const sk_level *lv, sk_fb *fb, int bg_x, int bg_y) {
     if (lv->backdrop.grid) draw_grid(fb, &lv->tiles_b, lv->backdrop.width, lv->backdrop.height, bg_x + SK_BUFFER_WORLD_X, bg_y, SK_GROUP_TILES_B, bg_index, lv);
 }
 
+void scene_draw_backdrop_stream(const sk_level *lv, const uint8_t *cells, const uint16_t ring[32], sk_fb *fb, int bg_x, int bg_y) {
+    if (!cells) return;                                          /* sub_106B08 in a scroll mode: columns from the strip cache */
+    int sx = bg_x + SK_BUFFER_WORLD_X, first_col = sx >> 4, off_x = sx & 15, first_row = bg_y >> 4, off_y = bg_y & 15;
+    int w = lv->backdrop.width, h = lv->backdrop.height;
+    for (int ty = 0; ty <= fb->h / 16 + 1; ty++) {
+        int cy = first_row + ty;
+        if (cy < 0 || cy >= h) continue;
+        for (int tx = 0; tx <= fb->w / 16 + 1; tx++) {
+            int cx = ring[(first_col + tx) & 31];
+            if (cx >= w) continue;
+            fb_blit_tile(fb, &lv->tiles_b, cells[cy * w + cx], tx * 16 - off_x, ty * 16 - off_y, SK_GROUP_TILES_B);
+        }
+    }
+}
+
 typedef struct { const uint16_t *indices; const uint8_t *states; const uint16_t *anim; int w, count; } anim_grid;
 
 static int fg_anim_index(const void *ctx, int x, int y) {        /* blit_fg_strips: the image + tile_anim[cell_state] */
