@@ -145,3 +145,15 @@ void test_replay_master_volume_ramps_two_a_tick(void) {          /* anim: master
     for (int i = 0; i < 50; i++) frame();
     CHECK_EQ(g_pt.master, 100); CHECK_EQ(g_p.ch[0].vol, 64);
 }
+
+void test_replay_cue_restarts_at_a_position_keeping_the_samples(void) {   /* anim: music_cue 0x101706 */
+    make_mod(2);
+    paula_init(&g_p, 48000);
+    CHECK(pt_start(&g_pt, &g_p, g_mod, g_n, 0, true));
+    pt_master(&g_pt, true);
+    g_pt.master = 0; g_pt.master_target = 0;
+    for (int i = 0; i < 20; i++) frame();
+    pt_cue(&g_pt, 1);
+    CHECK_EQ(g_pt.songpos, 1); CHECK_EQ(g_pt.patternpos, 0); CHECK_EQ(g_pt.speed, 6); CHECK(g_pt.playing);
+    CHECK_EQ(g_pt.master, 0); CHECK_EQ(g_pt.master_target, 100);   /* the volume comes back over 50 ticks */
+}

@@ -485,7 +485,8 @@ set(SK_TEST_NAMES
   replay_master_volume_ramps_two_a_tick
   anim_byterun1_body_fills_five_planes_row_by_row
   anim_op5_delta_writes_down_columns
-  anim_real_files_hold_eight_animations)
+  anim_real_files_hold_eight_animations
+  replay_cue_restarts_at_a_position_keeping_the_samples)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

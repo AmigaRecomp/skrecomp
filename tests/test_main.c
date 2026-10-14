@@ -421,6 +421,7 @@ void test_replay_master_volume_ramps_two_a_tick(void);
 void test_anim_byterun1_body_fills_five_planes_row_by_row(void);
 void test_anim_op5_delta_writes_down_columns(void);
 void test_anim_real_files_hold_eight_animations(void);
+void test_replay_cue_restarts_at_a_position_keeping_the_samples(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -839,6 +840,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "anim_byterun1_body_fills_five_planes_row_by_row", test_anim_byterun1_body_fills_five_planes_row_by_row },
     { "anim_op5_delta_writes_down_columns", test_anim_op5_delta_writes_down_columns },
     { "anim_real_files_hold_eight_animations", test_anim_real_files_hold_eight_animations },
+    { "replay_cue_restarts_at_a_position_keeping_the_samples", test_replay_cue_restarts_at_a_position_keeping_the_samples },
 };
 
 int main(int argc, char **argv) {

@@ -446,3 +446,11 @@ void pt_phase3(sk_pt *pt) {                                         /* 0x10140C 
     dskip(pt);
 }
 void pt_master(sk_pt *pt, bool on) { pt->master_on = on; pt->master = pt->master_target = 100; }
+void pt_cue(sk_pt *pt, int position) {                              /* anim: music_cue 0x101706 */
+    pt->playing = false;
+    pt->songpos = (uint8_t)position;
+    pt->speed = 6; pt->counter = pt->speed;
+    pt->patternpos = 0; pt->pattdelay2 = 0; pt->phases = 0;
+    pt->master_target = 100;
+    pt->playing = pt->mod != NULL;
+}

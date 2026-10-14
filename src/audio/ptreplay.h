@@ -45,6 +45,7 @@ void pt_init(sk_pt *pt, sk_paula *paula);   /* the static channel records (DMA b
 /* music_start: tune = the start position. False (nothing plays) when the buffer is too short for a module. */
 bool pt_start(sk_pt *pt, sk_paula *paula, uint8_t *mod, size_t n, int tune, bool use4);
 void pt_master(sk_pt *pt, bool on);         /* anim's music_start: master = target = 100 */
+void pt_cue(sk_pt *pt, int position);       /* anim's music_cue 0x101706: restart at a song position, the master back to 100 */
 void pt_stop(sk_pt *pt);                    /* music_stop 0x10113C */
 void pt_phase1(sk_pt *pt);                  /* 0x101180 */
 void pt_phase2(sk_pt *pt);                  /* 0x1013EE */
