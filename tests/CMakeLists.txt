@@ -375,7 +375,10 @@ set(SK_TEST_NAMES
   crab_flash_in_the_tunnel_ends_dark
   train_warning_blinks_on_ten_off_five
   queue_tile_change_takes_its_first_step_at_once
-  hedgehog_3_walks_and_curls_at_an_edge)
+  hedgehog_3_walks_and_curls_at_an_edge
+  roller_47_bounces_and_is_knocked_by_the_ball
+  gunman_69_shoots_a_kid_in_front
+  rock_73_shakes_drops_and_breaks)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -9,6 +9,12 @@
 
 static const uint8_t hedgehog_walk_script[] = { 0, 4, 0, 6, 0, 1, 2, 3, 4, 5, 6, 7 };         /* 0x119A98 */
 
+static const uint8_t roller_script[] = { 0, 4, 0, 4, 3, 2, 1, 0, 0, 1, 2, 3 };                 /* 0x112F4E */
+static const uint8_t gunman_walk_script[] = { 0, 6, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };   /* 0x118FD2 */
+static const uint8_t gunman_shoot_script[] = { 0, 6, 0, 4, 0, 1, 2, 2, 2, 2, 3, 4, 5, 5, 5, 5 };   /* 0x118FE2 */
+static const uint8_t gunman_shot_script[] = { 0, 8, 0, 3, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7 };   /* 0x118FF2 */
+static const int16_t rock_shake[4] = { 0, 1, -1, 0 };                                         /* 0x119972 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 
@@ -54,6 +60,161 @@ static void obj_hedgehog_update(sk_game *g, sk_slot *s, int index) {          /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 47: the roller (slot 63, READING a tumbleweed): bounces along to the left; the ball knocks it away ---- */
+static void obj_roller_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x112E6E */
+    init_object_slot(g, s, x, y - 12, s->type4);
+    s->vx = 4; s->vy = -6;
+    s->flags |= 4;
+    const uint8_t *f = res(g, 63);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
+}
+static void obj_roller_update(sk_game *g, sk_slot *s, int index) {            /* 0x112EA0 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (!(s->flags & 2)) {
+        if (aux_c(s)) {
+            s->vx = (int16_t)(s->vx - 4);
+            if (s->vx == 0) { set_aux_c(s, 0); s->flags &= ~1; s->vx = 4; }
+        }
+        int wrapped = 0;
+        step_animation(s, roller_script, s->flags, &wrapped);
+        int r = probe_rows_below(g, s, 16, -4);
+        if (r < 0) { d->y = (int16_t)(d->y + r); s->vy = -6; }        /* lands: a bounce */
+        if (ball_overlap(g, d->x, d->y, 32, 32)) {
+            s->flags |= 1;
+            if ((int16_t)(d->x + 16 - (int16_t)(g->ball.x >> 16)) < 0) s->flags &= ~1;   /* away from the ball */
+            set_aux_c(s, 1);
+            s->vx = 0x20;
+        }
+        int far = (int16_t)(s->x - d->x);
+        if ((uint16_t)(far < 0 ? -far : far) >= 0x190) s->flags |= 2;   /* 400 px from home: done */
+        touch_player(g, d->x, d->y, 32, 32);
+    }
+    despawn_if_far(g, s);
+}
+
+/* ---- type 69: the gunman (slots 118 walking, 119 shooting / hit, 120 the shot): shoots a kid in front within 70 px ---- */
+static void gunman_child(sk_game *g, sk_slot *s, int type, int off, int vx, int vy) {   /* sub_118FAA */
+    const sk_draw *d = s->draw;
+    spawn_child(g, s, d->x + 0x18, d->y + 0x10, type, off, res(g, 120), gunman_shot_script, 32, 25, vx, vy);
+}
+static void obj_gunman_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x118E0A */
+    init_object_slot(g, s, x, y - 48, s->type4);
+    s->vx = 2; s->vy = 0; s->t0 = 0;
+    s->hits = 3;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 118);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 48, 64, f, 1);                                  /* frames_48x64 */
+}
+static void obj_gunman_update(sk_game *g, sk_slot *s, int index) {            /* 0x118E48 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (s->flags & 2) { despawn_if_far(g, s); return; }
+    bool shoot = aux_c(s) == 1;
+    if (!shoot) {
+        int wrapped = 0;
+        step_animation(s, gunman_walk_script, s->flags, &wrapped);
+        if (ground_ahead(g, s, s->flags)) s->flags ^= 1;
+        if (s->t0) s->t0--;
+        else {
+            int facing = s->flags, k = (int16_t)(d->x + 0x18 - g->player.x);
+            if (k < 0) { k = -k; facing ^= 1; }
+            if (!(facing & 1) && (uint16_t)k < 0x46) {              /* the kid in front: draw */
+                size_frames(g, d, 64, 64, res(g, 119));
+                s->anim_tick = 0; s->anim_index = 0;
+                s->vx = 0;
+                set_aux_c(s, 1);
+                shoot = true;
+            }
+        }
+    }
+    if (shoot) {
+        int wrapped = 0;
+        int changed = step_animation(s, gunman_shoot_script, s->flags, &wrapped);
+        if (changed && s->anim_index == 2) gunman_child(g, s, 99, 0x18, 12, 4);
+        if (wrapped) {                                              /* holster: walk on, 50 frames before the next draw */
+            size_frames(g, d, 48, 64, res(g, 118));
+            s->anim_tick = 0; s->anim_index = 0;
+            set_frame2(s, 0, 6, s->flags);
+            s->vx = 2;
+            s->t0 = 50;
+            set_aux_c(s, 0);
+        }
+    }
+    touch_player(g, d->x, d->y, 48, 64);
+    if (ball_hits_object(g, s, 8, 0, 48, 64, 0, 0x500) >= 0) {      /* down: the hit pose and his hat (type 107) */
+        size_frames(g, d, 64, 64, res(g, 119));
+        set_frame2(s, 6, 6, 0);
+        d->x = (int16_t)(d->x - 16);
+        gunman_child(g, s, 107, 0, 0, -14);
+        d->x = (int16_t)(d->x + 8);
+    }
+    despawn_if_far(g, s);
+}
+
+/* ---- type 73: the falling rock (slot 110, READING): shakes 100 frames, drops, breaks (type 116) and bounces off; back after 50 ---- */
+static void obj_rock73_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x119806 */
+    init_object_slot(g, s, x, y - 10, s->type4);
+    s->vx = 0; s->vy = 0; s->t0 = 0;
+    s->t1 = 100;
+    const uint8_t *f = res(g, 110);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 16, 16, f, 1);                                  /* frames_16x16 */
+}
+static void obj_rock73_update(sk_game *g, sk_slot *s, int index) {            /* 0x11983C */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    int st = aux_c(s);
+    bool touch = false;
+    if (st == 0) {
+        s->t0 = (int16_t)((s->t0 + 1) & 3);
+        d->x = (int16_t)(s->x + rock_shake[s->t0]);
+        if (--s->t1) touch = true;
+        else { s->flags |= 4; set_aux_c(s, 1); st = 1; }
+    }
+    if (st == 1) {
+        if (probe_rows_below(g, s, 0, 0) == 0) touch = true;        /* still falling */
+        else {                                                      /* it lands and breaks */
+            sk_objects *o = &g->objs;
+            o->child_w = 16; o->child_h = 16; o->child_vx = -4; o->child_vy = -4;
+            const uint8_t *f = res(g, 110);
+            o->child_frames = f ? f + 0xA0 : NULL;
+            spawn_object(g, d->x, d->y, 116);
+            set_frame2(s, 2, 2, 0);
+            s->vx = 4; s->flags |= 1; s->vy = -4;
+            set_aux_c(s, 2);
+            st = 2;
+        }
+    }
+    if (st == 2) {
+        if (object_offscreen(g, d->x, d->y, 64) < 0) {              /* sub_10D92C: gone from view, rest */
+            s->vx = 0; s->vy = 0; s->flags &= ~4;
+            s->t1 = 50;
+            set_aux_c(s, 3);
+            st = 3;
+        }
+    }
+    if (st == 3 && --s->t1 == 0) {
+        set_frame2(s, 0, 0, 0);
+        d->x = s->x; d->y = s->y;
+        s->t1 = 100;
+        set_aux_c(s, 0);
+    }
+    if (touch) touch_player(g, d->x, d->y, 16, 16);
+    despawn_if_far(g, s);
+}
+
 void obj_usa_install(void) {
     object_init_table[3] = obj_hedgehog_init;          object_update_table[3] = obj_hedgehog_update;
+    object_init_table[47] = obj_roller_init;           object_update_table[47] = obj_roller_update;
+    object_init_table[69] = obj_gunman_init;           object_update_table[69] = obj_gunman_update;
+    object_init_table[73] = obj_rock73_init;           object_update_table[73] = obj_rock73_update;
 }

@@ -54,3 +54,51 @@ void test_hedgehog_3_walks_and_curls_at_an_edge(void) {             /* type 3 */
     CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->vx, 2); CHECK_EQ(s->draw->y, y - 1);   /* uncurls and walks on */
     drop_game();
 }
+
+void test_roller_47_bounces_and_is_knocked_by_the_ball(void) {      /* type 47 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 12 * 16, 47, 0);
+    CHECK_EQ(s->y, 12 * 16 - 12); CHECK_EQ(s->vx, 4); CHECK_EQ(s->vy, -6); CHECK(s->flags & 4); CHECK_EQ(s->draw->w, 32);
+    int i = 0;
+    while (s->vy != -6 || i < 3) { tick(1); if (++i > 60) break; }
+    CHECK(i <= 60);                                                  /* it lands and bounces again */
+    g_g.ball.x = (s->draw->x + 24) << 16; g_g.ball.y = (s->draw->y + 16) << 16; g_g.player.ball_free = 1;   /* a loose ball */
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->flags & 1, 0); CHECK_EQ(s->vx, 0x20);       /* the ball on its right: knocked left */
+    g_g.ball.x = 3000 << 16;
+    tick(8);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->vx, 4);
+    drop_game();
+}
+
+void test_gunman_69_shoots_a_kid_in_front(void) {                    /* type 69 */
+    CHECK(make_game());
+    sk_slot *s = spawn(250, 11 * 16, 69, 0);                         /* the marker row: one above the floor */
+    CHECK_EQ(s->y, 11 * 16 - 48); CHECK_EQ(s->hits, 3); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 64);
+    tick(1);                                                         /* (the fixture's edge may turn it) */
+    CHECK_EQ(aux_c(s), 0);
+    g_g.player.x = (int16_t)(s->draw->x + 24 + ((s->flags & 1) ? 50 : -50));   /* 50 px in front */
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->draw->w, 64); CHECK_EQ(s->vx, 0);
+    int i = 0;
+    while (count_type(99) == 0 && i++ < 40) tick(1);
+    CHECK_EQ(count_type(99), 1);
+    i = 0;
+    while (aux_c(s) != 0 && i++ < 40) tick(1);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->t0, 50); CHECK_EQ(s->vx, 2);
+    drop_game();
+}
+
+void test_rock_73_shakes_drops_and_breaks(void) {                    /* type 73 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 9 * 16, 73, 0);
+    CHECK_EQ(s->y, 9 * 16 - 10); CHECK_EQ(s->t1, 100); CHECK_EQ(s->draw->w, 16);
+    tick(1);
+    CHECK_EQ(s->draw->x, s->x + 1);                                  /* the shake: 0, +1, -1, 0 */
+    tick(99);
+    CHECK_EQ(aux_c(s), 1); CHECK(s->flags & 4);
+    int i = 0;
+    while (aux_c(s) == 1 && i++ < 60) tick(1);
+    CHECK_EQ(aux_c(s), 2); CHECK_EQ(count_type(116), 1); CHECK_EQ(s->vx, 4); CHECK(s->flags & 1);
+    drop_game();
+}
