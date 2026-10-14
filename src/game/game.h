@@ -75,7 +75,9 @@ struct sk_game {
     int music_slot_last, jingle_loads, jingle_frees;   /* for the tests */
     struct sk_sound *snd;
     struct { bool used; int16_t x, y, h; const uint8_t *mask; size_t mask_len; } occl[4];   /* the sprite occluders 0x3007BA (types 40, 41) */
-    int occl_count;                     /* 0x30038A */               /* the sound driver; NULL plays nothing (tests) */
+    int occl_count;                     /* 0x30038A */
+    int8_t train_fade;                  /* 0x30035D: JAPAN TRAIN's palette fade in progress (sub_1049C8) */
+    uint8_t train_flags;                /* 0x30035B */               /* the sound driver; NULL plays nothing (tests) */
     uint8_t kill_kind;                  /* 0x30037F: 1 pick-up kick, 2 volley, 3 overhead (kill statistics) */
     uint8_t kills[4];                   /* 0x300373 / 0x300375 / 0x300374 by kill_kind 1..3 */
     uint32_t score_value;               /* 0x300050: the score the type-113 popup shows */

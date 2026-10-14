@@ -292,6 +292,7 @@ void test_cannon_without_a_fixed_record(void);
 void test_insect_25_homes_on_the_kid(void);
 void test_thrower_67_wakes_and_throws(void);
 void test_wheel_platform_6_turns_full_circles(void);
+void test_crab_18_wakes_attacks_and_explodes(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -581,6 +582,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "insect_25_homes_on_the_kid", test_insect_25_homes_on_the_kid },
     { "thrower_67_wakes_and_throws", test_thrower_67_wakes_and_throws },
     { "wheel_platform_6_turns_full_circles", test_wheel_platform_6_turns_full_circles },
+    { "crab_18_wakes_attacks_and_explodes", test_crab_18_wakes_attacks_and_explodes },
 };
 
 int main(int argc, char **argv) {

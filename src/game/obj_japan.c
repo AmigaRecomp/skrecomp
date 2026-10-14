@@ -15,6 +15,16 @@ static const uint8_t th67_throw_script[] = { 0, 8, 0, 4, 18, 19, 20, 21, 21, 21,
 static const uint8_t th67_missile_script[] = { 0, 2, 0, 10, 0, 0, 1, 1 };                      /* 0x118C48 */
 static const uint8_t th67_debris_script[] = { 0, 2, 0, 10, 0, 0, 0, 0 };                       /* 0x118C50 */
 
+static const uint8_t crab_data[64] = {                                                         /* 0x10FC4E: the scripts overlap */
+    0, 4, 0, 2, 0, 1, 0, 6, 0, 6, 0, 4, 0, 1, 2, 3, 4, 5, 0, 2, 0, 6, 0, 1, 0, 6, 0, 3, 0, 6, 1, 0,
+    6, 6, 0, 1, 0, 4, 0, 6, 2, 3, 4, 5, 7, 8, 9, 10, 0, 6, 0, 4, 0, 2, 1, 0, 2, 1, 0, 2, 1, 0, 2, 1 };
+#define CRAB_DIE (crab_data + 0)         /* 0x10FC4E */
+#define CRAB_BURST (crab_data + 8)       /* 0x10FC56 */
+#define CRAB_WAKE (crab_data + 18)       /* 0x10FC60 */
+#define CRAB_TURN (crab_data + 26)       /* 0x10FC68 */
+#define CRAB_WALK (crab_data + 36)       /* 0x10FC72 */
+#define CRAB_BITE (crab_data + 48)       /* 0x10FC7E */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -174,8 +184,116 @@ static void obj_wheel_update(sk_game *g, sk_slot *s, int index) {             /*
     chain_platform_place(g, s, pf);
 }
 
+/* ---- type 18: the crab (slots 14; 15 the pieces, 16 the burst, 17 the bite): wakes on the kid's level, bites at close range ---- */
+static void obj_crab_init(sk_game *g, sk_slot *s, int x, int y) {             /* 0x10F7FE */
+    init_object_slot(g, s, x - 16, y - 16, s->type4);
+    s->aux = 0;
+    if (g->objs.marker_param & 1) set_aux_d(s, 0xFF);                /* patrols 80 px instead of to the edges */
+    if (g->objs.marker_param & 2) s->y = (int16_t)(s->y + 8);
+    s->vx = 0; s->vy = 0; s->hits = 3;
+    const uint8_t *f = res(g, 14);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
+}
+static void crab_explode(sk_game *g, sk_slot *s, sk_draw *d) {      /* 0x10FAC4 */
+    sk_objects *o = &g->objs;
+    play_sfx(g, 0x13);
+    g->score_value = 0x1000;
+    spawn_object(g, d->x + ((uint16_t)d->w >> 1), d->y + ((uint16_t)d->h >> 1), 113);
+    o->child_script = CRAB_BURST; o->child_w = 32; o->child_h = 22; o->child_frames = res(g, 16);
+    o->child_vx = 0; o->child_vy = 0;
+    spawn_object(g, d->x, d->y + 8, 115);
+    const uint8_t *pieces = res(g, 15);
+    o->child_frames = pieces ? pieces + 0x280 : NULL;
+    o->child_vx = 0; o->child_vy = -14; o->child_w = 16; o->child_h = 16;
+    spawn_object(g, d->x + 8, d->y, 116);
+    static const struct { int dx, dy, vx, vy; } k[4] = { { 0, 0, -6, -8 }, { 16, 0, 6, -8 }, { 0, 16, -4, -6 }, { 16, 16, 4, -6 } };
+    for (int i = 0; i < 4; i++) {
+        o->child_frames = pieces ? pieces + 0xA0 * i : NULL;
+        o->child_vx = (int16_t)k[i].vx; o->child_vy = (int16_t)k[i].vy;
+        spawn_object(g, d->x + k[i].dx, d->y + k[i].dy, 116);
+    }
+    g->flash_timer = 16;
+    g->flash_table = 0;                                             /* 0x3012BA, or 0x30169A in the train's dark (sub_1049C8) */
+    if (g->train_fade < 0 || (g->train_fade == 0 && (g->train_flags & 0x20))) g->flash_table = 1;
+    g->train_fade = 0;
+    free_object_deferred(g, s);
+}
+static void obj_crab_update(sk_game *g, sk_slot *s, int index) {              /* 0x10F850 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    const sk_player *p = &g->player;
+    bool die = false;
+    if (g->ball_kicked_flag && !(s->flags & 2) && point_offscreen(g, d->x, d->y, d->w, d->h) >= 0) {   /* sub_10E156 */
+        add_score(g, 0x1000);
+        die = true;
+    }
+    if (!die && !(s->flags & 2)) {
+        int wrapped = 0;
+        switch (aux_c(s)) {
+        case 0: {                                                   /* asleep: wakes when the kid is level and within 150 */
+            s->flags &= ~1;
+            int dx = (int16_t)(d->x + 16 - p->x);
+            if (dx < 0) { dx = -dx; s->flags |= 1; }
+            if ((uint16_t)dx >= 0x96) break;
+            if ((uint16_t)iabs((int16_t)(p->y + 8 - d->y)) >= 16) break;
+            set_aux_c(s, 1);
+        }   /* fall through */
+        case 1:
+            step_animation(s, CRAB_WAKE, s->flags, &wrapped);
+            if (wrapped) { reset_animation(s); set_aux_c(s, 2); s->vx = 4; }
+            break;
+        case 2: {
+            apply_velocity(s);
+            step_animation_simple(s, CRAB_WALK, s->flags);
+            if ((uint16_t)++s->t1 >= 16 && (uint16_t)iabs((int16_t)(p->y + 8 - d->y)) < 16
+                && (uint16_t)iabs((int16_t)(p->x - d->x - 16)) < 0x30) {
+                set_aux_c(s, 4); s->t1 = 0;
+                goto bite;
+            }
+            if ((uint16_t)++s->t0 < 25) break;
+            bool turn = aux_d(s) ? (uint16_t)iabs((int16_t)(d->x - s->x)) >= 0x50 : ground_ahead(g, s, s->flags) != 0;
+            if (!turn) break;
+            reset_animation(s);
+            set_aux_c(s, 3);
+        }   /* fall through */
+        case 3:
+            step_animation(s, CRAB_TURN, s->flags, &wrapped);
+            if (wrapped) { reset_animation(s); s->flags ^= 1; set_aux_c(s, 2); s->t0 = 0; }
+            break;
+        case 4:
+        bite:
+            s->t1++;
+            if (s->t1 == 25) {
+                sk_objects *o = &g->objs;
+                o->child_frames = res(g, 17); o->child_script = CRAB_BITE;
+                o->child_w = 32; o->child_h = 10;
+                o->child_vx = 0; o->child_vy = 0;
+                spawn_object(g, d->x + ((s->flags & 1) ? 32 : -32), d->y + 10, 114);
+            } else if ((uint16_t)s->t1 >= 49) { s->t1 = 0; set_aux_c(s, 2); }
+            break;
+        default: break;
+        }
+        touch_player(g, d->x, d->y, 32, 32);
+        int r = ball_hits_object_quiet(g, s, 0, 0, 32, 32, 0, 0x1000);
+        if (r == 0) die = true;
+        else { if (r == -2 && aux_c(s) == 0) set_aux_c(s, 1); despawn_if_far(g, s); return; }
+    }
+    if (die) { s->flags |= 2; s->t0 = 0; reset_animation(s); s->timer = 8; }
+    if ((int8_t)--s->timer < 0) { d->dflags &= (uint8_t)~2; s->timer = 15; play_sfx(g, 0x14); }   /* 0x10FA8E: it smoulders */
+    if ((uint16_t)++s->t0 < 50) {
+        int wrapped = 0;
+        step_animation(s, CRAB_DIE, 0, &wrapped);
+        despawn_if_far(g, s);
+        return;
+    }
+    crab_explode(g, s, d);
+}
+
 void obj_japan_install(void) {
     object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
+    object_init_table[18] = obj_crab_init;             object_update_table[18] = obj_crab_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;

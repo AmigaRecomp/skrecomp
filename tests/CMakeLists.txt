@@ -340,7 +340,8 @@ set(SK_TEST_NAMES
   cannon_without_a_fixed_record
   insect_25_homes_on_the_kid
   thrower_67_wakes_and_throws
-  wheel_platform_6_turns_full_circles)
+  wheel_platform_6_turns_full_circles
+  crab_18_wakes_attacks_and_explodes)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -98,3 +98,23 @@ void test_wheel_platform_6_turns_full_circles(void) {               /* type 6 */
     CHECK_EQ(pf->py >> 16, s->y + 80);                               /* back at the bottom */
     drop_game();
 }
+
+void test_crab_18_wakes_attacks_and_explodes(void) {                /* type 18 */
+    CHECK(make_game());
+    g_g.player.x = 1000; g_g.player.y = 11 * 16;
+    sk_slot *s = spawn(216, 12 * 16, 18, 0);
+    CHECK_EQ(s->x, 200); CHECK_EQ(s->y, 12 * 16 - 16); CHECK_EQ(s->hits, 3); CHECK_EQ(s->draw->w, 32);
+    tick(3);
+    CHECK_EQ(aux_c(s), 0);                                           /* asleep: the kid far */
+    g_g.player.x = (int16_t)(s->draw->x + 16 + 100); g_g.player.y = (int16_t)(s->draw->y - 8);
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->flags & 1, 1);               /* waking, facing the kid */
+    int i = 0;
+    while (aux_c(s) != 2 && i++ < 40) tick(1);
+    CHECK_EQ(aux_c(s), 2); CHECK_EQ(s->vx, 4);
+    s->flags |= 2; s->t0 = 0; s->timer = 8;                          /* killed: the death run */
+    i = 0;
+    while (s->x >= 0 && i++ < 80) tick(1);
+    CHECK(s->x < 0); CHECK_EQ(count_type(116), 5); CHECK_EQ(g_g.flash_timer, 16); CHECK_EQ(g_g.sfx_last, 0x13);
+    drop_game();
+}
