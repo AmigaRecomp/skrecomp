@@ -3,10 +3,14 @@
 #define SK_APP_ARGS_H
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include "core/err.h"
 
 typedef struct {
-    const char *roms;           /* directory with the disk images (required unless --help/--version) */
+    const char *roms;           /* directory with the disk images; NULL: --data or the embedded data */
+    const char *data_path;      /* --data FILE: a soccerkid.dat made by skextract */
+    const uint8_t *data; size_t data_len;   /* the archive in memory (main: the embedded copy or --data's file) */
     int level;                  /* data index 0..41 (0 = England 1, 12 = bonus) */
     const char *section_file;   /* --section fileNNN:S[:WxH]: graphics-set file name on the level's disk */
     int section;                /* -1 = the level record's first graphics set */

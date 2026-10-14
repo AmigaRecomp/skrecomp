@@ -222,7 +222,10 @@ bool scene_open(sk_scene *s, const sk_args *a, sk_err *e) {
     s->show_frames = !a->no_frames;
     s->cam_x = a->cam_x;
     s->cam_y = a->cam_y;
-    if (!disks_open(&s->disks, a->roms, e)) { scene_close(s); return false; }
+    bool opened = a->roms ? disks_open(&s->disks, a->roms, e)
+                : a->data ? disks_open_archive(&s->disks, a->data, a->data_len, e)
+                : sk_fail(e, "no game data: give --roms <dir> or --data FILE, or build with data/soccerkid.dat (see skextract)");
+    if (!opened) { scene_close(s); return false; }
     uint8_t *sk;
     size_t n;
     if (!disks_read(&s->disks, 0, "sk.pak", &sk, &n, e)) { scene_close(s); return false; }

@@ -86,7 +86,25 @@ add_library(skcore STATIC
 target_include_directories(skcore PUBLIC src)
 target_link_libraries(skcore PUBLIC ZLIB::ZLIB SDL3::SDL3)
 
-add_executable(soccerkid src/app/main.c)
+# The game data: build/skextract <roms dir> writes data/soccerkid.dat; every build then embeds it in soccerkid (skembed).
+add_executable(skextract tools/skextract.c)
+target_link_libraries(skextract PRIVATE skcore)
+target_compile_definitions(skextract PRIVATE SK_DEFAULT_DATA="${CMAKE_SOURCE_DIR}/data/soccerkid.dat")
+add_executable(skembed tools/skembed.c)
+set(SK_EMBEDDED_C ${CMAKE_BINARY_DIR}/embedded_data.c)
+add_custom_target(embed_data ALL
+  COMMAND skembed ${CMAKE_SOURCE_DIR}/data/soccerkid.dat ${SK_EMBEDDED_C}
+  BYPRODUCTS ${SK_EMBEDDED_C}
+  COMMENT "Embedding data/soccerkid.dat (if present)"
+  VERBATIM)
+add_dependencies(embed_data skembed)
+set_source_files_properties(${SK_EMBEDDED_C} PROPERTIES GENERATED TRUE)
+if(NOT MSVC)
+  set_source_files_properties(${SK_EMBEDDED_C} PROPERTIES COMPILE_OPTIONS "-w")
+endif()
+
+add_executable(soccerkid src/app/main.c ${SK_EMBEDDED_C})
+add_dependencies(soccerkid embed_data)
 target_link_libraries(soccerkid PRIVATE skcore SDL3::SDL3)
 
 enable_testing()

@@ -525,3 +525,6 @@ set(SK_TEST_NAMES
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
+
+add_test(NAME skembed_writes_the_archive_as_an_array
+  COMMAND ${CMAKE_COMMAND} -DSKEMBED=$<TARGET_FILE:skembed> -DOUT=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/skembed_check.cmake)

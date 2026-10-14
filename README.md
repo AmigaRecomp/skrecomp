@@ -12,14 +12,22 @@ Requirements: a C11 compiler, CMake 3.24 or newer, SDL3 and zlib (on macOS:
 
 ```sh
 cmake -B build -G Ninja
-cmake --build build
+cmake --build build                          # builds skextract, skembed and soccerkid
+build/skextract ../SourceROMS                # your five disks (.adf or .zip) -> data/soccerkid.dat
+cmake --build build                          # again: soccerkid now carries the game inside
+build/soccerkid                              # the whole game, no other files needed
 ```
+
+`skextract` reads the files the game needs from your own disk images into `data/soccerkid.dat` (about 4 MB); the
+next build embeds that file in the `soccerkid` program, so the one binary is the complete game. The repository never
+holds any of it (`data/` is ignored). Without the file the program is built empty and asks for `--roms <dir>` (the disk
+images) or `--data FILE` (a `soccerkid.dat`) instead.
 
 ## Run
 
-Point the program at a directory holding the five disk images, either as `.adf` files or as
-`.zip` archives containing one `.adf` each. The images are recognised by their volume names
-`SKDisk0` to `SKDisk4`, not by file name.
+With the data built in, `soccerkid` needs no arguments. Otherwise point it at a directory holding the five disk
+images, either as `.adf` files or as `.zip` archives containing one `.adf` each (`--roms`); the images are
+recognised by their volume names `SKDisk0` to `SKDisk4`, not by file name.
 
 ```sh
 build/soccerkid --roms ../SourceROMS                                  # the game: the intro, the language screen, the title

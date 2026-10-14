@@ -58,8 +58,10 @@ void test_args_defaults_and_errors(void) {
     CHECK(!parse(&a, &e, 2, missing));
     CHECK_STR(e.msg, "--roms");
     const char *noroms[] = { "soccerkid", "--level", "1" };
-    CHECK(!parse(&a, &e, 3, noroms));
-    CHECK_STR(e.msg, "--roms");
+    CHECK(parse(&a, &e, 3, noroms));                               /* the embedded data, or --data, can stand in */
+    CHECK(a.roms == NULL && a.data_path == NULL);
+    const char *data[] = { "soccerkid", "--data", "x.dat" };
+    CHECK(parse(&a, &e, 3, data)); CHECK(strcmp(a.data_path, "x.dat") == 0);
     const char *help[] = { "soccerkid", "--help" };
     CHECK(parse(&a, &e, 2, help));
     CHECK(a.help);

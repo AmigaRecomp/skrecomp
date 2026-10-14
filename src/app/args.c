@@ -5,8 +5,9 @@
 #include "app/play.h"
 
 static const char *USAGE =
-    "usage: soccerkid --roms <dir> [options]\n"
+    "usage: soccerkid [--roms <dir> | --data FILE] [options]\n"
     "  --roms <dir>            directory holding the five disk images (.adf or .zip)\n"
+    "  --data FILE             a soccerkid.dat made by skextract (default: the data built into this program)\n"
     "  --save FILE             the SaveGame file (default: the user's data folder)\n"
     "  --no-intro              start at the language screen\n"
     "  --controls FILE         the key and gamepad bindings (default: the user's data folder; F12 remaps in the game)\n"
@@ -62,13 +63,14 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
                            strcmp(opt, "--cam") == 0 || strcmp(opt, "--screenshot") == 0 || strcmp(opt, "--scale") == 0 ||
                            strcmp(opt, "--exit-after") == 0 || strcmp(opt, "--frames") == 0 || strcmp(opt, "--script") == 0 ||
                            strcmp(opt, "--start") == 0 || strcmp(opt, "--near") == 0 || strcmp(opt, "--cup") == 0 ||
-                           strcmp(opt, "--save") == 0 || strcmp(opt, "--controls") == 0;
+                           strcmp(opt, "--save") == 0 || strcmp(opt, "--controls") == 0 || strcmp(opt, "--data") == 0;
         if (!takes_value) return sk_fail(e, "unknown option %s", opt);
         if (!val) return sk_fail(e, "%s needs a value", opt);
         i++;
         if (strcmp(opt, "--roms") == 0) a->roms = val;
         else if (strcmp(opt, "--screenshot") == 0) a->screenshot = val;
         else if (strcmp(opt, "--save") == 0) a->save_path = val;
+        else if (strcmp(opt, "--data") == 0) a->data_path = val;
         else if (strcmp(opt, "--controls") == 0) a->controls_path = val;
         else if (strcmp(opt, "--cup") == 0) { if (!parse_int(val, &a->cup) || a->cup < 0 || a->cup > 31) return sk_fail(e, "--cup: a mask 0..31, got %s", val); }
         else if (strcmp(opt, "--level") == 0) { if (!parse_int(val, &a->level)) return sk_fail(e, "--level: not a number: %s", val); }
@@ -122,7 +124,6 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
             a->section_file = section_name;
         }
     }
-    if (!a->help && !a->version && !a->roms) return sk_fail(e, "--roms <dir> is required");
     if (a->level < 0 && (a->viewer || a->markers || a->near_type > 0 || a->has_start || a->section_file)) a->level = 0;   /* these need a level */
     return true;
 }

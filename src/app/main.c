@@ -5,6 +5,8 @@
 #include "game/player.h"
 #include "game/world.h"
 #include "app/args.h"
+#include "app/embedded.h"
+#include "core/zipfile.h"
 #include "app/play.h"
 #include "app/scene.h"
 #include "app/window.h"
@@ -88,6 +90,13 @@ int main(int argc, char **argv) {
         return 2;
     }
     if (a.help) { fputs(args_usage(), stdout); return 0; }
+    uint8_t *file = NULL; size_t file_n = 0;
+    if (!a.roms && a.data_path) {                                   /* --data: an archive from disk */
+        if (!file_read_all(a.data_path, &file, &file_n, &e)) { fprintf(stderr, "soccerkid: %s\n", e.msg); return 2; }
+        a.data = file; a.data_len = file_n;
+    } else if (!a.roms && sk_embedded_size) { a.data = sk_embedded_data; a.data_len = sk_embedded_size; }   /* the built-in game */
     if (a.version) { puts("soccerkid 0.2"); return 0; }
-    return a.viewer ? run_viewer(&a, &e) : run_play(&a, &e);
+    int rc = a.viewer ? run_viewer(&a, &e) : run_play(&a, &e);
+    free(file);
+    return rc;
 }
