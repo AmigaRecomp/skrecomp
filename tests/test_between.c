@@ -24,7 +24,10 @@ void test_play_level_entry_walks_the_games_tail(void) {
     uint8_t seq[] = { 28, 12, 41, 29, 35, 42, 36 };
     memcpy(t.sequence, seq, sizeof seq);
     int ln = 2;
-    sk_run r = play_level_entry(&t, &ln);                        /* ALIEN is 8b: its slot is passed over (ruling) */
+    sk_run r = play_level_entry(&t, &ln);                        /* ALIEN is a tile level */
+    CHECK_EQ(r.kind, SK_RUN_LEVEL); CHECK_EQ(r.data_index, 41); CHECK_EQ(ln, 2);
+    ln = 3;                                                      /* its exit walked on */
+    r = play_level_entry(&t, &ln);
     CHECK_EQ(r.kind, SK_RUN_ENDING); CHECK_EQ(ln, 4);            /* end_screens: level_number += 1 */
     r = play_level_entry(&t, &ln);
     CHECK_EQ(r.kind, SK_RUN_MAP); CHECK_EQ(r.map_index, 5); CHECK_EQ(ln, 5);

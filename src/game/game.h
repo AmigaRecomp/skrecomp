@@ -99,6 +99,12 @@ struct sk_game {
     uint8_t piece_collected;            /* 0x300298: a piece since the last map (blocks a bonus level) */
     uint8_t bonus_pending;              /* 0x300299: scoreboard_setup found 11 cards */
     int bonus_tokens;                   /* 0x300296: attribute 80's tokens taken (0x32 = all) */
+    struct {                            /* the ALIEN's parts (type 82): 0x300090 / 0x30007C / 0x300084 and their draw records */
+        sk_slot *head, *piece_a, *piece_b;
+        sk_draw *head_draw, *pa_draw, *pb_draw;
+        int8_t hand_a, hand_b;          /* 0x300095 / 0x300094: hand frame overrides, -1 = by the arm's angle */
+        int16_t arm_drop;               /* 0x300096 */
+    } alien;
     uint8_t stat_balls, stat_time;      /* 0x300371, 0x300372 (BCD): the scoreboard's BALLS and TIME (CARDS is cards_taken) */
     uint8_t balls_allotted;             /* 0x300376: the level record's +6 */
     struct {                            /* the scoreboard (between-levels.md section 6) */

@@ -431,7 +431,12 @@ set(SK_TEST_NAMES
   bonus_check_sends_the_world_to_its_bonus_level
   bonus_level_setup_keeps_its_clock_and_time_out
   cup_piece_81_waits_for_fifty_tokens_then_ends_the_bonus_level
-  bonus_token_80_counts_as_a_coin)
+  bonus_token_80_counts_as_a_coin
+  alien_82_without_the_cup_sends_the_kid_home
+  alien_82_with_the_cup_fights_and_dies
+  alien_82_starts_over_after_the_kid_dies
+  alien_shot_83_flies_along_the_arm_and_clamps_its_frame
+  bonus_levels_and_alien_load_and_run)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

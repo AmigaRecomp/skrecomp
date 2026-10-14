@@ -182,7 +182,8 @@ bool scene_load_level(sk_scene *s, int data_index, sk_err *e) {
     uint8_t *data;
     size_t n;
     sk_err inner = {0};
-    if (!disks_read_file_no(&s->disks, disk, data_index, false, &data, &n, &inner))
+    int file = data_index >= 30 ? data_index + 100 : data_index;      /* load_level_resources 0x103056: the bonus levels and ALIEN */
+    if (!disks_read_file_no(&s->disks, disk, file, false, &data, &n, &inner))
         return sk_fail(e, "level %d: %s", data_index, inner.msg);
     sk_level lv = {0};
     bool ok = level_parse(data, n, &lv, &inner);

@@ -380,7 +380,7 @@ void test_play_game_end_starts_over(void) {                          /* ROM-back
     sk_args a = { .roms = roms, .level = 28, .scale = 1, .section = -1 };
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
-    p.game.level_number = 47;                                       /* CITY 2's scoreboard done: 48 ALIEN (8b), 49 the ending */
+    p.game.level_number = 48;                                       /* ALIEN done: 49 the ending */
     finish_level(&p);
     for (int i = 0; i < 64 + 25 + 1; i++) play_step(&p, 0);
     CHECK_EQ(p.pic.kind, SK_PIC_ENDING); CHECK_EQ(p.game.level_number, 50);
@@ -426,4 +426,23 @@ void test_scoreboard_level_counts_and_moves_on(void) {             /* ROM-backed
     CHECK_EQ(p.game.player.score - score, 0x6200u);               /* 4 x 300 + 8 x 200 + 31 x 100 + 3 x 100, BCD */
     CHECK_EQ(p.game.cards, 0); CHECK_EQ(p.game.stat_time, 0);
     play_close(&p);
+}
+
+void test_bonus_levels_and_alien_load_and_run(void) {               /* ROM-backed: data 36..41 are files 136..141 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    for (int lv = 36; lv <= 41; lv++) {
+        sk_args a = { .roms = roms, .level = lv, .scale = 1, .section = -1, .script = ".170,R1500,.330" };
+        static sk_play p; sk_err e = {0};
+        CHECK(play_open(&p, &a, &e));
+        if (!SK_OK(&e)) { printf("level %d: %s\n", lv, e.msg); continue; }
+        int want = lv == 41 ? 82 : 81, found = 0;
+        for (int i = 0; i < 2000; i++) {
+            play_step(&p, 0);
+            for (int k = 0; k < 16; k++) found |= p.game.objs.slot[k].x >= 0 && (p.game.objs.slot[k].type4 & 0x1FF) == want * 4;
+        }
+        if (lv == 41) CHECK(found);                                 /* the alien is beside the start */
+        CHECK(!p.load_failed);
+        play_close(&p);
+    }
 }

@@ -73,3 +73,79 @@ void test_bonus_token_80_counts_as_a_coin(void) {               /* attribute 80 
     CHECK_EQ(g_g.bonus_tokens, 1);
     drop_game();
 }
+
+static int count_type(int type) { int c = 0; for (int i = 0; i < 16; i++) c += g_g.objs.slot[i].x >= 0 && (g_g.objs.slot[i].type4 & 0x1FF) == type * 4; return c; }
+
+void test_alien_82_without_the_cup_sends_the_kid_home(void) {   /* type 82, harmless */
+    CHECK(make_game());
+    g_g.cup_pieces = 0x1B; g_g.level_number = 48;
+    sk_slot *s = spawn(400, 11 * 16, 82, 0);
+    CHECK(s != NULL);
+    CHECK_EQ(count_type(116), 1);                                /* the second layer */
+    CHECK_EQ(g_g.push_x, 400 - 0xD4);
+    g_g.player.x = 300;
+    tick(50);
+    CHECK(!g_g.message_box_request);
+    g_g.player.x = 400 - 0x40 + 1;
+    tick(1);
+    CHECK(g_g.message_box_request); CHECK_EQ(g_g.message_box_kind, 0);
+    tick(28);
+    CHECK_EQ(g_g.level_outcome, 0);
+    tick(1);
+    CHECK_EQ(g_g.level_outcome, 0x81); CHECK_EQ(g_g.level_number, 49); CHECK(g_g.curtain_flags & 0x10);
+    drop_game();
+}
+
+void test_alien_82_with_the_cup_fights_and_dies(void) {          /* type 82, the boss */
+    CHECK(make_game());
+    g_g.cup_pieces = 0x1F; g_g.level_number = 48;
+    g_g.player.x = 100;
+    sk_slot *s = spawn(400, 11 * 16, 82, 0);
+    CHECK(s != NULL);
+    CHECK_EQ(count_type(84), 2); CHECK_EQ(count_type(116), 1);
+    CHECK_EQ(s->hits, 35); CHECK(g_g.objs.chain_c); CHECK_EQ(g_g.objs.chain_count, 5);
+    CHECK_EQ(s->x, 400 - 0x20); CHECK_EQ(s->y, 11 * 16 - 0x31);
+    tick(99);
+    CHECK(s->draw->dflags & 4);                                  /* hidden for the intro */
+    tick(51);
+    CHECK(!(s->draw->dflags & 4));                               /* blinked in */
+    int dx = g_g.objs.chain[5].x - s->draw->x;
+    CHECK(dx > 0x20);                                            /* arm B hangs from the right shoulder */
+    s->hits = 0;                                                 /* the 35th hit */
+    set_aux_c(s, aux_c(s) | 4);
+    uint32_t score = g_g.player.score;
+    int n = 0;
+    while (g_g.level_outcome != 0x81 && n < 3000) { tick(1); n++; }
+    CHECK_EQ(g_g.level_outcome, 0x81); CHECK_EQ(g_g.level_number, 49);
+    CHECK_EQ(g_g.player.score - score, 0x100000u);
+    drop_game();
+}
+
+void test_alien_82_starts_over_after_the_kid_dies(void) {
+    CHECK(make_game());
+    g_g.cup_pieces = 0x1F; g_g.player.x = 100;
+    spawn(400, 11 * 16, 82, 0);
+    tick(10);
+    g_g.player.dying = 1;
+    tick(1);
+    CHECK_EQ(count_type(82), 1);
+    g_g.player.dying = 0;
+    tick(1);
+    CHECK_EQ(count_type(82) + count_type(84) + count_type(116), 0);
+    CHECK(!g_g.objs.chain_c);
+    drop_game();
+}
+
+void test_alien_shot_83_flies_along_the_arm_and_clamps_its_frame(void) {
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 100, 83, 0xC0);                      /* level, to the left */
+    CHECK(s != NULL);
+    CHECK_EQ(s->frame, 2);
+    int x = s->draw->x;
+    tick(1);
+    CHECK(s->draw->x < x);
+    s = spawn(200, 100, 83, 0x90);                               /* nearly straight up: frame -1 clamped */
+    CHECK(s != NULL);
+    CHECK_EQ(s->frame, 0);
+    drop_game();
+}
