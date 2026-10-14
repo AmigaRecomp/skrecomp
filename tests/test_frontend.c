@@ -78,3 +78,14 @@ void test_title_sparkle_plays_eleven_steps_after_fifty_frames(void) {   /* title
     CHECK(!fe.sparkle_on); CHECK_EQ(fe.sparkle_step, 0);
     frontend_free(&fe);
 }
+
+void test_title_menu_needs_fire_released_once(void) {          /* ruling: the original's disk loading gave time to let go */
+    memset(&fe, 0, sizeof fe);
+    sk_err e = {0};
+    CHECK(frontend_menu_from(&fe, NULL, title, sizeof title, &e));
+    CHECK_EQ(frontend_step(&fe, SK_IN_FIRE, 0), SK_FE_STAY);     /* still held from the last screen */
+    CHECK_EQ(frontend_step(&fe, SK_IN_FIRE, 0), SK_FE_STAY);
+    frontend_step(&fe, 0, 0);
+    CHECK_EQ(frontend_step(&fe, SK_IN_FIRE, 0), SK_FE_START);
+    frontend_free(&fe);
+}

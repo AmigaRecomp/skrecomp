@@ -91,6 +91,8 @@ bool frontend_menu_from(sk_frontend *f, const sk_image *sk, const uint8_t *title
     f->sparkle_wait = 0x32; f->sparkle_on = false; f->sparkle_step = 0;
     f->attract_counter = 0;
     f->tutorial = f->resume = false;
+    f->fire_released = false;
+    f->prev_input = 0xFF;                                        /* nothing held counts as a press */
     return true;
 }
 
@@ -139,7 +141,8 @@ static sk_fe_result menu_step(sk_frontend *f, uint8_t input, unsigned keys) {   
     if (f->resume) { f->attract_counter = -1; return SK_FE_RESUME; }
     if (f->tutorial) { f->attract_counter = -1; return SK_FE_TUTORIAL; }
     if (++f->attract_counter >= MENU_IDLE) return SK_FE_IDLE;
-    if ((input & SK_IN_FIRE) && f->item == 0) { f->attract_counter = -1; return SK_FE_START; }
+    if (!(input & SK_IN_FIRE)) f->fire_released = true;
+    if ((input & SK_IN_FIRE) && f->fire_released && f->item == 0) { f->attract_counter = -1; return SK_FE_START; }
     return SK_FE_STAY;
 }
 

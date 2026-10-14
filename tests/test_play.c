@@ -349,7 +349,7 @@ static void finish_level(sk_play *p) {                              /* what the 
 void test_play_whole_game_runs_map_levels_and_the_scoreboard(void) {   /* ROM-backed */
     const char *roms = getenv("SOCCERKID_ROMS");
     if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
-    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    sk_args a = { .roms = roms, .level = -1, .new_game = true, .scale = 1, .section = -1 };
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     if (!SK_OK(&e)) printf("play_open: %s\n", e.msg);
@@ -459,5 +459,30 @@ void test_bonus_level_game_over_and_direct_start(void) {            /* ROM-backe
     CHECK_EQ(p.pic.kind, SK_PIC_LOADING);                           /* not the bonus level again: on from where the board left */
     CHECK_EQ(p.next.kind, SK_RUN_MAP); CHECK_EQ(p.next.map_index, 2);
     CHECK(!p.game.timeout_armed);
+    play_close(&p);
+}
+
+void test_play_starts_at_the_language_screen_and_the_title(void) {   /* ROM-backed: start-up, level_session, 0x103FC0 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    CHECK_EQ(p.fe.mode, SK_FE_LANGUAGE);
+    play_step(&p, 0); play_step(&p, SK_IN_RIGHT); play_step(&p, 0); play_step(&p, SK_IN_FIRE);   /* French */
+    CHECK_EQ(p.fe.language, 1);
+    CHECK_EQ(p.fe.mode, SK_FE_MENU);
+    CHECK(p.snd.music_use4); CHECK(p.snd.slot[0] != NULL);       /* file027 on four channels */
+    for (int i = 0; i < 10; i++) play_step(&p, 0);
+    play_step(&p, SK_IN_FIRE);                                   /* START GAME */
+    CHECK_EQ(p.fe.mode, SK_FE_OFF);
+    CHECK(!p.snd.music_use4);
+    CHECK_EQ(p.pic.kind, SK_PIC_LOADING); CHECK_EQ(p.next.kind, SK_RUN_MAP);
+    CHECK_EQ(p.game.player.lives, 3); CHECK_EQ(p.game.game_flags, 0);
+    for (int i = 0; i < 25 + 201 + 25 + 1; i++) play_step(&p, 0);
+    CHECK_EQ(p.scene.level_index, 0);
+    p.game.player.lives = -1; p.game.player.state = 64;          /* game over: back to the title */
+    for (int i = 0; i < 400 && p.fe.mode == SK_FE_OFF; i++) play_step(&p, 0);
+    CHECK_EQ(p.fe.mode, SK_FE_MENU);
     play_close(&p);
 }

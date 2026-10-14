@@ -7,6 +7,7 @@
 #include "app/args.h"
 #include "app/scene.h"
 #include "app/pictures.h"
+#include "app/frontend.h"
 #include "game/between.h"
 #include "game/game.h"
 #include "game/resources.h"
@@ -35,6 +36,10 @@ typedef struct sk_play {
     sk_pictures pic;                /* a picture mode (loading strip, world map, ending) runs instead of the level when on */
     sk_run next;                    /* what follows the loading strip */
     int cup_arg;                    /* --cup, -1 none */
+    sk_frontend fe;                 /* the frontend's screens, when on */
+    bool quit;                      /* the frontend asked to leave the program */
+    bool with_frontend;             /* started without --level / --new-game: the game returns to the title */
+    unsigned fe_keys;               /* SK_FE_KEY_* held this frame (the window sets them) */
 } sk_play;
 
 bool play_open(sk_play *p, const sk_args *a, sk_err *e);

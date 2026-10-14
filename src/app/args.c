@@ -7,6 +7,7 @@
 static const char *USAGE =
     "usage: soccerkid --roms <dir> [options]\n"
     "  --roms <dir>            directory holding the five disk images (.adf or .zip)\n"
+    "  --new-game              skip the language screen and the title: a new game at world map 0\n"
     "  --cup MASK              the cup pieces already held (31 = all five: the ALIEN fights, the good ending)\n"
     "  --level N               play one level, data index 0..41 (default: the whole game from world map 0)\n"
     "  --section fileNNN:S[:WxH]  show the frames of graphics-set file NNN section S (size estimated unless given)\n"
@@ -52,6 +53,7 @@ bool args_parse(int argc, char **argv, sk_args *a, sk_err *e) {
         if (strcmp(opt, "--no-frames") == 0) { a->no_frames = true; continue; }
         if (strcmp(opt, "--viewer") == 0) { a->viewer = true; continue; }
         if (strcmp(opt, "--markers") == 0) { a->markers = true; continue; }
+        if (strcmp(opt, "--new-game") == 0) { a->new_game = true; continue; }
         bool takes_value = strcmp(opt, "--roms") == 0 || strcmp(opt, "--level") == 0 || strcmp(opt, "--section") == 0 ||
                            strcmp(opt, "--cam") == 0 || strcmp(opt, "--screenshot") == 0 || strcmp(opt, "--scale") == 0 ||
                            strcmp(opt, "--exit-after") == 0 || strcmp(opt, "--frames") == 0 || strcmp(opt, "--script") == 0 ||

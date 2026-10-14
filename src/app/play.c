@@ -9,10 +9,12 @@
 #include "game/camera.h"
 #include "game/level_flow.h"
 #include "game/objects.h"
+#include "game/front.h"
 #include "game/scoreboard.h"
 #include "gfx/display_model.h"
 
 static void play_advance(sk_play *p);
+static void session_start(sk_play *p);
 
 #define GAME_OVER_FRAMES 150            /* ruling: the original's exit from state 64 is unknown */
 
@@ -88,6 +90,11 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     game_new_game(&p->game);
     p->cup_arg = a->cup;
     if (a->cup >= 0) p->game.cup_pieces = (uint8_t)a->cup;
+    if (a->level < 0 && !a->new_game) {                             /* the frontend: the language screen first */
+        p->with_frontend = true;
+        if (!frontend_language(&p->fe, &p->scene.sk, &p->scene.disks, e)) { play_close(p); return false; }
+        return true;
+    }
     if (a->level < 0) { play_advance(p); if (p->load_failed) { *e = p->load_err; play_close(p); return false; } return true; }   /* the whole game */
     if (pos >= 0) p->game.level_number = pos;
     if (a->level >= 36 && a->level <= 40) {                         /* a bonus level started directly: as bonus_check would */
@@ -120,8 +127,9 @@ static void play_advance(sk_play *p) {
     sk_err e = {0};
     bonus_check(&p->game);
     sk_run r = play_level_entry(&p->scene.tables, &p->game.level_number);
-    if (r.kind == SK_RUN_GAME_END) {                                /* 42: the frontend (8c); until then a new game (ruling) */
-        game_new_game(&p->game);
+    if (r.kind == SK_RUN_GAME_END) {                                /* 42: play_level returns to the outer loop */
+        if (p->with_frontend) { session_start(p); return; }
+        game_new_game(&p->game);                                    /* --new-game: round again (ruling) */
         r = play_level_entry(&p->scene.tables, &p->game.level_number);
     }
     p->next = r;
@@ -151,6 +159,61 @@ static void start_next(sk_play *p) {                                /* after loa
         pictures_free(&p->pic);
         if (!play_start_level(p, p->game.level_number, 0, &e)) fail(p, &e);
         break;
+    }
+}
+
+/* ---- the frontend: level_session (0x104E9E) and the outer loop (0x103FC0) ---- */
+static void title_music(sk_play *p, bool on) {                      /* frontend_load: file027, tune 0, four channels; frontend_teardown */
+    sound_stop(&p->snd);
+    sound_free_level_sfx(&p->snd);                                  /* port: channel 4 lets go before a module is freed */
+    sound_set_module(&p->snd, 0, NULL, 0);
+    p->snd.music_use4 = false;
+    if (!on) return;
+    sk_err e = {0};
+    uint8_t *mod = NULL; size_t n = 0;
+    if (!disks_read_file_no(&p->scene.disks, 1, 27, true, &mod, &n, &e)) { fprintf(stderr, "soccerkid: no title music: %s\n", e.msg); return; }
+    sound_set_module(&p->snd, 0, mod, n);
+    p->snd.music_use4 = true;
+    sound_music(&p->snd, SK_MUSIC_LEVEL, 0);
+}
+
+static void session_start(sk_play *p) {                             /* level_session */
+    sk_err e = {0};
+    pictures_free(&p->pic);
+    p->fade_wait = 0; p->game_over_frames = 0;
+    p->game.game_flags = 0xFF;
+    title_music(p, true);
+    if (!frontend_menu(&p->fe, &p->scene.sk, &p->scene.disks, &e)) fail(p, &e);
+}
+
+static void start_game(sk_play *p) {                                /* START GAME: frontend_teardown, then the outer loop */
+    kit_apply(&p->scene.sk, p->fe.shirt, p->fe.shorts);              /* 0x11CCFE: the kit reaches the game */
+    p->fe.mode = SK_FE_OFF;
+    title_music(p, false);
+    p->game.game_flags = 0;
+    play_sfx(&p->game, 0);
+    game_new_game(&p->game);                                        /* 0x103FC0..0x104022 */
+    if (p->cup_arg >= 0) p->game.cup_pieces = (uint8_t)p->cup_arg;
+    play_advance(p);
+}
+
+static void frontend_frame(sk_play *p, uint8_t in) {
+    sk_err e = {0};
+    switch (frontend_step(&p->fe, in, p->fe_keys)) {
+    case SK_FE_LANGUAGE_CHOSEN: {                                   /* the language's message texts, then the session */
+        uint8_t *bin = NULL; size_t n = 0;
+        if (disks_read(&p->scene.disks, 0, language_file(p->fe.language), &bin, &n, &e)) language_apply(&p->scene.sk, bin, n);
+        else fprintf(stderr, "soccerkid: %s\n", e.msg);
+        free(bin);
+        session_start(p);
+        break;
+    }
+    case SK_FE_START: start_game(p); break;
+    case SK_FE_QUIT: p->quit = true; break;
+    case SK_FE_IDLE: case SK_FE_TUTORIAL: case SK_FE_RESUME:          /* the attract cycle, the tutorial and RESUME come next */
+        if (!frontend_menu_from(&p->fe, &p->scene.sk, p->fe.title, SK_TITLE_SIZE, &e)) fail(p, &e);
+        break;
+    default: break;
     }
 }
 
@@ -191,6 +254,11 @@ static void sound_step(sk_play *p) {                                /* the VBL's
 void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->load_failed) return;
     p->game.snd = &p->snd;
+    if (p->fe.mode != SK_FE_OFF) {
+        frontend_frame(p, p->script ? script_input(p) : keyboard_input);
+        sound_step(p);
+        return;
+    }
     if (p->pic.kind != SK_PIC_OFF) {
         picture_step(p, p->script ? script_input(p) : keyboard_input);
         sound_step(p);
@@ -218,7 +286,8 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
         break;
     case SK_OUTCOME_GAME_OVER:
         if (p->game_over_frames == 0) sound_fade_out(&p->snd);       /* fade_music_out 0x1040F2 (the statistics go: a new game follows) */
-        if (++p->game_over_frames >= GAME_OVER_FRAMES) {
+        if (++p->game_over_frames >= GAME_OVER_FRAMES && p->with_frontend) { session_start(p); break; }   /* back to the title */
+        if (p->game_over_frames >= GAME_OVER_FRAMES) {
             int idx = p->scene.level_index, back = p->game.fulltime_level;
             game_new_game(&p->game);
             if (idx >= 36 && idx <= 40) {                           /* a bonus level is not replayed untimed: on from its board */
@@ -260,7 +329,7 @@ static void draw_board(sk_play *p) {
 }
 
 void play_draw(sk_play *p) {
-    if (p->pic.kind != SK_PIC_OFF) return;                          /* pictures_present draws the mode */
+    if (p->pic.kind != SK_PIC_OFF || p->fe.mode != SK_FE_OFF) return;   /* pictures_present / frontend_present draw the mode */
     sk_fb *fb = &p->scene.fb;
     const sk_level *lv = &p->scene.level;
     fb_clear(fb, 0);
@@ -302,6 +371,7 @@ void play_draw(sk_play *p) {
 }
 
 void play_present(sk_play *p, uint32_t *out) {
+    if (p->fe.mode != SK_FE_OFF) { frontend_present(&p->fe, out); return; }
     if (p->pic.kind != SK_PIC_OFF) { pictures_present(&p->pic, out); return; }
     sk_sky sky;
     scene_sky(&p->scene.level, p->game.view.bg_y, &sky);
@@ -310,6 +380,7 @@ void play_present(sk_play *p, uint32_t *out) {
 
 void play_close(sk_play *p) {
     pictures_free(&p->pic);
+    frontend_free(&p->fe);
     sound_free(&p->snd);
     resources_free(&p->res);
     game_close(&p->game);

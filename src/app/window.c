@@ -150,6 +150,7 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
         last = now;
         running = poll_events(w, NULL);
         for (int i = 0; i < steps; i++) play_step(p, window_input_bits(SDL_GetKeyboardState(NULL)));
+        if (p->quit) running = false;
         play_draw(p);
         play_present(p, w->pixels);
         present_pixels(w);

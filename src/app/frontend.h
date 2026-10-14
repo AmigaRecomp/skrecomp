@@ -37,6 +37,7 @@ typedef struct {
     int option;                         /* the OPTIONS cursor */
     bool *music_off, *sfx_muted;        /* the options' toggles (0x300367 / 0x300368), NULL in tests */
     bool tutorial, resume;              /* 0x300393 / 0x300390 */
+    bool fire_released;                 /* ruling: START GAME needs fire let go once since the menu opened */
     const uint16_t *hiscore_kits;       /* F1..F10: 10 x (shirt, shorts), NULL none */
 } sk_frontend;
 

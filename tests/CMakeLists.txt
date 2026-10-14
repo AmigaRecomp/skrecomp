@@ -451,7 +451,9 @@ set(SK_TEST_NAMES
   title_menu_wraps_and_starts_on_fire
   title_menu_times_out_after_750_frames
   title_menu_shows_the_kit_on_the_kid
-  title_sparkle_plays_eleven_steps_after_fifty_frames)
+  title_sparkle_plays_eleven_steps_after_fifty_frames
+  play_starts_at_the_language_screen_and_the_title
+  title_menu_needs_fire_released_once)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
