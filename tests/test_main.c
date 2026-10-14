@@ -348,6 +348,9 @@ void test_play_level_entry_walks_the_games_tail(void);
 void test_flight_heads_down_to_italy_with_the_empty_shadow(void);
 void test_flight_heads_up_to_russia_and_level_elsewhere(void);
 void test_flight_wraps_east_from_japan_to_the_usa(void);
+void test_masked8_draws_the_index_where_the_mask_is_set(void);
+void test_mapsprites_parse_rejects_a_short_pack(void);
+void test_mapsprites_real_pack_and_pictures(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -693,6 +696,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "flight_heads_down_to_italy_with_the_empty_shadow", test_flight_heads_down_to_italy_with_the_empty_shadow },
     { "flight_heads_up_to_russia_and_level_elsewhere", test_flight_heads_up_to_russia_and_level_elsewhere },
     { "flight_wraps_east_from_japan_to_the_usa", test_flight_wraps_east_from_japan_to_the_usa },
+    { "masked8_draws_the_index_where_the_mask_is_set", test_masked8_draws_the_index_where_the_mask_is_set },
+    { "mapsprites_parse_rejects_a_short_pack", test_mapsprites_parse_rejects_a_short_pack },
+    { "mapsprites_real_pack_and_pictures", test_mapsprites_real_pack_and_pictures },
 };
 
 int main(int argc, char **argv) {

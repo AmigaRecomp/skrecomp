@@ -52,7 +52,8 @@ add_executable(sk_tests
   test_attr_usa.c
   test_attr_country_london.c
   test_obj_russia.c
-  test_between.c)
+  test_between.c
+  test_mapsprites.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -401,7 +402,10 @@ set(SK_TEST_NAMES
   play_level_entry_walks_the_games_tail
   flight_heads_down_to_italy_with_the_empty_shadow
   flight_heads_up_to_russia_and_level_elsewhere
-  flight_wraps_east_from_japan_to_the_usa)
+  flight_wraps_east_from_japan_to_the_usa
+  masked8_draws_the_index_where_the_mask_is_set
+  mapsprites_parse_rejects_a_short_pack
+  mapsprites_real_pack_and_pictures)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
