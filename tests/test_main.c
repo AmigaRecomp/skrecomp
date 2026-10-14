@@ -440,6 +440,9 @@ void test_anim_open_survives_huge_chunk_lengths(void);
 void test_a_pause_does_not_survive_a_level_setup(void);
 void test_the_pause_waits_for_a_message_box_and_lifts_its_own_box(void);
 void test_pause_only_in_a_running_level(void);
+void test_controls_defaults_map_keys_and_pad_to_the_five_inputs(void);
+void test_controls_file_round_trips_and_keeps_defaults_for_unknown_lines(void);
+void test_controls_set_replaces_one_device_and_keeps_the_other(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -877,6 +880,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "a_pause_does_not_survive_a_level_setup", test_a_pause_does_not_survive_a_level_setup },
     { "the_pause_waits_for_a_message_box_and_lifts_its_own_box", test_the_pause_waits_for_a_message_box_and_lifts_its_own_box },
     { "pause_only_in_a_running_level", test_pause_only_in_a_running_level },
+    { "controls_defaults_map_keys_and_pad_to_the_five_inputs", test_controls_defaults_map_keys_and_pad_to_the_five_inputs },
+    { "controls_file_round_trips_and_keeps_defaults_for_unknown_lines", test_controls_file_round_trips_and_keeps_defaults_for_unknown_lines },
+    { "controls_set_replaces_one_device_and_keeps_the_other", test_controls_set_replaces_one_device_and_keeps_the_other },
 };
 
 int main(int argc, char **argv) {

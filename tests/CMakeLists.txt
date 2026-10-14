@@ -64,7 +64,8 @@ add_executable(sk_tests
   test_obj_front.c
   test_savescreen.c
   test_anim.c
-  test_intro.c)
+  test_intro.c
+  test_controls.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -505,7 +506,10 @@ set(SK_TEST_NAMES
   anim_open_survives_huge_chunk_lengths
   a_pause_does_not_survive_a_level_setup
   the_pause_waits_for_a_message_box_and_lifts_its_own_box
-  pause_only_in_a_running_level)
+  pause_only_in_a_running_level
+  controls_defaults_map_keys_and_pad_to_the_five_inputs
+  controls_file_round_trips_and_keeps_defaults_for_unknown_lines
+  controls_set_replaces_one_device_and_keeps_the_other)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

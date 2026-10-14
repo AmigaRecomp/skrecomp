@@ -40,6 +40,7 @@ add_library(skcore STATIC
   src/app/frontend.c
   src/app/savescreen.c
   src/app/intro.c
+  src/app/controls.c
   src/app/window.c
   src/game/world.c
   src/game/collision.c
