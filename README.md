@@ -22,6 +22,7 @@ Point the program at a directory holding the five disk images, either as `.adf` 
 `SKDisk0` to `SKDisk4`, not by file name.
 
 ```sh
+build/soccerkid --roms ../SourceROMS                                  # play the whole game from the first world map
 build/soccerkid --roms ../SourceROMS --level 0                        # play level 0 in a window
 build/soccerkid --roms ../SourceROMS --level 0 --frames 300 --script R150,RU20,R130 --screenshot out.png
                                                                       # play 300 frames headless from a script, then a PNG
@@ -30,7 +31,11 @@ build/soccerkid --roms ../SourceROMS --level 17 --viewer --section file036:0   #
 build/soccerkid --help                                                # every option
 ```
 
-`--level N` is the level's data index (0 = England 1 ... 28, 12 = the bonus stage); `--section
+Without `--level` the game runs as the original's level sequence: the loading strip, the world map with the aircraft
+flying to the next country (and the cup pieces collected so far), each pair of levels, the scoreboard that counts the
+cards, balls, time and trick kicks into a bonus, and after the last level the end screen (the good one only with all
+five cup pieces), then the game starts over. `--level N` plays one level by its data index (0 = England 1 ... 28,
+12 = the scoreboard) and moves on along the sequence from there; `--section
 fileNNN:S[:WxH]` shows the frames of a graphics-set section from the level's disk (the frame
 size is estimated from the data unless given); `--cam X,Y` sets the camera; `--no-backdrop`
 and `--no-frames` reduce the picture to one layer.
@@ -50,7 +55,8 @@ audio device the game runs silent.
 The ball (all five worlds are complete, every level of the game: England's streets, country and London with LONDON2's boss;
 Italy's Ruins, Venice and the Riviera with RIVIERA2's boss; Russia's forest, the rocking battle ship with its rope and RED SQUARE
 with its boss; Japan's TRAIN whose scenery streams past through tunnels and the FACTORY with FACTORY2's boss; the USA's Wild West,
-the beach and the city with the last boss. After the last level the game starts over; the end screens are not done yet):
+the beach and the city with the last boss. The bonus levels and the ALIEN level are not done yet; the title screen and the
+intro neither):
 - **Kick:** fire with left or right kicks the ball at your feet; kicked into an enemy it knocks
   it out for points. Jumping onto the ball with down held stands you on it.
 - **Tricks:** with the ball at your feet, hold fire still for a moment: the kid flicks it up and
