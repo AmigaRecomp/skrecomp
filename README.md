@@ -33,8 +33,9 @@ build/soccerkid --help                                                # every op
 
 Without `--level` the game runs as the original's level sequence: the loading strip, the world map with the aircraft
 flying to the next country (and the cup pieces collected so far), each pair of levels, the scoreboard that counts the
-cards, balls, time and trick kicks into a bonus, and after the last level the end screen (the good one only with all
-five cup pieces), then the game starts over. `--level N` plays one level by its data index (0 = England 1 ... 28,
+cards, balls, time and trick kicks into a bonus (all 11 cards of a pair open the world's bonus level: a minute to take
+50 tokens, then the cup piece), the ALIEN (it sends the kid home without the five cup pieces and fights with them), and
+the end screen, then the game starts over. `--cup 31` starts with all five pieces. `--level N` plays one level by its data index (0 = England 1 ... 28,
 12 = the scoreboard) and moves on along the sequence from there; `--section
 fileNNN:S[:WxH]` shows the frames of a graphics-set section from the level's disk (the frame
 size is estimated from the data unless given); `--cam X,Y` sets the camera; `--no-backdrop`
@@ -55,8 +56,8 @@ audio device the game runs silent.
 The ball (all five worlds are complete, every level of the game: England's streets, country and London with LONDON2's boss;
 Italy's Ruins, Venice and the Riviera with RIVIERA2's boss; Russia's forest, the rocking battle ship with its rope and RED SQUARE
 with its boss; Japan's TRAIN whose scenery streams past through tunnels and the FACTORY with FACTORY2's boss; the USA's Wild West,
-the beach and the city with the last boss. The bonus levels and the ALIEN level are not done yet; the title screen and the
-intro neither):
+the beach and the city with the last boss, the five bonus levels and the ALIEN. The title screen and the intro are not
+done yet):
 - **Kick:** fire with left or right kicks the ball at your feet; kicked into an enemy it knocks
   it out for points. Jumping onto the ball with down held stands you on it.
 - **Tricks:** with the ball at your feet, hold fire still for a moment: the kid flicks it up and
