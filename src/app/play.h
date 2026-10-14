@@ -8,6 +8,8 @@
 #include "app/scene.h"
 #include "app/pictures.h"
 #include "app/frontend.h"
+#include "app/savescreen.h"
+#include "game/savegame.h"
 #include "game/attract.h"
 #include "game/between.h"
 #include "game/game.h"
@@ -47,6 +49,11 @@ typedef struct sk_play {
     int session_round;              /* level_session's d7: menu, pan, menu, pan, demo */
     bool saved_muted;               /* sfx_muted before a demo */
     sk_name_entry name;
+    sk_savescreen save;             /* the save prompt or the RESUME list, when on */
+    char save_path[512];
+    bool resuming; sk_save_slot resume_slot;   /* RESUME GAME: the slot load_game_slot puts over the new game */
+    int typed_key;                  /* last_ascii_key: the window's last typed character, consumed each step */
+    bool esc_key;                   /* Escape, for the save screens */
     unsigned fe_keys;               /* SK_FE_KEY_* held this frame (the window sets them) */
 } sk_play;
 

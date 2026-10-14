@@ -412,6 +412,11 @@ void test_fire_ends_a_demo_at_once(void);
 void test_title_idle_runs_the_hiscore_pan_then_the_demo(void);
 void test_options_tutorial_runs_and_returns(void);
 void test_a_qualifying_score_asks_for_a_name(void);
+void test_save_prompt_cross_leaves_without_saving(void);
+void test_save_prompt_saves_a_typed_name_in_a_slot(void);
+void test_resume_list_escape_cancels_and_fire_picks(void);
+void test_save_before_a_map_and_resume_it(void);
+void test_window_typed_keys_for_the_save_name(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -821,6 +826,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "title_idle_runs_the_hiscore_pan_then_the_demo", test_title_idle_runs_the_hiscore_pan_then_the_demo },
     { "options_tutorial_runs_and_returns", test_options_tutorial_runs_and_returns },
     { "a_qualifying_score_asks_for_a_name", test_a_qualifying_score_asks_for_a_name },
+    { "save_prompt_cross_leaves_without_saving", test_save_prompt_cross_leaves_without_saving },
+    { "save_prompt_saves_a_typed_name_in_a_slot", test_save_prompt_saves_a_typed_name_in_a_slot },
+    { "resume_list_escape_cancels_and_fire_picks", test_resume_list_escape_cancels_and_fire_picks },
+    { "save_before_a_map_and_resume_it", test_save_before_a_map_and_resume_it },
+    { "window_typed_keys_for_the_save_name", test_window_typed_keys_for_the_save_name },
 };
 
 int main(int argc, char **argv) {

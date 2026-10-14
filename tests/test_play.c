@@ -562,3 +562,49 @@ void test_a_qualifying_score_asks_for_a_name(void) {               /* ROM-backed
     CHECK_EQ(p.attract, SK_ATTRACT_NONE); CHECK_EQ(p.fe.mode, SK_FE_MENU);
     play_close(&p);
 }
+
+#include "game/savegame.h"
+void test_save_before_a_map_and_resume_it(void) {                   /* ROM-backed: save_game_screen, resume_game_screen */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    char path[256];
+    snprintf(path, sizeof path, "%s/sk_test_SaveGame", getenv("TMPDIR") ? getenv("TMPDIR") : "/tmp");
+    remove(path);
+    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1, .save_path = path };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    to_title(&p);
+    play_step(&p, SK_IN_FIRE);                                      /* START GAME */
+    for (int i = 0; i < 260; i++) play_step(&p, 0);
+    p.game.level_number = 9; p.game.player.score = 0x4321; p.game.cup_pieces = 1;   /* England's last board done */
+    finish_level(&p);
+    for (int i = 0; i < 64 + 2; i++) play_step(&p, 0);
+    CHECK_EQ(p.save.mode, SK_SAVE_ASK);                             /* before map 1 */
+    play_step(&p, SK_IN_LEFT); play_step(&p, SK_IN_FIRE); play_step(&p, 0);   /* the tick */
+    play_step(&p, 0); play_step(&p, SK_IN_FIRE);                    /* slot 1 */
+    p.typed_key = 'K'; play_step(&p, 0); p.typed_key = 'O'; play_step(&p, 0); p.typed_key = 0x0D; play_step(&p, 0);
+    for (int i = 0; i < 60; i++) play_step(&p, 0);
+    CHECK_EQ(p.save.mode, SK_SAVE_OFF);
+    CHECK_EQ(p.pic.kind, SK_PIC_LOADING); CHECK_EQ(p.next.kind, SK_RUN_MAP); CHECK_EQ(p.next.map_index, 1);
+    FILE *f = fopen(path, "rb"); CHECK(f != NULL);
+    uint8_t file[SK_SAVE_SIZE] = {0}; size_t n = f ? fread(file, 1, sizeof file, f) : 0; if (f) fclose(f);
+    sk_save_slot slot;
+    CHECK(savegame_get(file, n, 0, &slot));
+    CHECK(strcmp(slot.name, "KO") == 0); CHECK_EQ(slot.level_number, 11); CHECK_EQ(slot.score, 0x4321u); CHECK_EQ(slot.cup_pieces, 1);
+    play_close(&p);
+
+    CHECK(play_open(&p, &a, &e));                                   /* a new run: RESUME GAME */
+    to_title(&p);
+    play_step(&p, SK_IN_UP); play_step(&p, 0); play_step(&p, SK_IN_FIRE); play_step(&p, 0);   /* OPTIONS */
+    for (int i = 0; i < 20; i++) play_step(&p, 0);
+    play_step(&p, SK_IN_UP); play_step(&p, 0); play_step(&p, SK_IN_FIRE); play_step(&p, 0);   /* RESUME GAME */
+    for (int i = 0; i < 3; i++) play_step(&p, 0);
+    CHECK_EQ(p.save.mode, SK_SAVE_LIST); CHECK(p.save.resume);
+    CHECK(strncmp(p.save.rows[0], "1. KO", 5) == 0);
+    play_step(&p, SK_IN_FIRE);
+    CHECK_EQ(p.save.mode, SK_SAVE_OFF);
+    CHECK_EQ(p.game.level_number, 11); CHECK_EQ(p.game.player.score, 0x4321u); CHECK_EQ(p.game.cup_pieces, 1);
+    CHECK_EQ(p.pic.kind, SK_PIC_LOADING); CHECK_EQ(p.next.kind, SK_RUN_LEVEL); CHECK_EQ(p.next.data_index, 6);   /* RUINS 1, past the map */
+    play_close(&p);
+    remove(path);
+}

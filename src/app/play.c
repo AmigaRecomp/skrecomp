@@ -9,12 +9,14 @@
 #include "game/camera.h"
 #include "game/level_flow.h"
 #include "game/objects.h"
+#include "game/savegame.h"
 #include "game/attract.h"
 #include "game/front.h"
 #include "game/scoreboard.h"
 #include "gfx/display_model.h"
 
 static void play_advance(sk_play *p);
+static void save_rows(sk_play *p, char rows[5][24]);
 static void session_start(sk_play *p);
 
 #define GAME_OVER_FRAMES 150            /* ruling: the original's exit from state 64 is unknown */
@@ -90,6 +92,7 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     for (int i = 0; i < SK_LEVEL_SEQUENCE_LEN; i++) if (p->scene.tables.sequence[i] == a->level) { pos = i; break; }
     game_new_game(&p->game);
     p->cup_arg = a->cup;
+    if (a->save_path) snprintf(p->save_path, sizeof p->save_path, "%s", a->save_path);
     if (a->cup >= 0) p->game.cup_pieces = (uint8_t)a->cup;
     if (a->level < 0 && !a->new_game) {                             /* the frontend: the language screen first */
         p->with_frontend = true;
@@ -134,6 +137,12 @@ static void play_advance(sk_play *p) {
         r = play_level_entry(&p->scene.tables, &p->game.level_number);
     }
     p->next = r;
+    if (r.kind == SK_RUN_MAP && p->with_frontend && p->game.level_number >= 4 && p->game.level_number < 0x30) {   /* save_game_screen */
+        char rows[5][24];
+        save_rows(p, rows);
+        if (savescreen_open(&p->save, SK_SAVE_ASK, &p->scene.sk, p->fe.language, NULL, 0, rows, &e)) return;
+        fprintf(stderr, "soccerkid: %s\n", e.msg);
+    }
     if (!pictures_loading(&p->pic, &p->scene.sk, &e)) fail(p, &e);
 }
 
@@ -283,6 +292,54 @@ static void attract_frame(sk_play *p, uint8_t in) {
     name_entry_hud(g, &p->name);
 }
 
+/* ---- the SaveGame file: save_game_slot 0x1034B0, load_game_slot 0x103566 ---- */
+static size_t read_save(const sk_play *p, uint8_t file[SK_SAVE_SIZE]) {
+    memset(file, 0, SK_SAVE_SIZE);
+    FILE *f = p->save_path[0] ? fopen(p->save_path, "rb") : NULL;
+    if (!f) return 0;
+    size_t n = fread(file, 1, SK_SAVE_SIZE, f);
+    fclose(f);
+    return n;
+}
+
+static void save_rows(sk_play *p, char rows[5][24]) {            /* load_save_names */
+    uint8_t file[SK_SAVE_SIZE];
+    size_t n = read_save(p, file);
+    savegame_names(file, n, rows);
+}
+
+static void write_save(sk_play *p, int slot, const char *name) {
+    uint8_t file[SK_SAVE_SIZE];
+    if (read_save(p, file) < SK_SAVE_SIZE) memset(file, 0, sizeof file);
+    sk_save_slot s = { "", p->game.player.score, p->game.level_number, p->game.player.lives, p->game.cup_pieces,
+                       (uint8_t)p->fe.shirt, (uint8_t)p->fe.shorts, p->game.extra_heart };
+    snprintf(s.name, sizeof s.name, "%s", name);
+    savegame_put(file, slot, &s);
+    FILE *f = p->save_path[0] ? fopen(p->save_path, "wb") : NULL;
+    if (!f || fwrite(file, 1, sizeof file, f) != sizeof file) fprintf(stderr, "soccerkid: could not write %s\n", p->save_path);
+    if (f) fclose(f);
+}
+
+static void start_game(sk_play *p);
+static void save_frame(sk_play *p, uint8_t in) {
+    sk_err e = {0};
+    sk_save_result r = savescreen_step(&p->save, in, p->typed_key, p->esc_key);
+    p->typed_key = 0; p->esc_key = false;
+    if (r == SK_SAVE_RESULT_STAY) return;
+    bool resume = p->save.resume;
+    int slot = p->save.slot;
+    p->save.mode = SK_SAVE_OFF;
+    if (r == SK_SAVE_RESULT_SAVE) write_save(p, slot, p->save.name);
+    if (!resume) { if (!pictures_loading(&p->pic, &p->scene.sk, &e)) fail(p, &e); return; }   /* on to the map */
+    uint8_t file[SK_SAVE_SIZE];
+    size_t n = read_save(p, file);
+    sk_save_slot s;
+    if (r != SK_SAVE_RESULT_LOAD || !savegame_get(file, n, slot, &s)) { session_start(p); return; }   /* back to the session */
+    p->fe.shirt = s.shirt % 14; p->fe.shorts = s.shorts % 14;
+    p->resume_slot = s; p->resuming = true;
+    start_game(p);
+}
+
 static void start_game(sk_play *p) {                                /* START GAME: frontend_teardown, then the outer loop */
     kit_apply(&p->scene.sk, p->fe.shirt, p->fe.shorts);              /* 0x11CCFE: the kit reaches the game */
     p->fe.mode = SK_FE_OFF;
@@ -291,6 +348,12 @@ static void start_game(sk_play *p) {                                /* START GAM
     play_sfx(&p->game, 0);
     game_new_game(&p->game);                                        /* 0x103FC0..0x104022 */
     if (p->cup_arg >= 0) p->game.cup_pieces = (uint8_t)p->cup_arg;
+    if (p->resuming) {                                              /* load_game_slot over the new game */
+        p->resuming = false;
+        p->game.player.score = p->resume_slot.score; p->game.level_number = p->resume_slot.level_number;
+        p->game.player.lives = (int8_t)p->resume_slot.lives; p->game.cup_pieces = p->resume_slot.cup_pieces;
+        p->game.extra_heart = p->resume_slot.extra_heart;
+    }
     play_advance(p);
 }
 
@@ -315,9 +378,15 @@ static void frontend_frame(sk_play *p, uint8_t in) {
     case SK_FE_QUIT: p->quit = true; break;
     case SK_FE_IDLE: attract_start(p, SK_ATTRACT_PAN); break;       /* attract_loop */
     case SK_FE_TUTORIAL: attract_start(p, SK_ATTRACT_TUTORIAL); break;
-    case SK_FE_RESUME:                                              /* RESUME comes with the save screens */
-        if (!frontend_menu_from(&p->fe, &p->scene.sk, p->fe.title, SK_TITLE_SIZE, &e)) fail(p, &e);
+    case SK_FE_RESUME: {                                            /* the session ends; the outer loop's resume_game_screen */
+        char rows[5][24];
+        save_rows(p, rows);
+        p->fe.mode = SK_FE_OFF;
+        title_music(p, false);
+        p->game.game_flags = 0;
+        if (!savescreen_open(&p->save, SK_SAVE_RESUME, &p->scene.sk, p->fe.language, NULL, 0, rows, &e)) fail(p, &e);
         break;
+    }
     default: break;
     }
 }
@@ -361,6 +430,11 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
     p->game.snd = &p->snd;
     if (p->fe.mode != SK_FE_OFF) {
         frontend_frame(p, p->script ? script_input(p) : keyboard_input);
+        sound_step(p);
+        return;
+    }
+    if (p->save.mode != SK_SAVE_OFF) {
+        save_frame(p, p->script ? script_input(p) : keyboard_input);
         sound_step(p);
         return;
     }
@@ -439,7 +513,7 @@ static void draw_board(sk_play *p) {
 }
 
 void play_draw(sk_play *p) {
-    if (p->pic.kind != SK_PIC_OFF || p->fe.mode != SK_FE_OFF) return;   /* pictures_present / frontend_present draw the mode */
+    if (p->pic.kind != SK_PIC_OFF || p->fe.mode != SK_FE_OFF || p->save.mode != SK_SAVE_OFF) return;   /* pictures_present / frontend_present draw the mode */
     sk_fb *fb = &p->scene.fb;
     const sk_level *lv = &p->scene.level;
     fb_clear(fb, 0);
@@ -482,6 +556,7 @@ void play_draw(sk_play *p) {
 }
 
 void play_present(sk_play *p, uint32_t *out) {
+    if (p->save.mode != SK_SAVE_OFF) { savescreen_present(&p->save, out); return; }
     if (p->fe.mode != SK_FE_OFF) { frontend_present(&p->fe, out); return; }
     if (p->pic.kind != SK_PIC_OFF) { pictures_present(&p->pic, out); return; }
     sk_sky sky;

@@ -1,6 +1,7 @@
 /* soccerkid: plays a level (default) or runs the level viewer (--viewer). */
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL3/SDL.h>
 #include "game/player.h"
 #include "game/world.h"
 #include "app/args.h"
@@ -36,8 +37,14 @@ static int run_viewer(const sk_args *a, sk_err *e) {
     return rc;
 }
 
-static int run_play(const sk_args *a, sk_err *e) {
+static int run_play(const sk_args *in, sk_err *e) {
     static sk_play p;
+    sk_args args = *in, *a = &args;
+    static char save[512];
+    if (!a->save_path) {                                            /* SaveGame in the user's data folder */
+        char *dir = SDL_GetPrefPath("soccerkid", "soccerkid");
+        if (dir) { snprintf(save, sizeof save, "%sSaveGame", dir); SDL_free(dir); a->save_path = save; }
+    }
     if (!play_open(&p, a, e)) { fprintf(stderr, "soccerkid: %s\n", e->msg); return 1; }
     int rc = 0;
     if (a->markers) {                                               /* --markers: the level's objects, left to right */

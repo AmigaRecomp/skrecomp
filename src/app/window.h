@@ -25,7 +25,8 @@ int window_run(sk_window *w, sk_play *p, int exit_after);
 int window_run_viewer(sk_window *w, sk_scene *s, int exit_after);
 /* The joystick bits held on the keyboard: arrows or WASD, Space / Left Ctrl / X = fire (pure, for tests). */
 uint8_t window_input_bits(const bool *keys);
-unsigned window_frontend_keys(const bool *keys);    /* SK_FE_KEY_TAB and F1..F10 */
+unsigned window_frontend_keys(const bool *keys);
+int window_typed_key(SDL_Keycode k);                /* last_ascii_key for the save name, 0 none */    /* SK_FE_KEY_TAB and F1..F10 */
 void window_close(sk_window *w);
 
 /* Moves the camera by (dx, dy) * step pixels, clamped to the scene's limits (pure, for tests). */

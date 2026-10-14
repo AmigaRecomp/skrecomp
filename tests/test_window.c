@@ -70,3 +70,10 @@ void test_window_frontend_keys_map_tab_and_f_keys(void) {
     keys[SDL_SCANCODE_TAB] = false; keys[SDL_SCANCODE_F3] = false; keys[SDL_SCANCODE_F10] = true;
     CHECK_EQ(window_frontend_keys(keys), (unsigned)SK_FE_KEY_F1 << 9);
 }
+
+void test_window_typed_keys_for_the_save_name(void) {         /* the keymap 0x200A38: uppercase, digits, Backspace 8, Return 0x0D */
+    CHECK_EQ(window_typed_key(SDLK_A), 'A'); CHECK_EQ(window_typed_key(SDLK_Z), 'Z');
+    CHECK_EQ(window_typed_key(SDLK_7), '7'); CHECK_EQ(window_typed_key(SDLK_SPACE), ' ');
+    CHECK_EQ(window_typed_key(SDLK_BACKSPACE), 8); CHECK_EQ(window_typed_key(SDLK_RETURN), 0x0D);
+    CHECK_EQ(window_typed_key(SDLK_F1), 0);
+}

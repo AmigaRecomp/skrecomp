@@ -61,7 +61,8 @@ add_executable(sk_tests
   test_frontend.c
   test_savegame.c
   test_attract.c
-  test_obj_front.c)
+  test_obj_front.c
+  test_savescreen.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -474,7 +475,12 @@ set(SK_TEST_NAMES
   fire_ends_a_demo_at_once
   title_idle_runs_the_hiscore_pan_then_the_demo
   options_tutorial_runs_and_returns
-  a_qualifying_score_asks_for_a_name)
+  a_qualifying_score_asks_for_a_name
+  save_prompt_cross_leaves_without_saving
+  save_prompt_saves_a_typed_name_in_a_slot
+  resume_list_escape_cancels_and_fire_picks
+  save_before_a_map_and_resume_it
+  window_typed_keys_for_the_save_name)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

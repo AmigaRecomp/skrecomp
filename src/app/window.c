@@ -78,6 +78,19 @@ unsigned window_frontend_keys(const bool *keys) {
     return k;
 }
 
+int window_typed_key(SDL_Keycode k) {
+    if (k >= SDLK_A && k <= SDLK_Z) return 'A' + (int)(k - SDLK_A);   /* the keymap gives uppercase only */
+    if (k >= SDLK_0 && k <= SDLK_9) return '0' + (int)(k - SDLK_0);
+    switch (k) {
+    case SDLK_SPACE: return ' ';
+    case SDLK_MINUS: return '-';
+    case SDLK_PERIOD: return '.';
+    case SDLK_BACKSPACE: case SDLK_DELETE: return 8;
+    case SDLK_RETURN: case SDLK_KP_ENTER: return 0x0D;
+    default: return 0;
+    }
+}
+
 static void present_pixels(sk_window *w) {
     SDL_UpdateTexture(w->tex, NULL, w->pixels, SK_SCREEN_W * (int)sizeof *w->pixels);
     SDL_RenderClear(w->ren);
@@ -86,11 +99,17 @@ static void present_pixels(sk_window *w) {
     w->frames_presented++;
 }
 
-/* Quit and one-shot keys: polled every iteration so the window stays responsive. s may be NULL (play mode). */
-static bool poll_events(sk_window *w, sk_scene *s) {
+/* Quit and one-shot keys: polled every iteration so the window stays responsive. s may be NULL (play mode); p is the
+   game (NULL in the viewer): a save screen takes the typed keys and Escape. */
+static bool poll_events(sk_window *w, sk_scene *s, sk_play *p) {
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
         if (ev.type == SDL_EVENT_QUIT) return false;
+        if (ev.type == SDL_EVENT_KEY_DOWN && p && p->save.mode != SK_SAVE_OFF) {
+            if (ev.key.key == SDLK_ESCAPE) { p->esc_key = true; continue; }
+            int c = window_typed_key(ev.key.key);
+            if (c) { p->typed_key = c; continue; }
+        }
         if (ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat) {
             switch (ev.key.key) {
             case SDLK_ESCAPE: return false;
@@ -137,7 +156,7 @@ int window_run_viewer(sk_window *w, sk_scene *s, int exit_after) {
         uint64_t now = SDL_GetTicksNS();
         int steps = window_steps_for(&acc, now - last);
         last = now;
-        running = poll_events(w, s);
+        running = poll_events(w, s, NULL);
         for (int i = 0; i < steps; i++) step_held_keys(s);
         scene_draw(s);
         scene_present(s, w->pixels);
@@ -157,7 +176,7 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
         uint64_t now = SDL_GetTicksNS();
         int steps = window_steps_for(&acc, now - last);
         last = now;
-        running = poll_events(w, NULL);
+        running = poll_events(w, NULL, p);
         for (int i = 0; i < steps; i++) {
             p->fe_keys = window_frontend_keys(SDL_GetKeyboardState(NULL));
             play_step(p, window_input_bits(SDL_GetKeyboardState(NULL)));
