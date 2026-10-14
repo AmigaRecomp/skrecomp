@@ -5,6 +5,7 @@
 #include "app/scene.h"
 #include "app/window.h"
 #include "game/input.h"
+#include "app/frontend.h"
 
 void test_window_runs_headless_frames(void) {         /* ROM-backed; SDL's dummy video driver */
     const char *roms = getenv("SOCCERKID_ROMS");
@@ -59,4 +60,13 @@ void test_window_input_bits_map_keys(void) {
     CHECK_EQ(window_input_bits(keys), SK_IN_RIGHT | SK_IN_FIRE);
     keys[SDL_SCANCODE_RIGHT] = false; keys[SDL_SCANCODE_W] = true; keys[SDL_SCANCODE_A] = true;
     CHECK_EQ(window_input_bits(keys), SK_IN_UP | SK_IN_LEFT | SK_IN_FIRE);
+}
+
+void test_window_frontend_keys_map_tab_and_f_keys(void) {
+    bool keys[SDL_SCANCODE_COUNT] = { false };
+    CHECK_EQ(window_frontend_keys(keys), 0u);
+    keys[SDL_SCANCODE_TAB] = true; keys[SDL_SCANCODE_F3] = true;
+    CHECK_EQ(window_frontend_keys(keys), (unsigned)SK_FE_KEY_TAB | (SK_FE_KEY_F1 << 2));
+    keys[SDL_SCANCODE_TAB] = false; keys[SDL_SCANCODE_F3] = false; keys[SDL_SCANCODE_F10] = true;
+    CHECK_EQ(window_frontend_keys(keys), (unsigned)SK_FE_KEY_F1 << 9);
 }

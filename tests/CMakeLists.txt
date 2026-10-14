@@ -457,7 +457,8 @@ set(SK_TEST_NAMES
   title_menu_needs_fire_released_once
   savegame_slot_round_trips_through_the_xor_and_checksum
   savegame_names_show_empty_slots
-  hiscore_insert_shifts_the_table_down)
+  hiscore_insert_shifts_the_table_down
+  window_frontend_keys_map_tab_and_f_keys)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

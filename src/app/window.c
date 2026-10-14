@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "app/window.h"
+#include "app/frontend.h"
 #include "game/input.h"
 #include "gfx/display_model.h"
 
@@ -67,6 +68,14 @@ uint8_t window_input_bits(const bool *keys) {
     if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) in |= SK_IN_RIGHT;
     if (keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_X]) in |= SK_IN_FIRE;
     return in;
+}
+
+unsigned window_frontend_keys(const bool *keys) {
+    static const SDL_Scancode f[10] = { SDL_SCANCODE_F1, SDL_SCANCODE_F2, SDL_SCANCODE_F3, SDL_SCANCODE_F4, SDL_SCANCODE_F5,
+                                        SDL_SCANCODE_F6, SDL_SCANCODE_F7, SDL_SCANCODE_F8, SDL_SCANCODE_F9, SDL_SCANCODE_F10 };
+    unsigned k = keys[SDL_SCANCODE_TAB] ? SK_FE_KEY_TAB : 0;
+    for (int i = 0; i < 10; i++) if (keys[f[i]]) k |= SK_FE_KEY_F1 << i;
+    return k;
 }
 
 static void present_pixels(sk_window *w) {
@@ -149,7 +158,10 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
         int steps = window_steps_for(&acc, now - last);
         last = now;
         running = poll_events(w, NULL);
-        for (int i = 0; i < steps; i++) play_step(p, window_input_bits(SDL_GetKeyboardState(NULL)));
+        for (int i = 0; i < steps; i++) {
+            p->fe_keys = window_frontend_keys(SDL_GetKeyboardState(NULL));
+            play_step(p, window_input_bits(SDL_GetKeyboardState(NULL)));
+        }
         if (p->quit) running = false;
         play_draw(p);
         play_present(p, w->pixels);
