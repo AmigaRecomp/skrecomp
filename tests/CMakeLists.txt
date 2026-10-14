@@ -423,7 +423,10 @@ set(SK_TEST_NAMES
   level_end_stats_add_time_and_balls
   scoreboard_free_clears_the_cards
   play_draws_the_board_text_into_playfield_one
-  scoreboard_level_counts_and_moves_on)
+  scoreboard_level_counts_and_moves_on
+  card_resets_clear_all_cards_too
+  new_game_clears_the_statistics
+  ending_goes_black_while_the_music_fades)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

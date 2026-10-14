@@ -72,3 +72,14 @@ void test_ending_waits_for_fire_then_fades_64_frames(void) {
     while (!pictures_step(&pc, 0) && n < 200) n++;
     CHECK_EQ(n + 1, 64);                                         /* fade_music_out */
 }
+
+void test_ending_goes_black_while_the_music_fades(void) {        /* copper_blank, COLOR00 = 0 (0x11F104) */
+    static uint8_t end[81920 + 1024];
+    memset(end, 0xFF, 81920); memset(end + 81920, 0, 1024); put_be16(end + 81920 + 4 * 255, 0x0FFF);
+    sk_err e = {0};
+    CHECK(pictures_ending_from(&pc, end, sizeof end, true, &e));
+    static uint32_t out[320 * 256];
+    pictures_present(&pc, out); CHECK(out[0] != 0);
+    pictures_step(&pc, SK_IN_FIRE);
+    pictures_present(&pc, out); CHECK_EQ(out[0], 0); CHECK_EQ(out[320 * 256 - 1], 0);
+}

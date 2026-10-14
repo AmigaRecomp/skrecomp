@@ -367,6 +367,9 @@ void test_level_end_stats_add_time_and_balls(void);
 void test_scoreboard_free_clears_the_cards(void);
 void test_play_draws_the_board_text_into_playfield_one(void);
 void test_scoreboard_level_counts_and_moves_on(void);
+void test_card_resets_clear_all_cards_too(void);
+void test_new_game_clears_the_statistics(void);
+void test_ending_goes_black_while_the_music_fades(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -731,6 +734,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "scoreboard_free_clears_the_cards", test_scoreboard_free_clears_the_cards },
     { "play_draws_the_board_text_into_playfield_one", test_play_draws_the_board_text_into_playfield_one },
     { "scoreboard_level_counts_and_moves_on", test_scoreboard_level_counts_and_moves_on },
+    { "card_resets_clear_all_cards_too", test_card_resets_clear_all_cards_too },
+    { "new_game_clears_the_statistics", test_new_game_clears_the_statistics },
+    { "ending_goes_black_while_the_music_fades", test_ending_goes_black_while_the_music_fades },
 };
 
 int main(int argc, char **argv) {

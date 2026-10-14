@@ -127,13 +127,13 @@ void scoreboard_setup(sk_game *g) {                              /* 0x103DAC */
     g->stat_balls = to_bcd(g->stat_balls);
     g->cards_taken = to_bcd((uint8_t)g->cards_taken);
     g->kills[1] = to_bcd(g->kills[1]); g->kills[3] = to_bcd(g->kills[3]); g->kills[2] = to_bcd(g->kills[2]);
-    g->card_anim[0] = 0; g->cards = 0; g->hud_card_flag = 0;
+    g->card_anim[0] = 0; g->cards = 0; g->hud_card_flag = 0; g->all_cards = 0;   /* clr.w hud_card_flag: both bytes */
 }
 
 void scoreboard_free(sk_game *g) {                               /* 0x103F9A, from reset_level_state */
     if (!g->board.active) return;
     g->board.active = false;
-    g->cards = 0; g->hud_card_flag = 0;                          /* reset_card_count */
+    g->cards = 0; g->hud_card_flag = 0; g->all_cards = 0;        /* reset_card_count: move.w #0 takes all_cards */
     g->stat_balls = 0; g->stat_time = 0;
 }
 

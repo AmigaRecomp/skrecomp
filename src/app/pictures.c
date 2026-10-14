@@ -130,6 +130,7 @@ bool pictures_step(sk_pictures *pc, uint8_t input) {
         if (pc->phase == 0) {
             if (!(input & SK_IN_FIRE)) return false;             /* input_state bit 4, no timeout */
             pc->phase = 1; pc->frame = 0; pc->fading = true;
+            memset(pc->px, 0, sizeof pc->px); pc->pal[0] = 0;   /* copper_blank, COLOR00 = 0 (0x11F104) */
             return false;
         }
         return f + 1 >= 64;                                      /* fade_music_out */

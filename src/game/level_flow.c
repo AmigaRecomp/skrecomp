@@ -22,6 +22,10 @@ void game_new_game(sk_game *g) {                                /* 0x10402E and 
     g->player.score = 0;
     g->level_number = 0;                                         /* 0x103FC0: world map 0 first */
     g->cup_pieces = 0;                                           /* 0x104004 */
+    g->recalls = 0; g->stat_balls = 0; g->stat_time = 0; g->cards_taken = 0;   /* 0x103FD4..0x104022 */
+    g->kills[1] = g->kills[2] = g->kills[3] = 0;
+    g->bonus_pending = 0; g->piece_collected = 0; g->extra_heart = 0;
+    g->cards = 0; g->hud_card_flag = 0; g->all_cards = 0;        /* clr.w hud_card_flag takes all_cards */
 }
 
 static void level_record_head(const sk_game *g, int data_index, uint32_t *timer, uint8_t *layer, int *kit) {

@@ -125,3 +125,28 @@ void test_scoreboard_free_clears_the_cards(void) {
     CHECK(!g_g.board.active); CHECK_EQ(g_g.cards, 0); CHECK_EQ(g_g.stat_balls, 0); CHECK_EQ(g_g.stat_time, 0);
     drop();
 }
+
+void test_card_resets_clear_all_cards_too(void) {               /* the word clears of hud_card_flag take all_cards (0x3001E9) */
+    CHECK(make_board());
+    g_g.all_cards = 1;
+    scoreboard_setup(&g_g);
+    CHECK_EQ(g_g.all_cards, 0);
+    g_g.all_cards = 1;
+    scoreboard_free(&g_g);
+    CHECK_EQ(g_g.all_cards, 0);
+    g_g.all_cards = 1;
+    game_new_game(&g_g);
+    CHECK_EQ(g_g.all_cards, 0);
+    drop();
+}
+
+void test_new_game_clears_the_statistics(void) {                /* 0x103FD4..0x104022 */
+    CHECK(make_board());
+    g_g.recalls = 3; g_g.stat_balls = 4; g_g.stat_time = 5; g_g.cards_taken = 6; g_g.kills[1] = g_g.kills[2] = g_g.kills[3] = 7;
+    g_g.bonus_pending = 0xFF; g_g.piece_collected = 0xFF; g_g.cards = 8; g_g.hud_card_flag = 1; g_g.extra_heart = 1;
+    game_new_game(&g_g);
+    CHECK_EQ(g_g.recalls, 0); CHECK_EQ(g_g.stat_balls, 0); CHECK_EQ(g_g.stat_time, 0); CHECK_EQ(g_g.cards_taken, 0);
+    CHECK_EQ(g_g.kills[1] + g_g.kills[2] + g_g.kills[3], 0); CHECK_EQ(g_g.bonus_pending, 0); CHECK_EQ(g_g.piece_collected, 0);
+    CHECK_EQ(g_g.cards, 0); CHECK_EQ(g_g.hud_card_flag, 0); CHECK_EQ(g_g.extra_heart, 0);
+    drop();
+}

@@ -117,7 +117,7 @@ void hud_init(sk_game *g) {                                      /* hud_clear_bi
     if (g->sk) {
         h->digits = image_ptr(g->sk, DIGIT_FONT_8, 16 * 16);
         h->timer_font = image_ptr(g->sk, TIMER_FONT, 22 * 10);
-        h->icons = image_ptr(g->sk, HUD_ICONS, 128 * 16);
+        h->icons = image_ptr(g->sk, HUD_ICONS, 128 * 22);              /* glyphs 0..21: the scoreboard uses 0x10..0x15 */
         h->health = image_ptr(g->sk, HEALTH_ICONS, 80 * 10);
         h->palette12[0] = 0;
         for (int i = 0; i < 15; i++) h->palette12[1 + i] = image_u16(g->sk, HUD_PALETTE + 2u * (uint32_t)i);
