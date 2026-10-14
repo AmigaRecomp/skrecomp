@@ -222,7 +222,7 @@ int play_level_next(const sk_tables *t, int level_number) {
     for (int i = level_number + 1; i < SK_LEVEL_SEQUENCE_LEN; i++) {
         int d = t->sequence[i];
         if (d == 42) return -1;
-        if (d == 12 || d == 29 || (d >= 30 && d <= 35)) continue;
+        if (d == 12 || d == 29 || (d >= 30 && d <= 35) || d == 41) continue;   /* scoreboard, end screens, world maps, the ALIEN screen */
         return i;
     }
     return -1;

@@ -73,6 +73,9 @@ void test_play_level_next_skips_non_tile_levels(void) {
     CHECK_EQ(play_level_next(&t, 2), 4);                          /* 12 (scoreboard) skipped */
     CHECK_EQ(play_level_next(&t, 4), 6);                          /* 29 skipped */
     CHECK_EQ(play_level_next(&t, 6), -1);                         /* 42 = end */
+    uint8_t usa[] = { 27, 28, 12, 41, 29, 35, 42 };               /* the game's tail: CITY 1, CITY 2, the ALIEN screen, the end */
+    memcpy(t.sequence, usa, sizeof usa);
+    CHECK_EQ(play_level_next(&t, 1), -1);                         /* 41 (ALIEN, not a tile level) skipped too */
 }
 
 void test_level_setup_and_outcome(void) {
