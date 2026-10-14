@@ -70,6 +70,7 @@ add_library(skcore STATIC
   src/game/between.c
   src/game/scoreboard.c
   src/game/front.c
+  src/game/savegame.c
   src/game/attr_usa.c
   src/audio/paula.c
   src/audio/ptreplay.c

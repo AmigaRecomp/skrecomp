@@ -58,7 +58,8 @@ add_executable(sk_tests
   test_scoreboard.c
   test_obj_bonus.c
   test_front.c
-  test_frontend.c)
+  test_frontend.c
+  test_savegame.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -453,7 +454,9 @@ set(SK_TEST_NAMES
   title_menu_shows_the_kit_on_the_kid
   title_sparkle_plays_eleven_steps_after_fifty_frames
   play_starts_at_the_language_screen_and_the_title
-  title_menu_needs_fire_released_once)
+  title_menu_needs_fire_released_once
+  savegame_slot_round_trips_through_the_xor_and_checksum
+  savegame_names_show_empty_slots)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

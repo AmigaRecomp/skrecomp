@@ -394,6 +394,8 @@ void test_title_menu_shows_the_kit_on_the_kid(void);
 void test_title_sparkle_plays_eleven_steps_after_fifty_frames(void);
 void test_play_starts_at_the_language_screen_and_the_title(void);
 void test_title_menu_needs_fire_released_once(void);
+void test_savegame_slot_round_trips_through_the_xor_and_checksum(void);
+void test_savegame_names_show_empty_slots(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -785,6 +787,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "title_sparkle_plays_eleven_steps_after_fifty_frames", test_title_sparkle_plays_eleven_steps_after_fifty_frames },
     { "play_starts_at_the_language_screen_and_the_title", test_play_starts_at_the_language_screen_and_the_title },
     { "title_menu_needs_fire_released_once", test_title_menu_needs_fire_released_once },
+    { "savegame_slot_round_trips_through_the_xor_and_checksum", test_savegame_slot_round_trips_through_the_xor_and_checksum },
+    { "savegame_names_show_empty_slots", test_savegame_names_show_empty_slots },
 };
 
 int main(int argc, char **argv) {
