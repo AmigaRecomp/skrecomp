@@ -50,7 +50,7 @@ void test_intro_plays_through_in_about_111_seconds(void) {     /* ROM-backed: th
         if (n == 1500) { intro_present(&it, out); for (int i = 0; i < 320 * 200; i++) coloured += out[i] != 0; }
     }
     CHECK(it.done);
-    CHECK(n > 5300 && n < 5800);                                 /* about 5546 ticks */
+    CHECK(n >= 5515 && n <= 5560);                               /* about 5546 ticks (intro.md, a READING sum) */
     CHECK(coloured > 20000);                                     /* the space ship, not a black screen */
     intro_free(&it); sound_free(&snd); disks_close(&d);
 }

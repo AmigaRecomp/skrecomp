@@ -45,8 +45,9 @@ uint16_t intro_lerp(uint16_t from, uint16_t to, int step) {     /* lerp_colour 0
 }
 
 static void copper_palette(sk_intro *it, const uint16_t *p) { memcpy(it->copper, p, sizeof it->copper); }
-static void fade_start(sk_intro *it, const uint16_t *to) { memcpy(it->fade_from, it->pal_current, sizeof it->fade_from); it->fade_to = to; it->fade_step = 0; }
-static bool fade_tick(sk_intro *it) {                            /* fade_palette 0x1011CE: 17 ticks, one write each */
+static void fade_start(sk_intro *it, const uint16_t *to) { memcpy(it->fade_from, it->pal_current, sizeof it->fade_from); it->fade_to = to; it->fade_step = -1; }
+static bool fade_tick(sk_intro *it) {                            /* fade_palette 0x1011CE: 17 ticks, each waits a tick, then writes */
+    if (it->fade_step < 0) { it->fade_step = 0; return false; }
     for (int k = 0; k < 32; k++) it->copper[k] = intro_lerp(it->fade_from[k], it->fade_to[k], it->fade_step);
     if (++it->fade_step < 17) return false;
     memcpy(it->pal_current, it->fade_to, sizeof it->pal_current);
@@ -213,7 +214,7 @@ static bool run_op(sk_intro *it, bool skip) {
             } else anim_apply_delta(f->data, f->n, it->screen[it->work]);
             swap(it);
             it->sub = 2;
-            break;
+            return false;                                        /* sf vbl_flag: at least one fresh tick */
         }
         case 2:                                                  /* wait until tick_counter > D, then show */
             if (it->tick_counter <= it->delay) return false;
