@@ -47,10 +47,10 @@ quirks included), with the KICK OFF, life-lost and game-over jingles and the bos
 effects play on the fourth channel by the original's priority rule (`../re/docs/notes/audio.md`). With no
 audio device the game runs silent.
 
-The ball (England's six levels, Italy's six, Russia's five and Japan's five are complete: the streets, the country with its
-moving and sinking platforms, London with LONDON2's boss, the Ruins, Venice and the Riviera with RIVIERA2's boss, the forest,
-the rocking battle ship with its rope, RED SQUARE with its boss, the TRAIN whose scenery streams past through tunnels, and
-the FACTORY with its presses, lift tubes and FACTORY2's boss; the other worlds play with whatever of their objects these share):
+The ball (all five worlds are complete, every level of the game: England's streets, country and London with LONDON2's boss;
+Italy's Ruins, Venice and the Riviera with RIVIERA2's boss; Russia's forest, the rocking battle ship with its rope and RED SQUARE
+with its boss; Japan's TRAIN whose scenery streams past through tunnels and the FACTORY with FACTORY2's boss; the USA's Wild West,
+the beach and the city with the last boss. After the last level the game starts over; the end screens are not done yet):
 - **Kick:** fire with left or right kicks the ball at your feet; kicked into an enemy it knocks
   it out for points. Jumping onto the ball with down held stands you on it.
 - **Tricks:** with the ball at your feet, hold fire still for a moment: the kid flicks it up and
