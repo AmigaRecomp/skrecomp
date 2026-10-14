@@ -63,7 +63,8 @@ add_executable(sk_tests
   test_attract.c
   test_obj_front.c
   test_savescreen.c
-  test_anim.c)
+  test_anim.c
+  test_intro.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -486,7 +487,10 @@ set(SK_TEST_NAMES
   anim_byterun1_body_fills_five_planes_row_by_row
   anim_op5_delta_writes_down_columns
   anim_real_files_hold_eight_animations
-  replay_cue_restarts_at_a_position_keeping_the_samples)
+  replay_cue_restarts_at_a_position_keeping_the_samples
+  intro_fade_steps_floor_toward_the_target
+  intro_types_text_one_and_ends_on_a_key
+  intro_plays_through_in_about_111_seconds)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

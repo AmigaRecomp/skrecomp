@@ -422,6 +422,9 @@ void test_anim_byterun1_body_fills_five_planes_row_by_row(void);
 void test_anim_op5_delta_writes_down_columns(void);
 void test_anim_real_files_hold_eight_animations(void);
 void test_replay_cue_restarts_at_a_position_keeping_the_samples(void);
+void test_intro_fade_steps_floor_toward_the_target(void);
+void test_intro_types_text_one_and_ends_on_a_key(void);
+void test_intro_plays_through_in_about_111_seconds(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -841,6 +844,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "anim_op5_delta_writes_down_columns", test_anim_op5_delta_writes_down_columns },
     { "anim_real_files_hold_eight_animations", test_anim_real_files_hold_eight_animations },
     { "replay_cue_restarts_at_a_position_keeping_the_samples", test_replay_cue_restarts_at_a_position_keeping_the_samples },
+    { "intro_fade_steps_floor_toward_the_target", test_intro_fade_steps_floor_toward_the_target },
+    { "intro_types_text_one_and_ends_on_a_key", test_intro_types_text_one_and_ends_on_a_key },
+    { "intro_plays_through_in_about_111_seconds", test_intro_plays_through_in_about_111_seconds },
 };
 
 int main(int argc, char **argv) {
