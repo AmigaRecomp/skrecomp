@@ -55,7 +55,7 @@ screens it quits the program.
 
 Gamepads (any controller SDL knows: Xbox, PlayStation, Switch Pro, ...) work out of the box: d-pad or left stick to move,
 A to jump, B or X for fire, Start to pause, Back to leave. F12 opens the remap screen: press a key or pad button for each
-action in turn (Backspace keeps one, F5 restores the defaults, Escape cancels). The bindings are kept in `controls.cfg`
+action in turn (Backspace or the pad's Back keeps one, F5 restores the defaults, Escape cancels; F, M, TAB, F1..F12 stay fixed, and an input moved to a new action leaves its old one). The bindings are kept in `controls.cfg`
 in your user data folder (or `--controls FILE`), a text file you can also edit. On the title, TAB shows the version
 and F1..F10 in KIT DESIGN copy a hi-score's kit; typing names a save. The game runs at the original's
 50 frames per second with the original's movement, camera, collision and level flow
