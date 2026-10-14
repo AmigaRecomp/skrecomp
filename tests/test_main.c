@@ -345,6 +345,9 @@ void test_usa_run_without_a_crash(void);
 void test_jumper_17_ignores_a_low_step(void);
 void test_play_level_entry_runs_maps_and_endings_on_their_own_slot(void);
 void test_play_level_entry_walks_the_games_tail(void);
+void test_flight_heads_down_to_italy_with_the_empty_shadow(void);
+void test_flight_heads_up_to_russia_and_level_elsewhere(void);
+void test_flight_wraps_east_from_japan_to_the_usa(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -687,6 +690,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "jumper_17_ignores_a_low_step", test_jumper_17_ignores_a_low_step },
     { "play_level_entry_runs_maps_and_endings_on_their_own_slot", test_play_level_entry_runs_maps_and_endings_on_their_own_slot },
     { "play_level_entry_walks_the_games_tail", test_play_level_entry_walks_the_games_tail },
+    { "flight_heads_down_to_italy_with_the_empty_shadow", test_flight_heads_down_to_italy_with_the_empty_shadow },
+    { "flight_heads_up_to_russia_and_level_elsewhere", test_flight_heads_up_to_russia_and_level_elsewhere },
+    { "flight_wraps_east_from_japan_to_the_usa", test_flight_wraps_east_from_japan_to_the_usa },
 };
 
 int main(int argc, char **argv) {

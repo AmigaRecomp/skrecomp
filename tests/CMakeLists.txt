@@ -398,7 +398,10 @@ set(SK_TEST_NAMES
   usa_run_without_a_crash
   jumper_17_ignores_a_low_step
   play_level_entry_runs_maps_and_endings_on_their_own_slot
-  play_level_entry_walks_the_games_tail)
+  play_level_entry_walks_the_games_tail
+  flight_heads_down_to_italy_with_the_empty_shadow
+  flight_heads_up_to_russia_and_level_elsewhere
+  flight_wraps_east_from_japan_to_the_usa)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

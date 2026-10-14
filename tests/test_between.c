@@ -34,3 +34,37 @@ void test_play_level_entry_walks_the_games_tail(void) {
     r = play_level_entry(&t, &ln);
     CHECK_EQ(r.kind, SK_RUN_GAME_END);
 }
+
+static int fly(sk_flight *f, int *frames) {
+    *frames = 0;
+    while (!flight_step(f) && *frames < 1000) ++*frames;
+    return ++*frames;
+}
+
+void test_flight_heads_down_to_italy_with_the_empty_shadow(void) {
+    sk_flight f;
+    flight_init(&f, 149, 44, 164, 70);                           /* map 1: England -> Italy, atan2 +43 */
+    CHECK_EQ(f.big_off, 0); CHECK_EQ(f.small_off, 0x1D4);
+    int n; fly(&f, &n);
+    CHECK_EQ(f.x >> 16, 164);
+    CHECK(((f.y >> 16) - 70) * ((f.y >> 16) - 70) <= 1);       /* 1 px a frame along the heading lands on the target */
+    CHECK(n >= 29 && n <= 31);                                   /* sqrt(15^2 + 26^2) = 30 */
+}
+
+void test_flight_heads_up_to_russia_and_level_elsewhere(void) {
+    sk_flight f;
+    flight_init(&f, 164, 70, 179, 35);                           /* atan2 -48: up */
+    CHECK_EQ(f.big_off, 0x558); CHECK_EQ(f.small_off, 0xEA);
+    flight_init(&f, 179, 35, 274, 65);                           /* +12: level */
+    CHECK_EQ(f.big_off, 0x2AC); CHECK_EQ(f.small_off, 0);
+}
+
+void test_flight_wraps_east_from_japan_to_the_usa(void) {
+    sk_flight f;
+    flight_init(&f, 274, 65, 63, 61);                            /* dx = 63 - 274 + 320 = 109, always east */
+    CHECK(f.sx > 0);
+    int n; fly(&f, &n);
+    CHECK_EQ((f.x >> 16) - 320, 63);                             /* the second test of the loop: x - 320 == target */
+    CHECK(n >= 108 && n <= 111);
+    CHECK_EQ(flight_draw_x(&f), 63);                             /* drawn wrapped into the picture */
+}
