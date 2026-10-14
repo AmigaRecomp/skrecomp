@@ -64,7 +64,7 @@ audio device the game runs silent.
 The ball (all five worlds are complete, every level of the game: England's streets, country and London with LONDON2's boss;
 Italy's Ruins, Venice and the Riviera with RIVIERA2's boss; Russia's forest, the rocking battle ship with its rope and RED SQUARE
 with its boss; Japan's TRAIN whose scenery streams past through tunnels and the FACTORY with FACTORY2's boss; the USA's Wild West,
-the beach and the city with the last boss, the five bonus levels and the ALIEN.):
+the beach and the city with the last boss, the five bonus levels and the ALIEN):
 - **Kick:** fire with left or right kicks the ball at your feet; kicked into an enemy it knocks
   it out for points. Jumping onto the ball with down held stands you on it.
 - **Tricks:** with the ball at your feet, hold fire still for a moment: the kid flicks it up and
