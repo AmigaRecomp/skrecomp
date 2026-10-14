@@ -98,6 +98,7 @@ struct sk_game {
     uint8_t cup_pieces;                 /* 0x300394: bit k = world k's cup piece (type 81); 0x1F = all five */
     uint8_t piece_collected;            /* 0x300298: a piece since the last map (blocks a bonus level) */
     uint8_t bonus_pending;              /* 0x300299: scoreboard_setup found 11 cards */
+    int bonus_tokens;                   /* 0x300296: attribute 80's tokens taken (0x32 = all) */
     uint8_t stat_balls, stat_time;      /* 0x300371, 0x300372 (BCD): the scoreboard's BALLS and TIME (CARDS is cards_taken) */
     uint8_t balls_allotted;             /* 0x300376: the level record's +6 */
     struct {                            /* the scoreboard (between-levels.md section 6) */

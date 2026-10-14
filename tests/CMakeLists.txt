@@ -426,7 +426,9 @@ set(SK_TEST_NAMES
   scoreboard_level_counts_and_moves_on
   card_resets_clear_all_cards_too
   new_game_clears_the_statistics
-  ending_goes_black_while_the_music_fades)
+  ending_goes_black_while_the_music_fades
+  bonus_check_sends_the_world_to_its_bonus_level
+  bonus_level_setup_keeps_its_clock_and_time_out)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

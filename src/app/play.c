@@ -112,6 +112,7 @@ static void fail(sk_play *p, const sk_err *e) { p->load_failed = true; p->load_e
 /* play_level (0x104060): what level_number points at, behind the loading strip */
 static void play_advance(sk_play *p) {
     sk_err e = {0};
+    bonus_check(&p->game);
     sk_run r = play_level_entry(&p->scene.tables, &p->game.level_number);
     if (r.kind == SK_RUN_GAME_END) {                                /* 42: the frontend (8c); until then a new game (ruling) */
         game_new_game(&p->game);

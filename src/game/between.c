@@ -1,4 +1,5 @@
 #include "game/between.h"
+#include "game/game.h"
 #include "game/ball.h"
 #include "game/platforms.h"
 
@@ -41,4 +42,14 @@ bool flight_step(sk_flight *f) {                                 /* loc_11E842 *
 int flight_draw_x(const sk_flight *f) {
     int x = (int16_t)(f->x >> 16);
     return x >= 320 ? x - 320 : x;
+}
+
+void bonus_check(sk_game *g) {                                   /* 0x11EF1C */
+    if (!g->bonus_pending) return;
+    g->timeout_armed = true;
+    g->bonus_tokens = 0;
+    g->timer_rate = 0x32;                                        /* 50 frames a unit: the 0x60 on the clock is a minute */
+    g->fulltime_level = g->level_number;
+    int n = g->level_number;
+    g->level_number = n < 0x0B ? 0x34 : n < 0x15 ? 0x35 : n < 0x1E ? 0x36 : n < 0x27 ? 0x37 : n < 0x31 ? 0x38 : 0x39;
 }

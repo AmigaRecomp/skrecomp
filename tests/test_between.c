@@ -68,3 +68,41 @@ void test_flight_wraps_east_from_japan_to_the_usa(void) {
     CHECK(n >= 108 && n <= 111);
     CHECK_EQ(flight_draw_x(&f), 63);                             /* drawn wrapped into the picture */
 }
+
+#include <stdlib.h>
+#include "fixture.h"
+#include "game/game.h"
+#include "game/level_flow.h"
+
+void test_bonus_check_sends_the_world_to_its_bonus_level(void) {
+    static sk_game g;
+    memset(&g, 0, sizeof g);
+    game_new_game(&g);
+    g.level_number = 9;                                          /* England's last scoreboard done */
+    bonus_check(&g);
+    CHECK_EQ(g.level_number, 9);                                 /* nothing pending */
+    g.bonus_pending = 0xFF; g.bonus_tokens = 7;
+    bonus_check(&g);
+    CHECK_EQ(g.level_number, 0x34); CHECK_EQ(g.fulltime_level, 9); CHECK_EQ(g.timer_rate, 0x32);
+    CHECK(g.timeout_armed); CHECK_EQ(g.bonus_tokens, 0);
+    static const int from[5] = { 0x0A, 0x14, 0x1D, 0x26, 0x30 }, to[5] = { 0x34, 0x35, 0x36, 0x37, 0x38 };
+    for (int k = 0; k < 5; k++) { g.level_number = from[k]; bonus_check(&g); CHECK_EQ(g.level_number, to[k]); }
+    g.level_number = 0x31; bonus_check(&g); CHECK_EQ(g.level_number, 0x39);
+}
+
+void test_bonus_level_setup_keeps_its_clock_and_time_out(void) {
+    static sk_game g;
+    static sk_level lv;
+    uint8_t *d = NULL; size_t n = 0; sk_err e = {0};
+    memset(&g, 0, sizeof g); memset(&lv, 0, sizeof lv);
+    CHECK(load_fixture("level_play.bin", &d, &n) && level_parse(d, n, &lv, &e));
+    game_new_game(&g);
+    CHECK_EQ(g.timer_rate, 0x5DC);
+    g.timer_rate = 0x32; g.timeout_armed = true;
+    CHECK(game_setup_level(&g, &lv, 36));
+    CHECK_EQ(g.timer_rate, 0x32); CHECK(g.timeout_armed);
+    g.level_timer = 0; g.bonus_pending = 0xFF;
+    timeout_check(&g);
+    CHECK_EQ(g.bonus_pending, 0); CHECK_EQ(g.timer_rate, 0x5DC); CHECK(!g.timeout_armed); CHECK_EQ(g.player.state, 68);
+    game_close(&g);
+}

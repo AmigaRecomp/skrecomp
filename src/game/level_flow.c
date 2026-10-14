@@ -22,6 +22,7 @@ void game_new_game(sk_game *g) {                                /* 0x10402E and 
     g->player.score = 0;
     g->level_number = 0;                                         /* 0x103FC0: world map 0 first */
     g->cup_pieces = 0;                                           /* 0x104004 */
+    g->timer_rate = TIMER_RATE; g->timeout_armed = false;
     g->recalls = 0; g->stat_balls = 0; g->stat_time = 0; g->cards_taken = 0;   /* 0x103FD4..0x104022 */
     g->kills[1] = g->kills[2] = g->kills[3] = 0;
     g->bonus_pending = 0; g->piece_collected = 0; g->extra_heart = 0;
@@ -78,9 +79,8 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     init_player(g);
     g->player.top_speed = 16;                                    /* move.w #$10, player (0x104188) */
     g->timer_tick = 0;
-    g->timer_rate = TIMER_RATE;
+    if (!g->timer_rate) g->timer_rate = TIMER_RATE;              /* port guard: set at start-up (0x10066C), bonus_check and the end */
     g->level_timer = timer;
-    g->timeout_armed = false;
     g->curtain_flags = 4;                                        /* open request */
     g->curtain_step = 0x62;
     g->curtain_top = g->curtain_bottom = 100;
@@ -120,6 +120,7 @@ void timeout_check(sk_game *g) {                                /* sub_11EF7C */
     g->player.state = 68;
     g->jingle_requested = true; g->jingle = 2;
     g->timer_rate = TIMER_RATE;
+    g->bonus_pending = 0;
     g->timeout_armed = false;
 }
 
