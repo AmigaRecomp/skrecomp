@@ -54,7 +54,8 @@ typedef struct sk_play {
     sk_savescreen save;             /* the save prompt or the RESUME list, when on */
     char save_path[512];
     bool resuming; sk_save_slot resume_slot;   /* RESUME GAME: the slot load_game_slot puts over the new game */
-    int typed_key;                  /* last_ascii_key: the window's last typed character, consumed each step */
+    int typed_key;                  /* last_ascii_key: this step's typed character */
+    int typed_queue[8], typed_n;    /* the window's keys waiting for their frame */
     bool esc_key;                   /* Escape: a save screen cancels, a level closes its curtain, the frontend quits */
     bool pause_key;
     bool leaving;                   /* the fade before the title after ESC */                 /* F10 or P: the pause */
@@ -68,6 +69,8 @@ void play_step(sk_play *p, uint8_t keyboard_input);     /* one game frame; the s
 void play_draw(sk_play *p);                             /* backdrop, foreground, objects into the framebuffer */
 void play_present(sk_play *p, uint32_t *out);           /* SK_SCREEN_W x SK_SCREEN_H */
 void play_close(sk_play *p);
+void play_type(sk_play *p, int key);                    /* a typed key, one taken per frame */
+int  play_next_typed(sk_play *p);                       /* 0 none */
 
 /* One script token at *s: letters U D L R F or '.', then a frame count; advances past the comma. */
 bool script_parse_step(const char **s, uint8_t *input, int *frames, sk_err *e);

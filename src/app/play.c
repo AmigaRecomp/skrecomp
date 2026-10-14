@@ -438,6 +438,7 @@ static void sound_step(sk_play *p) {                                /* the VBL's
 void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->load_failed) return;
     p->game.snd = &p->snd;
+    if (!p->typed_key) p->typed_key = play_next_typed(p);           /* one queued key a frame */
     bool esc = p->esc_key && p->save.mode == SK_SAVE_OFF, pause = p->pause_key;
     p->pause_key = false;
     if (esc) {
@@ -615,4 +616,12 @@ void play_close(sk_play *p) {
     resources_free(&p->res);
     game_close(&p->game);
     scene_close(&p->scene);
+}
+void play_type(sk_play *p, int key) { if (p->typed_n < 8) p->typed_queue[p->typed_n++] = key; }
+
+int play_next_typed(sk_play *p) {
+    if (!p->typed_n) return 0;
+    int k = p->typed_queue[0];
+    memmove(p->typed_queue, p->typed_queue + 1, sizeof p->typed_queue[0] * (size_t)--p->typed_n);
+    return k;
 }

@@ -688,3 +688,14 @@ void test_escape_leaves_a_game_for_the_title_and_quits_from_the_title(void) {   
     CHECK(p.quit);                                                  /* on the title: the program ends */
     play_close(&p);
 }
+
+void test_typed_keys_queue_between_frames(void) {
+    static sk_play p;
+    memset(&p, 0, sizeof p);
+    play_type(&p, 'A'); play_type(&p, 'B'); play_type(&p, 'C');    /* three keys inside one 20 ms frame */
+    CHECK_EQ(play_next_typed(&p), 'A'); CHECK_EQ(play_next_typed(&p), 'B'); CHECK_EQ(play_next_typed(&p), 'C');
+    CHECK_EQ(play_next_typed(&p), 0);
+    for (int i = 0; i < 20; i++) play_type(&p, 'Z');               /* a full queue drops the newest */
+    int n = 0; while (play_next_typed(&p)) n++;
+    CHECK_EQ(n, 8);
+}
