@@ -55,6 +55,7 @@ void test_remap_text_fits_the_screen(void) {
     }
 }
 
-void test_remap_help_stays_above_the_hud(void) {               /* the HUD panel starts at frame line 201 */
-    for (int i = 0; i < SK_REMAP_HELP_LINES; i++) CHECK(remap_help[i].y + 8 <= 200);
+void test_remap_help_stays_above_the_hud(void) {               /* the screen covers the whole frame: within its 256 lines */
+    for (int i = 0; i < SK_REMAP_HELP_LINES; i++) CHECK(remap_help[i].y + 8 <= 256);
+    for (int i = 1; i < SK_REMAP_HELP_LINES; i++) CHECK(remap_help[i].y - remap_help[i - 1].y >= 14);   /* room between the lines */
 }

@@ -7,8 +7,8 @@
 #define FONT_8 0x204148u                /* the game's 8x8 font: 16 bytes a glyph, the first of each pair the face */
 
 const sk_remap_line remap_help[SK_REMAP_HELP_LINES] = {
-    { 160 - 8 * 36 / 2, 176, "BACKSPACE OR PAD BACK: KEEP THIS ONE" },
-    { 160 - 8 * 32 / 2, 187, "F5: ALL DEFAULTS     ESC: CANCEL" } };
+    { 40, 222, "BACKSPACE / PAD BACK" },
+    { 40, 238, "F5" } };
 
 void remap_open(sk_remap *r, sk_controls *live) {
     r->open = true; r->step = 0; r->live = live; r->before = *live;
@@ -28,19 +28,29 @@ sk_remap_result remap_input(sk_remap *r, sk_bind b) {
     return SK_REMAP_DONE;
 }
 
-static void text(const sk_image *sk, uint32_t *out, const char *s, int x, int y, uint32_t colour) {
+static void text_scaled(const sk_image *sk, uint32_t *out, const char *s, int x, int y, uint32_t colour, int scale) {
     for (int i = 0; s[i]; i++) {
         int c = toupper((unsigned char)s[i]);
         if (c < 0x20 || c > 0x5F) c = '?';
         for (int r = 0; r < 8 && sk; r++) {
             uint8_t face = image_u8(sk, FONT_8 + (uint32_t)(c - 0x20) * 16u + 2u * (uint32_t)r);
             for (int b = 0; b < 8; b++)
-                if ((face >> (7 - b)) & 1) {
-                    int px = x + 8 * i + b, py = y + r;
-                    if (px >= 0 && px < SK_SCREEN_W && py >= 0 && py < SK_SCREEN_H) out[py * SK_SCREEN_W + px] = colour;
-                }
+                if ((face >> (7 - b)) & 1)
+                    for (int dy = 0; dy < scale; dy++)
+                        for (int dx = 0; dx < scale; dx++) {
+                            int px = x + (8 * i + b) * scale + dx, py = y + r * scale + dy;
+                            if (px >= 0 && px < SK_SCREEN_W && py >= 0 && py < SK_SCREEN_H) out[py * SK_SCREEN_W + px] = colour;
+                        }
         }
     }
+}
+static void text(const sk_image *sk, uint32_t *out, const char *s, int x, int y, uint32_t colour) { text_scaled(sk, out, s, x, y, colour, 1); }
+static void centred(const sk_image *sk, uint32_t *out, const char *s, int y, uint32_t colour, int scale) {
+    text_scaled(sk, out, s, (SK_SCREEN_W - 8 * scale * (int)strlen(s)) / 2, y, colour, scale);
+}
+static void fill(uint32_t *out, int x0, int y0, int w, int h, uint32_t colour) {
+    for (int y = y0; y < y0 + h; y++) for (int x = x0; x < x0 + w; x++)
+        if (x >= 0 && x < SK_SCREEN_W && y >= 0 && y < SK_SCREEN_H) out[y * SK_SCREEN_W + x] = colour;
 }
 
 static void first_of(const sk_controls *c, int a, bool keys, char *out, size_t n) {
@@ -57,19 +67,29 @@ static void first_of(const sk_controls *c, int a, bool keys, char *out, size_t n
 
 void remap_draw(const sk_remap *r, const sk_image *sk, uint32_t *out) {
     if (!r->open) return;
-    for (int i = 0; i < SK_SCREEN_W * SK_SCREEN_H; i++) out[i] = (out[i] >> 2) & 0x3F3F3F;   /* the game, dimmed */
-    const uint32_t white = 0xF0F0F0, yellow = 0xF0D040, grey = 0x909090;
-    text(sk, out, "CONTROLS", 128, 24, white);
-    text(sk, out, "ACTION   KEY          PAD", 24, 48, grey);
+    const uint32_t bg = 0x101828, bar = 0x2A3A6A, white = 0xF0F0F0, yellow = 0xF0D040, grey = 0x8890A0;
+    fill(out, 0, 0, SK_SCREEN_W, SK_SCREEN_H, bg);               /* a plain screen: the text needs the contrast */
+    centred(sk, out, "CONTROLS", 10, yellow, 2);
+    text(sk, out, "ACTION", 32, 38, grey); text(sk, out, "KEY", 120, 38, grey); text(sk, out, "PAD", 224, 38, grey);
+    fill(out, 24, 49, 272, 1, grey);
     for (int a = 0; a < SK_ACTIONS; a++) {
-        char k[32], p[32], line[64], name[16];
+        int y = 56 + 16 * a;
+        bool cur = a == r->step;
+        if (cur) { fill(out, 20, y - 4, 280, 16, bar); text(sk, out, ">", 22, y, yellow); }
+        char k[32], p[32], name[16];
         snprintf(name, sizeof name, "%s", controls_action_name((sk_action)a));
         first_of(r->live, a, true, k, sizeof k);
         first_of(r->live, a, false, p, sizeof p);
-        snprintf(line, sizeof line, "%-8.8s %-12.12s %-10.10s", name, k, p);
-        text(sk, out, line, 24, 64 + 12 * a, a == r->step ? yellow : white);
+        k[12] = 0; p[9] = 0;                                     /* the columns' widths */
+        uint32_t c = cur ? yellow : white;
+        text(sk, out, name, 32, y, c); text(sk, out, k, 120, y, c); text(sk, out, p, 224, y, c);
     }
-    char ask[64]; snprintf(ask, sizeof ask, "PRESS A KEY OR BUTTON FOR %s", controls_action_name((sk_action)r->step));
-    text(sk, out, ask, 24, 162, yellow);
-    for (int i = 0; i < SK_REMAP_HELP_LINES; i++) text(sk, out, remap_help[i].text, remap_help[i].x, remap_help[i].y, grey);
+    centred(sk, out, "PRESS A KEY OR BUTTON FOR", 186, white, 1);
+    centred(sk, out, controls_action_name((sk_action)r->step), 198, yellow, 2);
+    text(sk, out, remap_help[0].text, remap_help[0].x, remap_help[0].y, white);
+    text(sk, out, "KEEP", 216, remap_help[0].y, grey);
+    text(sk, out, remap_help[1].text, remap_help[1].x, remap_help[1].y, white);
+    text(sk, out, "DEFAULTS", 64, remap_help[1].y, grey);
+    text(sk, out, "ESC", 168, remap_help[1].y, white);
+    text(sk, out, "CANCEL", 200, remap_help[1].y, grey);
 }
