@@ -330,6 +330,7 @@ void test_rock_73_shakes_drops_and_breaks(void);
 void test_skater_7_pushes_on_the_flat(void);
 void test_bouncer_29_bounces_and_is_turned_by_the_ball(void);
 void test_egg_30_hatches_a_walker(void);
+void test_flyer_14_patrols_drops_and_falls_apart(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -657,6 +658,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "skater_7_pushes_on_the_flat", test_skater_7_pushes_on_the_flat },
     { "bouncer_29_bounces_and_is_turned_by_the_ball", test_bouncer_29_bounces_and_is_turned_by_the_ball },
     { "egg_30_hatches_a_walker", test_egg_30_hatches_a_walker },
+    { "flyer_14_patrols_drops_and_falls_apart", test_flyer_14_patrols_drops_and_falls_apart },
 };
 
 int main(int argc, char **argv) {

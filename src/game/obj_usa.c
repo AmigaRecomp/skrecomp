@@ -22,6 +22,9 @@ static const int8_t skater_offsets[20][2] = {                                   
 static const uint8_t bouncer_script[] = { 0, 8, 0, 4, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7 };   /* 0x110FBA */
 static const uint8_t hatchling_script[] = { 0, 4, 0, 6, 0, 1, 2, 3, 4, 5, 6, 7 };              /* 0x110CE2 */
 
+static const uint8_t flyer_script[] = { 0, 2, 0, 2, 0, 1 };                                   /* 0x10F368 */
+static const uint8_t flyer_drop_script[] = { 0, 2, 0, 4, 0, 0, 0, 0 };                        /* 0x10F36E */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 
@@ -378,9 +381,76 @@ static void obj_egg_update(sk_game *g, sk_slot *s, int index) {               /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 14: the flyer (slot 6, 48 x 53, READING): bobs and patrols, two drops (type 111) every 24 frames; down, a wreck (type 119) ---- */
+static void obj_flyer_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x10F1D2 */
+    init_object_slot(g, s, x, y - 0x26, s->type4);
+    int p = g->objs.marker_param & 0xFF;
+    s->t0 = (int16_t)((p & 0x18) >> 2);                             /* top speed */
+    s->t1 = (int16_t)(p & 0xE0);                                    /* frames before it turns */
+    s->hits = (uint8_t)(p & 7);
+    s->vx = s->t0; s->vy = 2;
+    s->flags |= 4 | 8;
+    const uint8_t *f = res(g, 6);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 48, 53, f, 1);                                  /* sub_107E78 */
+}
+static void flyer_down(sk_game *g, sk_slot *s, const sk_draw *d) {
+    s->flags |= 1;
+    s->vx = 2;
+    spawn_object(g, d->x, d->y, 119);
+}
+static void obj_flyer_update(sk_game *g, sk_slot *s, int index) {             /* 0x10F22E */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (g->ball_kicked_flag && ball_kill_check(g, s, 2, 0x750)) flyer_down(g, s, d);
+    if (!(s->flags & 2)) {
+        s->vy = (int16_t)-(s->vy - 1);                              /* the bob */
+        int wrapped = 0;
+        step_animation(s, flyer_script, 0, &wrapped);
+        set_aux_c(s, aux_c(s) + 1);
+        set_aux_d(s, aux_d(s) + 1);
+        if (aux_d(s) >= 0x18) {                                     /* the drops */
+            set_aux_d(s, 0);
+            sk_objects *o = &g->objs;
+            o->child_frames = res(g, 0); o->child_script = flyer_drop_script;
+            o->child_w = 16; o->child_h = 8;
+            o->child_vx = (int16_t)(4 | 0x8000); o->child_vy = -16;
+            spawn_object(g, d->x + 0x20, d->y + 0x38, 111);
+            o->child_vx = 4;
+            spawn_object(g, d->x + 0x1C, d->y + 0x38, 111);
+        }
+        if ((uint8_t)s->t1 < (uint8_t)aux_c(s)) {                   /* past its patrol: slow down and turn */
+            if (--s->vx == 0) { s->flags ^= 1; set_aux_c(s, 0); }
+        } else if (s->vx != s->t0) s->vx++;
+        touch_player(g, d->x + 8, d->y + 2, 48, 52);
+        if (ball_hits_object(g, s, 8, 0, 48, 56, 2, 0x750) == 0) flyer_down(g, s, d);
+    }
+    despawn_if_far(g, s);
+}
+
+/* ---- type 119: the flyer's wreck (slot 75, 32 x 32): up and away under gravity ---- */
+static void obj_wreck_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x10F376 */
+    init_object_slot_nodraw(g, s, x, y, s->type4);
+    s->vx = 2; s->vy = -10;
+    s->flags |= 4;
+    const uint8_t *f = res(g, 75);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
+}
+static void obj_wreck_update(sk_game *g, sk_slot *s, int index) {             /* 0x10F3A2 */
+    (void)index;
+    if (!slot_draw_record(g, s)) return;
+    apply_velocity(s);
+    free_if_far(g, s);
+}
+
 void obj_usa_install(void) {
     object_init_table[3] = obj_hedgehog_init;          object_update_table[3] = obj_hedgehog_update;
     object_init_table[7] = obj_skater_init;            object_update_table[7] = obj_skater_update;
+    object_init_table[14] = obj_flyer_init;            object_update_table[14] = obj_flyer_update;
+    object_init_table[119] = obj_wreck_init;           object_update_table[119] = obj_wreck_update;
     object_init_table[29] = obj_bouncer_init;          object_update_table[29] = obj_bouncer_update;
     object_init_table[30] = obj_egg_init;              object_update_table[30] = obj_egg_update;
     object_init_table[47] = obj_roller_init;           object_update_table[47] = obj_roller_update;

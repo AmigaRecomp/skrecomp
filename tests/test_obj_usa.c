@@ -143,3 +143,21 @@ void test_egg_30_hatches_a_walker(void) {                            /* type 30 
     CHECK_EQ(aux_c(s), 2); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 13); CHECK_EQ(s->flags & 4, 0);
     drop_game();
 }
+
+void test_flyer_14_patrols_drops_and_falls_apart(void) {            /* types 14 and 119 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 8 * 16, 14, 0x40 | 0x08 | 2);           /* turn after 64, top speed 2, two hits */
+    CHECK_EQ(s->y, 8 * 16 - 0x26); CHECK_EQ(s->t0, 2); CHECK_EQ(s->t1, 0x40); CHECK_EQ(s->hits, 2); CHECK_EQ(s->vx, 2);
+    CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 53);
+    tick(24);
+    CHECK_EQ(count_type(111), 2);                                    /* its pair of drops */
+    tick(64 - 24 + 1);
+    CHECK_EQ(s->vx, 1);                                              /* past the patrol: slowing to turn */
+    tick(1);
+    CHECK(s->flags & 1); CHECK_EQ(aux_c(s), 0);                      /* turned */
+    s->hits = 1;                                                     /* the last hit */
+    g_g.ball.x = (s->draw->x + 30) << 16; g_g.ball.y = (s->draw->y + 20) << 16; g_g.ball.vx = 6 << 16; g_g.player.ball_free = 1;
+    tick(1);
+    CHECK(s->flags & 2); CHECK_EQ(count_type(119), 1);
+    drop_game();
+}
