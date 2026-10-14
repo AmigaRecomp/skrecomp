@@ -80,3 +80,21 @@ void test_tile_queue_kinds_step_as_the_table_says(void) {
     set_cell_tile(&g_g, 1, 12, 2, 0); CHECK_EQ(world_tile_index(&g_g.world, 1, 12), 2); CHECK_EQ(g_g.world.state[12 * 40 + 1], 0x20);
     drop_game();
 }
+
+void test_queue_tile_change_takes_its_first_step_at_once(void) {    /* 0x11A8FC falls into apply_tile_change */
+    CHECK(make_game());
+    int cell = 10 * g_g.world.w + 5;
+    g_g.world.live[cell] = 0xC000 | 0x123;                           /* a pickup: its attribute flag in the top bits */
+    queue_tile_change(&g_g, 5, 10, 0, 0);
+    CHECK_EQ(g_g.world.live[cell], 0x1FA);                           /* the attribute is gone before any second probe */
+    CHECK_EQ(g_g.world.state[cell], 0x20);
+    int used = 0;
+    for (int i = 0; i < 32; i++) used += g_g.attrs.queue[i].used;
+    CHECK_EQ(used, 1);
+    for (int i = 0; i < 6 * 8; i++) process_tile_queue(&g_g);
+    CHECK_EQ(g_g.world.live[cell], 0);
+    used = 0;
+    for (int i = 0; i < 32; i++) used += g_g.attrs.queue[i].used;
+    CHECK_EQ(used, 0);
+    drop_game();
+}

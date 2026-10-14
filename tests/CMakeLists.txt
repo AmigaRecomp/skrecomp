@@ -372,7 +372,8 @@ set(SK_TEST_NAMES
   tube_ride_is_not_a_game_over
   press_despawn_keeps_its_marker_and_attribute
   crab_flash_in_the_tunnel_ends_dark
-  train_warning_blinks_on_ten_off_five)
+  train_warning_blinks_on_ten_off_five
+  queue_tile_change_takes_its_first_step_at_once)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -78,12 +78,16 @@ static void write_cell(sk_game *g, int cell, uint16_t word, int index, int state
     if (state >= 0) g->world.state[cell] = (uint8_t)state;
 }
 
+static void apply_tile_change(sk_game *g, sk_tile_change *q);
+
 void queue_tile_change(sk_game *g, int cx, int cy, int kind, int fallback) {  /* 0x11A8DC */
     int cell = cell_index(g, cx, cy);
     for (int i = 0; i < 32; i++) {
         sk_tile_change *q = &g->attrs.queue[i];
         if (q->used) continue;
         q->used = true; q->cell = cell; q->kind = kind; q->ticks = 0; q->start = 0;
+        apply_tile_change(g, q);                                 /* no rts at 0x11A8FC: the first step at once, so the cell's
+                                                                    attribute is gone before a second probe can queue it again */
         return;
     }
     write_cell(g, cell, (uint16_t)fallback, fallback, 0x20);    /* queue full: the fallback tile at once (loc_11AA3E) */
