@@ -118,3 +118,31 @@ void test_crab_18_wakes_attacks_and_explodes(void) {                /* type 18 *
     CHECK(s->x < 0); CHECK_EQ(count_type(116), 5); CHECK_EQ(g_g.flash_timer, 16); CHECK_EQ(g_g.sfx_last, 0x13);
     drop_game();
 }
+
+void test_random_matches_the_shift_register(void) {                 /* sub_102B42, seeded 0xDC359A7B at start-up (0x1003FC) */
+    static sk_game g;
+    memset(&g, 0, sizeof g);
+    game_new_game(&g);
+    CHECK_EQ(g.rng, 0xDC359A7Bu);
+    uint32_t r = game_random(&g);
+    CHECK_EQ(r, 0xB86B34F6u);                                        /* doubled, the carry set: no eor */
+    r = game_random(&g);
+    CHECK_EQ(r, 0x70D669ECu);                                        /* the top bit set again: no eor */
+    for (int i = 0; i < 3; i++) r = game_random(&g);
+    CHECK_EQ(r, 0xF0AFE264u);
+}
+
+void test_popper_33_appears_throws_and_sinks(void) {                /* type 33, child 111 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 8 * 16, 33, 0);
+    CHECK_EQ(s->t0, 4); CHECK(s->draw->dflags & 4); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 28);
+    tick(4);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->draw->dflags & 4, 0);         /* up, at one of its eight spots */
+    int i = 0;
+    while (count_type(111) < 2 && i++ < 200) tick(1);
+    CHECK_EQ(count_type(111), 2);
+    i = 0;
+    while (aux_c(s) != 0 && i++ < 300) tick(1);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->t0, 40); CHECK(s->draw->dflags & 4);   /* sunk: 40 frames hidden */
+    drop_game();
+}

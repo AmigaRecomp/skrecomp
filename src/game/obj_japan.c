@@ -25,6 +25,15 @@ static const uint8_t crab_data[64] = {                                          
 #define CRAB_WALK (crab_data + 36)       /* 0x10FC72 */
 #define CRAB_BITE (crab_data + 48)       /* 0x10FC7E */
 
+static const uint8_t popper_data[0x60] = {                                                      /* 0x1118B8: the spots, then the scripts */
+    0, 0, 0, 0, 255, 216, 0, 14, 0, 0, 0, 8, 0, 48, 0, 20, 255, 224, 0, 12, 255, 240, 0, 8, 0, 30, 0, 12, 0, 16, 0, 8,
+    0, 1, 0, 2, 0, 1, 0, 13, 0, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 17, 0, 4, 16, 13, 14, 15,
+    16, 13, 14, 15, 16, 13, 14, 15, 16, 13, 14, 15, 16, 0, 0, 13, 0, 6, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0 };
+#define POPPER_PIECE (popper_data + 0x20)   /* 0x1118D8 */
+#define POPPER_RISE (popper_data + 0x26)    /* 0x1118DE */
+#define POPPER_THROW (popper_data + 0x38)   /* 0x1118F0 */
+#define POPPER_SINK (popper_data + 0x4E)    /* 0x111906 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -291,9 +300,72 @@ static void obj_crab_update(sk_game *g, sk_slot *s, int index) {              /*
     crab_explode(g, s, d);
 }
 
+/* ---- type 33: the popper (slot 39): comes up at one of eight spots, throws two pieces (type 111), sinks ---- */
+static void obj_popper_init(sk_game *g, sk_slot *s, int x, int y) {           /* 0x11173E */
+    init_object_slot(g, s, x, y - 16, s->type4);
+    s->flags |= 1;
+    s->vx = 0; s->vy = 0; s->t0 = 4;
+    const uint8_t *f = res(g, 39);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 28, f, 1);                                  /* sub_107B8C */
+    slot_draw_record(g, s)->dflags |= 4;
+}
+static void obj_popper_update(sk_game *g, sk_slot *s, int index) {            /* 0x111778 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    int wrapped = 0;
+    switch (aux_c(s)) {
+    case 0: {
+        if (--s->t0) break;
+        set_aux_c(s, 1);
+        d->dflags &= (uint8_t)~4;
+        const uint8_t *q = popper_data + (game_random(g) & 7) * 4;
+        d->x = (int16_t)(s->x + (int16_t)(q[0] << 8 | q[1]));
+        d->y = (int16_t)(s->y + (int16_t)(q[2] << 8 | q[3]));
+        reset_animation(s);
+    }   /* fall through */
+    case 1:
+        step_animation(s, POPPER_RISE, 0, &wrapped);
+        if (!wrapped) break;
+        set_aux_c(s, 2);
+        reset_animation(s);
+        wrapped = 0;
+        /* fall through */
+    case 2: {
+        if (step_animation(s, POPPER_THROW, 0, &wrapped)) {
+            sk_objects *o = &g->objs;
+            int x = d->x;
+            o->child_vx = 6;
+            bool fire = s->frame == 13;
+            if (!fire && s->frame == 15) { x += 8; o->child_vx = (int16_t)(6 | 0x8000); fire = true; }
+            if (fire) {
+                o->child_script = POPPER_PIECE;
+                o->child_w = 16; o->child_h = 13;
+                const uint8_t *f = res(g, 44);
+                o->child_frames = f ? f + 0x208 : NULL;
+                o->child_vy = -8;
+                spawn_object(g, x, d->y + 4, 111);
+            }
+        }
+        if (wrapped) { set_aux_c(s, 3); s->t0 = 25; reset_animation(s); }
+        break;
+    }
+    case 3: if (--s->t0 == 0) set_aux_c(s, 4); break;
+    case 4:
+        step_animation(s, POPPER_SINK, 0, &wrapped);
+        if (wrapped) { set_aux_c(s, 0); s->t0 = 40; d->dflags |= 4; }
+        break;
+    default: break;
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_japan_install(void) {
     object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
     object_init_table[18] = obj_crab_init;             object_update_table[18] = obj_crab_update;
+    object_init_table[33] = obj_popper_init;           object_update_table[33] = obj_popper_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;

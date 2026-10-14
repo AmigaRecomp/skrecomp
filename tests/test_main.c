@@ -293,6 +293,8 @@ void test_insect_25_homes_on_the_kid(void);
 void test_thrower_67_wakes_and_throws(void);
 void test_wheel_platform_6_turns_full_circles(void);
 void test_crab_18_wakes_attacks_and_explodes(void);
+void test_random_matches_the_shift_register(void);
+void test_popper_33_appears_throws_and_sinks(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -583,6 +585,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "thrower_67_wakes_and_throws", test_thrower_67_wakes_and_throws },
     { "wheel_platform_6_turns_full_circles", test_wheel_platform_6_turns_full_circles },
     { "crab_18_wakes_attacks_and_explodes", test_crab_18_wakes_attacks_and_explodes },
+    { "random_matches_the_shift_register", test_random_matches_the_shift_register },
+    { "popper_33_appears_throws_and_sinks", test_popper_33_appears_throws_and_sinks },
 };
 
 int main(int argc, char **argv) {

@@ -15,6 +15,7 @@
 static void step(sk_game *g, int n) { if (g->step_probe) g->step_probe(g, n); }
 
 void game_new_game(sk_game *g) {                                /* 0x10402E and the score clears */
+    if (!g->rng) g->rng = 0xDC359A7Bu;                          /* the start-up seed (0x1003FC): once per run */
     g->player.lives = 3;
     g->player.score = 0;
     g->level_number = 1;
@@ -226,4 +227,11 @@ sk_outcome game_outcome(const sk_game *g) {
     if (g->level_end && (g->level_outcome & 0x80)) return SK_OUTCOME_NEXT_LEVEL;
     if (g->player.state == 64) return SK_OUTCOME_GAME_OVER;
     return SK_OUTCOME_RUNNING;
+}
+
+uint32_t game_random(sk_game *g) {                              /* sub_102B42 */
+    uint32_t c = g->rng >> 31;
+    g->rng <<= 1;
+    if (!c) g->rng ^= 0x1D872B41u;
+    return g->rng;
 }

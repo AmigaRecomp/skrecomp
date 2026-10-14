@@ -341,7 +341,9 @@ set(SK_TEST_NAMES
   insect_25_homes_on_the_kid
   thrower_67_wakes_and_throws
   wheel_platform_6_turns_full_circles
-  crab_18_wakes_attacks_and_explodes)
+  crab_18_wakes_attacks_and_explodes
+  random_matches_the_shift_register
+  popper_33_appears_throws_and_sinks)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

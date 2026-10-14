@@ -76,6 +76,7 @@ struct sk_game {
     struct sk_sound *snd;
     struct { bool used; int16_t x, y, h; const uint8_t *mask; size_t mask_len; } occl[4];   /* the sprite occluders 0x3007BA (types 40, 41) */
     int occl_count;                     /* 0x30038A */
+    uint32_t rng;                       /* 0x30000C: sub_102B42's shift register, seeded once at start-up */
     int8_t train_fade;                  /* 0x30035D: JAPAN TRAIN's palette fade in progress (sub_1049C8) */
     uint8_t train_flags;                /* 0x30035B */               /* the sound driver; NULL plays nothing (tests) */
     uint8_t kill_kind;                  /* 0x30037F: 1 pick-up kick, 2 volley, 3 overhead (kill statistics) */
@@ -128,6 +129,7 @@ struct sk_game {
     void (*step_probe)(sk_game *, int step);
 };
 
+uint32_t game_random(sk_game *g);           /* sub_102B42 */
 void play_sfx(sk_game *g, int n);                   /* play_sfx 0x102140 */
 void game_music(sk_game *g, int module, int tune);  /* music_request 0x100F80 */
 void game_music_slot(sk_game *g, int slot);         /* sub_103770 */
