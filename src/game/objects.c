@@ -10,6 +10,7 @@
 #include "game/obj_italy.h"
 #include "game/obj_russia.h"
 #include "game/obj_japan.h"
+#include "game/obj_usa.h"
 #include "game/obj_london.h"
 
 sk_obj_init_fn object_init_table[128];
@@ -32,6 +33,7 @@ void objects_reset(sk_game *g) {                                /* clear_object_
     obj_italy_install();
     obj_russia_install();
     obj_japan_install();
+    obj_usa_install();
     for (int i = 0; i < 128; i++) {
         if (!object_init_table[i]) object_init_table[i] = obj_stub_init;
         if (!object_update_table[i]) object_update_table[i] = obj_stub_update;

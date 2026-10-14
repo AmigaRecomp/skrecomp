@@ -48,6 +48,7 @@ add_executable(sk_tests
   test_attr_russia.c
   test_attr_japan.c
   test_scroll_modes.c
+  test_obj_usa.c
   test_attr_country_london.c
   test_obj_russia.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
@@ -373,7 +374,8 @@ set(SK_TEST_NAMES
   press_despawn_keeps_its_marker_and_attribute
   crab_flash_in_the_tunnel_ends_dark
   train_warning_blinks_on_ten_off_five
-  queue_tile_change_takes_its_first_step_at_once)
+  queue_tile_change_takes_its_first_step_at_once
+  hedgehog_3_walks_and_curls_at_an_edge)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

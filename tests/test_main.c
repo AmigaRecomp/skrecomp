@@ -323,6 +323,7 @@ void test_press_despawn_keeps_its_marker_and_attribute(void);
 void test_crab_flash_in_the_tunnel_ends_dark(void);
 void test_train_warning_blinks_on_ten_off_five(void);
 void test_queue_tile_change_takes_its_first_step_at_once(void);
+void test_hedgehog_3_walks_and_curls_at_an_edge(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -643,6 +644,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "crab_flash_in_the_tunnel_ends_dark", test_crab_flash_in_the_tunnel_ends_dark },
     { "train_warning_blinks_on_ten_off_five", test_train_warning_blinks_on_ten_off_five },
     { "queue_tile_change_takes_its_first_step_at_once", test_queue_tile_change_takes_its_first_step_at_once },
+    { "hedgehog_3_walks_and_curls_at_an_edge", test_hedgehog_3_walks_and_curls_at_an_edge },
 };
 
 int main(int argc, char **argv) {
