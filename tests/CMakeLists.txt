@@ -56,7 +56,8 @@ add_executable(sk_tests
   test_mapsprites.c
   test_pictures.c
   test_scoreboard.c
-  test_obj_bonus.c)
+  test_obj_bonus.c
+  test_front.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -441,7 +442,10 @@ set(SK_TEST_NAMES
   tokens_left_85_shows_in_the_bonus_levels
   alien_children_come_from_the_spawns_not_a_stale_slot
   alien_lets_go_of_a_head_freed_under_it
-  bonus_level_game_over_and_direct_start)
+  bonus_level_game_over_and_direct_start
+  image_write_stays_inside_a_segment
+  kit_apply_writes_the_rows_into_the_kid_palette
+  language_texts_load_into_the_message_tables)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

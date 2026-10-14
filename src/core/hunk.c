@@ -215,6 +215,13 @@ const uint8_t *image_ptr(const sk_image *img, uint32_t addr, size_t n) {
     return NULL;
 }
 
+bool image_write(sk_image *img, uint32_t addr, const uint8_t *data, size_t n) {
+    uint8_t *p = (uint8_t *)image_ptr(img, addr, n);
+    if (!p) return false;
+    memcpy(p, data, n);
+    return true;
+}
+
 uint8_t image_u8(const sk_image *img, uint32_t addr) { const uint8_t *p = image_ptr(img, addr, 1); return p ? p[0] : 0; }
 uint16_t image_u16(const sk_image *img, uint32_t addr) { const uint8_t *p = image_ptr(img, addr, 2); return p ? be16(p) : 0; }
 uint32_t image_u32(const sk_image *img, uint32_t addr) { const uint8_t *p = image_ptr(img, addr, 4); return p ? be32(p) : 0; }

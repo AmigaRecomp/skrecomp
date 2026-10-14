@@ -32,6 +32,9 @@ uint8_t  image_u8(const sk_image *img, uint32_t addr);     /* 0 when outside */
 uint16_t image_u16(const sk_image *img, uint32_t addr);
 uint32_t image_u32(const sk_image *img, uint32_t addr);
 
+/* Writes n bytes at addr when they lie inside one segment (the game's own writes into its data, e.g. the kit). */
+bool image_write(sk_image *img, uint32_t addr, const uint8_t *data, size_t n);
+
 void image_free(sk_image *img);
 
 #endif

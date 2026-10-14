@@ -384,6 +384,9 @@ void test_tokens_left_85_shows_in_the_bonus_levels(void);
 void test_alien_children_come_from_the_spawns_not_a_stale_slot(void);
 void test_alien_lets_go_of_a_head_freed_under_it(void);
 void test_bonus_level_game_over_and_direct_start(void);
+void test_image_write_stays_inside_a_segment(void);
+void test_kit_apply_writes_the_rows_into_the_kid_palette(void);
+void test_language_texts_load_into_the_message_tables(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -765,6 +768,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "alien_children_come_from_the_spawns_not_a_stale_slot", test_alien_children_come_from_the_spawns_not_a_stale_slot },
     { "alien_lets_go_of_a_head_freed_under_it", test_alien_lets_go_of_a_head_freed_under_it },
     { "bonus_level_game_over_and_direct_start", test_bonus_level_game_over_and_direct_start },
+    { "image_write_stays_inside_a_segment", test_image_write_stays_inside_a_segment },
+    { "kit_apply_writes_the_rows_into_the_kid_palette", test_kit_apply_writes_the_rows_into_the_kid_palette },
+    { "language_texts_load_into_the_message_tables", test_language_texts_load_into_the_message_tables },
 };
 
 int main(int argc, char **argv) {
