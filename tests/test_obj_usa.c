@@ -161,3 +161,38 @@ void test_flyer_14_patrols_drops_and_falls_apart(void) {            /* types 14 
     CHECK(s->flags & 2); CHECK_EQ(count_type(119), 1);
     drop_game();
 }
+
+void test_pot_13_drops_on_a_kid_below(void) {                        /* type 13 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 6 * 16, 13, 0);
+    CHECK_EQ(s->y, 6 * 16 + 8); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 27);
+    g_g.player.x = (int16_t)(s->draw->x + 10);                       /* under it, the pot on frame 0 */
+    tick(1);
+    CHECK_EQ(s->aux, 2); CHECK_EQ(s->vy, 10); CHECK(s->flags & 2); CHECK(s->flags & 4);
+    drop_game();
+}
+
+void test_rat_15_rests_then_runs(void) {                             /* type 15 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 15, 0x08 | 0x20 | 2);          /* rest 32, run 32, speed 2, facing left */
+    CHECK_EQ(s->y, 11 * 16 - 8); CHECK_EQ(s->vx, 2); CHECK_EQ(s->t0, 0x20); CHECK_EQ(s->t1, 0x20); CHECK_EQ(s->hits, 1);
+    CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 24);
+    int x = s->draw->x;
+    tick(32);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->draw->x, x);                  /* rested in place */
+    tick(32);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->draw->x, x - 32); CHECK(s->flags & 1);   /* ran 1 px a frame, turned */
+    drop_game();
+}
+
+void test_jumper_17_jumps_onto_a_wall(void) {                        /* type 17 */
+    CHECK(make_game());
+    sk_slot *s = spawn(280, 11 * 16, 17, 0x18 | 2 | 1);             /* rest 96, speed 2, facing right toward the wall at x 320 */
+    CHECK_EQ(s->x, 272); CHECK_EQ(s->y, 11 * 16 - 8); CHECK(s->flags & 1);
+    tick(96);
+    CHECK_EQ(aux_c(s), 1);
+    int i = 0;
+    while (aux_c(s) == 1 && i++ < 60) tick(1);
+    CHECK_EQ(aux_c(s), 2); CHECK(s->flags & 4);                      /* the wall ahead: up it goes */
+    drop_game();
+}

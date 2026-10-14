@@ -162,6 +162,22 @@ int ground_ahead(const sk_game *g, const sk_slot *s, int facing) {   /* 0x10DCFC
     return res;
 }
 
+bool solid_column_ahead(const sk_game *g, const sk_slot *s, int facing, int dx) {   /* sub_10DC0A */
+    const sk_draw *d = s->draw;
+    if (!d) return false;
+    int x = d->x + dx - 3 + (facing ? 4 : 0), y = (d->y + d->h - 4) & 0xFFFF;
+    int cx = (x & 0xFFF0) >> 4, cy = y >> 4, r0 = y & 15;
+    uint16_t bit = (uint16_t)(0x8000u >> (x & 15));
+    for (int k = 0; k < 16; k++) {                     /* the original reads on past the cell's 16 rows into the tile data that
+                                                          follows; the port reads the cell below */
+        int r = r0 + k;
+        uint16_t w;
+        row_word(g, cx, cy + (r >> 4), r & 15, &w);
+        if (!(w & bit)) return false;
+    }
+    return true;
+}
+
 bool wall_ahead(const sk_game *g, const sk_slot *s, int facing) {   /* sub_10DC8E */
     const sk_draw *d = s->draw;
     if (!d) return false;

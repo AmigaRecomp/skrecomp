@@ -25,6 +25,11 @@ static const uint8_t hatchling_script[] = { 0, 4, 0, 6, 0, 1, 2, 3, 4, 5, 6, 7 }
 static const uint8_t flyer_script[] = { 0, 2, 0, 2, 0, 1 };                                   /* 0x10F368 */
 static const uint8_t flyer_drop_script[] = { 0, 2, 0, 4, 0, 0, 0, 0 };                        /* 0x10F36E */
 
+static const uint8_t pot_script[] = { 0, 2, 0, 150, 0, 1 };                                   /* 0x10F472 */
+static const uint8_t rat_data[18] = { 0, 3, 0, 6, 1, 2, 3, 8, 9, 10, 0, 2, 0, 7, 4, 5, 11, 12 };   /* 0x10F7EC: run, then jump */
+#define RAT_RUN (rat_data + 0)      /* 0x10F7EC (0x10F57E is the same bytes) */
+#define RAT_JUMP (rat_data + 10)    /* 0x10F7F6 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 
@@ -446,9 +451,127 @@ static void obj_wreck_update(sk_game *g, sk_slot *s, int index) {             /*
     free_if_far(g, s);
 }
 
+/* ---- type 13: the pot (slot 5, 32 x 27, READING): rocks on its ledge; on frame 0 with the kid below, it falls on him ---- */
+static void obj_pot_init(sk_game *g, sk_slot *s, int x, int y) {              /* 0x10F3B0 */
+    init_object_slot(g, s, x, y + 8, s->type4);
+    s->vx = 0; s->vy = 0;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 5);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 27, f, 1);                                  /* frames_32x27 */
+}
+static void obj_pot_update(sk_game *g, sk_slot *s, int index) {               /* 0x10F3DA */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (s->aux == 2) touch_player(g, d->x, d->y, 32, 32);           /* falling */
+    else {
+        s->vx = 0;
+        if (!(g->frame_ticks & 3)) { s->vx = 2; s->flags ^= 1; }    /* the rock */
+        int wrapped = 0;
+        step_animation(s, pot_script, 0, &wrapped);
+        uint16_t kx = (uint16_t)g->player.x, lo = (uint16_t)(d->x - 0x14);
+        if (kx < lo || kx >= (uint16_t)(lo + 0x48)) s->aux = 0;
+        else if (s->aux == 0) {
+            if (s->frame == 0) { s->vy = 10; s->flags |= 6; s->aux = 2; }
+            else s->aux = 1;                                        /* the kid stays under it: once only */
+        }
+    }
+    despawn_if_far(g, s);
+}
+
+/* ---- types 15 and 17: the rat (slot 7, 32 x 24, READING): rests, then runs; 17 also jumps onto a wall ahead ---- */
+static void rat_init(sk_game *g, sk_slot *s, int x, int y) {
+    init_object_slot(g, s, x, y, s->type4);
+    int p = g->objs.marker_param & 0xFF;
+    s->flags = (int16_t)((s->flags & ~0xFF) | (p & 1));             /* move.b: the whole flags byte */
+    s->vx = (int16_t)(p & 6);
+    s->t0 = (int16_t)((uint8_t)((p & 0x18) << 2));                  /* the rest, frames (a byte at +0x14) */
+    s->t1 = (int16_t)(p & 0xE0);                                    /* the run */
+    s->flags |= 8;
+    s->vy = 0;
+    set_aux_d(s, s->t0);
+    s->hits = 1;
+    const uint8_t *f = res(g, 7);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 24, f, 0);                                  /* frames_32x24 */
+}
+static void rat_turn_check(sk_slot *s) {
+    set_aux_d(s, aux_d(s) - 1);
+    if (aux_d(s)) return;
+    set_aux_d(s, s->t0);
+    set_aux_c(s, 0);
+    s->flags ^= 1;
+}
+static void rat_rest(sk_slot *s) {
+    set_frame2(s, 0, 7, s->flags);
+    set_aux_d(s, aux_d(s) - 1);
+    if (aux_d(s)) return;
+    set_aux_d(s, s->t1);
+    set_aux_c(s, 1);
+}
+static void obj_rat_init(sk_game *g, sk_slot *s, int x, int y) { rat_init(g, s, x, y - 8); }               /* 0x10F478 */
+static void obj_rat_update(sk_game *g, sk_slot *s, int index) {               /* 0x10F4DA */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    if (g->ball_kicked_flag) ball_kill_check(g, s, 14, 0x200);
+    if (s->flags & 2) { apply_velocity(s); despawn_if_far(g, s); return; }
+    if (!aux_c(s)) rat_rest(s);
+    else {
+        apply_velocity(s);
+        int wrapped = 0;
+        step_animation(s, RAT_RUN, s->flags, &wrapped);
+        rat_turn_check(s);
+    }
+    touch_player(g, d->x, d->y, 20, 20);
+    ball_hits_object(g, s, 6, 4, 20, 20, 14, 0x200);
+    despawn_if_far(g, s);
+}
+static void obj_jumper_init(sk_game *g, sk_slot *s, int x, int y) { rat_init(g, s, x - 8, y - 8); }     /* 0x10F63E */
+static void obj_jumper_update(sk_game *g, sk_slot *s, int index) {            /* 0x10F6A2 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    if (g->ball_kicked_flag) ball_kill_check(g, s, 14, 0x400);
+    if (s->flags & 2) { apply_velocity(s); despawn_if_far(g, s); return; }
+    if (aux_c(s) == 1) {
+        int r = probe_rows_below2(g, s, 16, 0);
+        if (r > 0) {                                                /* off a ledge: falling, no faster than its drop */
+            set_frame2(s, 6, 13, s->flags);
+            s->flags |= 4;
+            if ((uint16_t)(2 * r) < (uint16_t)s->vy) s->vy = (int16_t)(2 * r);
+        } else {
+            s->vy = 0;
+            s->flags &= ~4;
+            step_animation_simple(s, RAT_RUN, s->flags);
+        }
+        apply_velocity(s);
+        if (solid_column_ahead(g, s, s->flags & 1, 16 + ((s->flags & 1) ? 30 : -30)) && aux_d(s) >= 20) {
+            s->vy = -12;                                            /* a wall 30 px ahead: up onto it */
+            s->flags |= 4;
+            set_aux_c(s, 2);
+            s->anim_tick = 0; s->anim_index = 0;
+        }
+        rat_turn_check(s);
+    } else if (aux_c(s) == 2) {
+        apply_velocity(s);
+        step_animation_simple(s, RAT_JUMP, s->flags);
+        if (s->vy >= 0) set_aux_c(s, 1);
+        rat_turn_check(s);
+    } else rat_rest(s);
+    touch_player(g, d->x, d->y, 20, 20);
+    ball_hits_object(g, s, 6, 4, 20, 20, 14, 0x400);
+    despawn_if_far(g, s);
+}
+
 void obj_usa_install(void) {
     object_init_table[3] = obj_hedgehog_init;          object_update_table[3] = obj_hedgehog_update;
     object_init_table[7] = obj_skater_init;            object_update_table[7] = obj_skater_update;
+    object_init_table[13] = obj_pot_init;              object_update_table[13] = obj_pot_update;
+    object_init_table[15] = obj_rat_init;              object_update_table[15] = obj_rat_update;
+    object_init_table[17] = obj_jumper_init;           object_update_table[17] = obj_jumper_update;
     object_init_table[14] = obj_flyer_init;            object_update_table[14] = obj_flyer_update;
     object_init_table[119] = obj_wreck_init;           object_update_table[119] = obj_wreck_update;
     object_init_table[29] = obj_bouncer_init;          object_update_table[29] = obj_bouncer_update;
