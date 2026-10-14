@@ -301,3 +301,22 @@ void test_russia_run_without_a_crash(void) {                        /* ROM-backe
         play_close(&p);
     }
 }
+
+void test_japan_run_without_a_crash(void) {                         /* ROM-backed: levels 18..22 */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    for (int lv = 18; lv <= 22; lv++) {
+        sk_args a = { .roms = roms, .level = lv, .scale = 1, .section = -1, .frames = 2000,
+                      .script = ".180,R300,RU20,R400,RF3,R600,RU20,L200,R300" };
+        static sk_play p; sk_err e = {0};
+        CHECK(play_open(&p, &a, &e));
+        for (int i = 0; i < a.frames; i++) { play_step(&p, 0); if (i % 50 == 0) play_draw(&p); }
+        play_draw(&p);
+        static uint32_t out[SK_SCREEN_W * SK_SCREEN_H]; play_present(&p, out);
+        CHECK(!p.load_failed);
+        CHECK(p.game.object_count <= 16);
+        printf("level %d: kid %d,%d state %d lives %d score %06X objects %d bg_x %d level %d\n", lv, p.game.player.x, p.game.player.y,
+               p.game.player.state, p.game.player.lives, p.game.player.score, p.game.object_count, p.game.view.bg_x, p.game.train_level);
+        play_close(&p);
+    }
+}

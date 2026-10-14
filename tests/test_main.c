@@ -315,6 +315,9 @@ void test_train_tunnel_fades_down_and_back(void);
 void test_backdrop_streams_new_columns_from_the_window(void);
 void test_battle_ship_rocks_and_drifts(void);
 void test_train_exit_walks_left_once_stopped(void);
+void test_japan_markers_spawn_real_types(void);
+void test_japan_slots_cover_the_frames(void);
+void test_japan_run_without_a_crash(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -627,6 +630,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "backdrop_streams_new_columns_from_the_window", test_backdrop_streams_new_columns_from_the_window },
     { "battle_ship_rocks_and_drifts", test_battle_ship_rocks_and_drifts },
     { "train_exit_walks_left_once_stopped", test_train_exit_walks_left_once_stopped },
+    { "japan_markers_spawn_real_types", test_japan_markers_spawn_real_types },
+    { "japan_slots_cover_the_frames", test_japan_slots_cover_the_frames },
+    { "japan_run_without_a_crash", test_japan_run_without_a_crash },
 };
 
 int main(int argc, char **argv) {

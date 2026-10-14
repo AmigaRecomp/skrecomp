@@ -365,7 +365,10 @@ set(SK_TEST_NAMES
   train_tunnel_fades_down_and_back
   backdrop_streams_new_columns_from_the_window
   battle_ship_rocks_and_drifts
-  train_exit_walks_left_once_stopped)
+  train_exit_walks_left_once_stopped
+  japan_markers_spawn_real_types
+  japan_slots_cover_the_frames
+  japan_run_without_a_crash)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
