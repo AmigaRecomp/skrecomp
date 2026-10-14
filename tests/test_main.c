@@ -425,6 +425,7 @@ void test_replay_cue_restarts_at_a_position_keeping_the_samples(void);
 void test_intro_fade_steps_floor_toward_the_target(void);
 void test_intro_types_text_one_and_ends_on_a_key(void);
 void test_intro_plays_through_in_about_111_seconds(void);
+void test_play_starts_with_the_intro_and_fire_skips_it(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -847,6 +848,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "intro_fade_steps_floor_toward_the_target", test_intro_fade_steps_floor_toward_the_target },
     { "intro_types_text_one_and_ends_on_a_key", test_intro_types_text_one_and_ends_on_a_key },
     { "intro_plays_through_in_about_111_seconds", test_intro_plays_through_in_about_111_seconds },
+    { "play_starts_with_the_intro_and_fire_skips_it", test_play_starts_with_the_intro_and_fire_skips_it },
 };
 
 int main(int argc, char **argv) {

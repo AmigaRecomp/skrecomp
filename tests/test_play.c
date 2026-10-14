@@ -465,7 +465,7 @@ void test_bonus_level_game_over_and_direct_start(void) {            /* ROM-backe
 void test_play_starts_at_the_language_screen_and_the_title(void) {   /* ROM-backed: start-up, level_session, 0x103FC0 */
     const char *roms = getenv("SOCCERKID_ROMS");
     if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
-    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    sk_args a = { .roms = roms, .level = -1, .no_intro = true, .scale = 1, .section = -1 };
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     CHECK_EQ(p.fe.mode, SK_FE_LANGUAGE);
@@ -494,7 +494,7 @@ static void to_title(sk_play *p) {                                  /* language 
 void test_title_idle_runs_the_hiscore_pan_then_the_demo(void) {    /* ROM-backed: level_session's attract cycle */
     const char *roms = getenv("SOCCERKID_ROMS");
     if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
-    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    sk_args a = { .roms = roms, .level = -1, .no_intro = true, .scale = 1, .section = -1 };
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     to_title(&p);
@@ -524,7 +524,7 @@ void test_title_idle_runs_the_hiscore_pan_then_the_demo(void) {    /* ROM-backed
 void test_options_tutorial_runs_and_returns(void) {                 /* ROM-backed: run_demo_level_b */
     const char *roms = getenv("SOCCERKID_ROMS");
     if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
-    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    sk_args a = { .roms = roms, .level = -1, .no_intro = true, .scale = 1, .section = -1 };
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     to_title(&p);
@@ -543,7 +543,7 @@ void test_options_tutorial_runs_and_returns(void) {                 /* ROM-backe
 void test_a_qualifying_score_asks_for_a_name(void) {               /* ROM-backed: attract_hiscores after a game */
     const char *roms = getenv("SOCCERKID_ROMS");
     if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
-    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    sk_args a = { .roms = roms, .level = -1, .no_intro = true, .scale = 1, .section = -1 };
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     to_title(&p);
@@ -570,7 +570,7 @@ void test_save_before_a_map_and_resume_it(void) {                   /* ROM-backe
     char path[256];
     snprintf(path, sizeof path, "%s/sk_test_SaveGame", getenv("TMPDIR") ? getenv("TMPDIR") : "/tmp");
     remove(path);
-    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1, .save_path = path };
+    sk_args a = { .roms = roms, .level = -1, .no_intro = true, .scale = 1, .section = -1, .save_path = path };
     static sk_play p; sk_err e = {0};
     CHECK(play_open(&p, &a, &e));
     to_title(&p);
@@ -607,4 +607,19 @@ void test_save_before_a_map_and_resume_it(void) {                   /* ROM-backe
     CHECK_EQ(p.pic.kind, SK_PIC_LOADING); CHECK_EQ(p.next.kind, SK_RUN_LEVEL); CHECK_EQ(p.next.data_index, 6);   /* RUINS 1, past the map */
     play_close(&p);
     remove(path);
+}
+
+void test_play_starts_with_the_intro_and_fire_skips_it(void) {     /* ROM-backed: anim, then soccerkid */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    CHECK(p.intro != NULL); CHECK_EQ(p.fe.mode, SK_FE_OFF);
+    for (int i = 0; i < 50; i++) play_step(&p, 0);
+    CHECK(p.intro != NULL);
+    play_step(&p, SK_IN_FIRE);                                      /* text 1 is being typed: typewriter_wait polls */
+    CHECK(p.intro == NULL); CHECK_EQ(p.fe.mode, SK_FE_LANGUAGE);
+    CHECK(!p.snd.music_use4);                                       /* the intro's music stopped and let go */
+    play_close(&p);
 }

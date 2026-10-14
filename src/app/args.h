@@ -24,6 +24,7 @@ typedef struct {
     int near_type, near_n;      /* --near TYPE[,N]: start beside the N-th marker of TYPE (<= 0: off) */
     bool markers;               /* --markers: list the level's object markers and exit */
     const char *save_path;      /* --save FILE: the SaveGame file (default: the user's data folder) */
+    bool no_intro;              /* --no-intro: start at the language screen */
     bool new_game;              /* --new-game: straight into a new game at world map 0, no frontend */
     int cup;                    /* --cup MASK: the cup pieces held at the start (0..31), -1 = none given */
     bool help, version;

@@ -490,7 +490,8 @@ set(SK_TEST_NAMES
   replay_cue_restarts_at_a_position_keeping_the_samples
   intro_fade_steps_floor_toward_the_target
   intro_types_text_one_and_ends_on_a_key
-  intro_plays_through_in_about_111_seconds)
+  intro_plays_through_in_about_111_seconds
+  play_starts_with_the_intro_and_fire_skips_it)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

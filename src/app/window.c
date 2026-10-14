@@ -105,6 +105,10 @@ static bool poll_events(sk_window *w, sk_scene *s, sk_play *p) {
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
         if (ev.type == SDL_EVENT_QUIT) return false;
+        if (p && p->intro && ((ev.type == SDL_EVENT_KEY_DOWN && ev.key.key != SDLK_ESCAPE) || ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN)) {
+            p->typed_key = 1;                                   /* frame_interrupt: any key, the mouse button or fire */
+            continue;
+        }
         if (ev.type == SDL_EVENT_KEY_DOWN && p && p->save.mode != SK_SAVE_OFF) {
             if (ev.key.key == SDLK_ESCAPE) { p->esc_key = true; continue; }
             int c = window_typed_key(ev.key.key);

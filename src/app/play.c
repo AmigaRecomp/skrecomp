@@ -96,6 +96,13 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     if (a->cup >= 0) p->game.cup_pieces = (uint8_t)a->cup;
     if (a->level < 0 && !a->new_game) {                             /* the frontend: the language screen first */
         p->with_frontend = true;
+        if (!a->no_intro) {                                         /* s/startup-sequence: anim first */
+            p->intro = calloc(1, sizeof *p->intro);
+            sk_err ie = {0};
+            if (p->intro && intro_open(p->intro, &p->scene.disks, &p->snd, &ie)) return true;
+            fprintf(stderr, "soccerkid: no intro: %s\n", p->intro ? ie.msg : "out of memory");
+            free(p->intro); p->intro = NULL;
+        }
         if (!frontend_language(&p->fe, &p->scene.sk, &p->scene.disks, e)) { play_close(p); return false; }
         return true;
     }
@@ -428,6 +435,21 @@ static void sound_step(sk_play *p) {                                /* the VBL's
 void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->load_failed) return;
     p->game.snd = &p->snd;
+    if (p->intro) {                                                 /* the intro: any key or fire ends it at its polling points */
+        uint8_t in = p->script ? script_input(p) : keyboard_input;
+        intro_step(p->intro, in != 0 || p->typed_key != 0 || p->fe_keys != 0);
+        p->typed_key = 0;
+        if (p->intro->done) {                                       /* exit_intro: music_stop, then soccerkid's language screen */
+            title_music(p, false);
+            p->snd.pt.master_on = false;
+            intro_free(p->intro); free(p->intro); p->intro = NULL;
+            sk_err e = {0};
+            if (!frontend_language(&p->fe, &p->scene.sk, &p->scene.disks, &e)) fail(p, &e);
+            p->fe.prev_input = 0xFF;
+        }
+        sound_step(p);
+        return;
+    }
     if (p->fe.mode != SK_FE_OFF) {
         frontend_frame(p, p->script ? script_input(p) : keyboard_input);
         sound_step(p);
@@ -513,7 +535,7 @@ static void draw_board(sk_play *p) {
 }
 
 void play_draw(sk_play *p) {
-    if (p->pic.kind != SK_PIC_OFF || p->fe.mode != SK_FE_OFF || p->save.mode != SK_SAVE_OFF) return;   /* pictures_present / frontend_present draw the mode */
+    if (p->pic.kind != SK_PIC_OFF || p->fe.mode != SK_FE_OFF || p->save.mode != SK_SAVE_OFF || p->intro) return;   /* pictures_present / frontend_present draw the mode */
     sk_fb *fb = &p->scene.fb;
     const sk_level *lv = &p->scene.level;
     fb_clear(fb, 0);
@@ -556,6 +578,7 @@ void play_draw(sk_play *p) {
 }
 
 void play_present(sk_play *p, uint32_t *out) {
+    if (p->intro) { intro_present(p->intro, out); return; }
     if (p->save.mode != SK_SAVE_OFF) { savescreen_present(&p->save, out); return; }
     if (p->fe.mode != SK_FE_OFF) { frontend_present(&p->fe, out); return; }
     if (p->pic.kind != SK_PIC_OFF) { pictures_present(&p->pic, out); return; }
@@ -565,6 +588,7 @@ void play_present(sk_play *p, uint32_t *out) {
 }
 
 void play_close(sk_play *p) {
+    if (p->intro) { intro_free(p->intro); free(p->intro); p->intro = NULL; }
     pictures_free(&p->pic);
     frontend_free(&p->fe);
     sound_free(&p->snd);
