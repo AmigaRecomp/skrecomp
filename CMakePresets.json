@@ -1,0 +1,19 @@
+{
+  "version": 3,
+  "configurePresets": [
+    { "name": "base", "hidden": true, "generator": "Ninja", "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" } },
+    { "name": "macos", "inherits": "base", "displayName": "macOS (Homebrew: sdl3, ninja, cmake)",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" } },
+    { "name": "linux", "inherits": "base", "displayName": "Linux (SDL3 and zlib development packages)",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" } },
+    { "name": "windows", "inherits": "base", "displayName": "Windows (MSYS2 UCRT64: gcc, SDL3, zlib)",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" } }
+  ],
+  "buildPresets": [
+    { "name": "macos", "configurePreset": "macos" },
+    { "name": "macos-app", "configurePreset": "macos", "targets": [ "app" ] },
+    { "name": "linux", "configurePreset": "linux" },
+    { "name": "windows", "configurePreset": "windows" }
+  ]
+}

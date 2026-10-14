@@ -454,6 +454,7 @@ void test_remap_text_fits_the_screen(void);
 void test_remap_help_stays_above_the_hud(void);
 void test_disks_read_from_an_archive(void);
 void test_disks_extract_matches_the_disks(void);
+void test_scale_up_repeats_pixels_and_down_averages_them(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -905,6 +906,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "remap_help_stays_above_the_hud", test_remap_help_stays_above_the_hud },
     { "disks_read_from_an_archive", test_disks_read_from_an_archive },
     { "disks_extract_matches_the_disks", test_disks_extract_matches_the_disks },
+    { "scale_up_repeats_pixels_and_down_averages_them", test_scale_up_repeats_pixels_and_down_averages_them },
 };
 
 int main(int argc, char **argv) {

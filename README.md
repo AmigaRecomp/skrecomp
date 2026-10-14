@@ -7,8 +7,22 @@ live in the sibling repository `../re`.
 
 ## Build
 
-Requirements: a C11 compiler, CMake 3.24 or newer, SDL3 and zlib (on macOS:
-`brew install sdl3` and the system zlib).
+Requirements: a C11 compiler, CMake 3.24 or newer, Ninja, SDL3 and zlib.
+
+| system | install | build |
+|---|---|---|
+| macOS | `brew install sdl3 ninja cmake` (zlib is in the system) | `scripts/build.sh ../SourceROMS` |
+| Linux | SDL3 and zlib development packages, e.g. `libsdl3-dev zlib1g-dev ninja-build cmake` | `scripts/build.sh ../SourceROMS` |
+| Windows | MSYS2, in its UCRT64 shell: `pacman -S mingw-w64-ucrt-x86_64-{gcc,SDL3,zlib,cmake,ninja}` | `scripts/build.sh ../SourceROMS` |
+
+`scripts/build.sh` picks the CMake preset for the system (`macos`, `linux`, `windows` in `CMakePresets.json`, output in
+`build/<preset>/`). With a directory of your disk images it runs both steps below; on macOS it also packs
+`build/macos/Soccer Kid.app` (`cmake --build --preset macos-app`): the game with SDL3 inside the app, signed ad hoc, and an
+icon cut from the title picture of your own data (the kid, by `skicon`). On Windows `SDL3.dll` is copied next to
+`soccerkid.exe`. Only the macOS build is tested here; the Linux and Windows presets are written for those systems' usual
+toolchains.
+
+By hand:
 
 ```sh
 cmake -B build -G Ninja

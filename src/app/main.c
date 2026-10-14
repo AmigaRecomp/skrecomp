@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>                                     /* the platform entry point (WinMain on Windows) */
 #include "game/player.h"
 #include "game/world.h"
 #include "app/args.h"

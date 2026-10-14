@@ -7,8 +7,17 @@ set(CMAKE_C_EXTENSIONS OFF)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
-add_compile_options(-Wall -Wextra -Werror -Wshadow -Wconversion -Wno-sign-conversion)
-add_compile_definitions(_POSIX_C_SOURCE=200809L _DARWIN_C_SOURCE)
+set(SK_VERSION 1.0)
+if(MSVC)
+  add_compile_options(/W3)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+else()
+  add_compile_options(-Wall -Wextra -Wshadow -Wconversion -Wno-sign-conversion)
+  if(CMAKE_C_COMPILER_ID MATCHES "Clang")                # warnings are errors where the port is tested (Clang, macOS)
+    add_compile_options(-Werror)
+  endif()
+endif()
+add_compile_definitions(_POSIX_C_SOURCE=200809L _DARWIN_C_SOURCE _DEFAULT_SOURCE)
 
 find_package(SDL3 CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -32,6 +41,7 @@ add_library(skcore STATIC
   src/gfx/palette.c
   src/gfx/present.c
   src/gfx/png.c
+  src/gfx/scale.c
   src/gfx/sprites.c
   src/app/args.c
   src/app/scene.c
@@ -106,6 +116,24 @@ endif()
 add_executable(soccerkid src/app/main.c ${SK_EMBEDDED_C})
 add_dependencies(soccerkid embed_data)
 target_link_libraries(soccerkid PRIVATE skcore SDL3::SDL3)
+if(WIN32)                                               # a window, no console; SDL3.dll next to the program
+  set_target_properties(soccerkid PROPERTIES WIN32_EXECUTABLE TRUE)
+  add_custom_command(TARGET soccerkid POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:soccerkid> $<TARGET_FILE_DIR:soccerkid>
+    COMMAND_EXPAND_LISTS)
+endif()
+
+if(APPLE)                                               # cmake --build build --target app: Soccer Kid.app
+  add_executable(skicon tools/skicon.c)
+  target_link_libraries(skicon PRIVATE skcore)
+  add_custom_target(app
+    COMMAND ${CMAKE_COMMAND} -DBIN=$<TARGET_FILE:soccerkid> -DSKICON=$<TARGET_FILE:skicon>
+            -DDATA=${CMAKE_SOURCE_DIR}/data/soccerkid.dat -DPLIST=${CMAKE_SOURCE_DIR}/packaging/Info.plist.in
+            -DVERSION=${SK_VERSION} -DOUT=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/packaging/make_app.cmake
+    DEPENDS soccerkid skicon
+    COMMENT "Packing Soccer Kid.app"
+    VERBATIM)
+endif()
 
 enable_testing()
 add_subdirectory(tests)

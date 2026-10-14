@@ -66,7 +66,8 @@ add_executable(sk_tests
   test_anim.c
   test_intro.c
   test_controls.c
-  test_remap.c)
+  test_remap.c
+  test_scale.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -521,7 +522,8 @@ set(SK_TEST_NAMES
   remap_text_fits_the_screen
   remap_help_stays_above_the_hud
   disks_read_from_an_archive
-  disks_extract_matches_the_disks)
+  disks_extract_matches_the_disks
+  scale_up_repeats_pixels_and_down_averages_them)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
