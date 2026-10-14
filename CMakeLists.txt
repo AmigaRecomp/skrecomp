@@ -27,6 +27,7 @@ add_library(skcore STATIC
   src/formats/bobs.c
   src/formats/screens.c
   src/formats/mapsprites.c
+  src/formats/anim.c
   src/gfx/framebuffer.c
   src/gfx/palette.c
   src/gfx/present.c

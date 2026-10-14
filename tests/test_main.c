@@ -418,6 +418,9 @@ void test_resume_list_escape_cancels_and_fire_picks(void);
 void test_save_before_a_map_and_resume_it(void);
 void test_window_typed_keys_for_the_save_name(void);
 void test_replay_master_volume_ramps_two_a_tick(void);
+void test_anim_byterun1_body_fills_five_planes_row_by_row(void);
+void test_anim_op5_delta_writes_down_columns(void);
+void test_anim_real_files_hold_eight_animations(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -833,6 +836,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "save_before_a_map_and_resume_it", test_save_before_a_map_and_resume_it },
     { "window_typed_keys_for_the_save_name", test_window_typed_keys_for_the_save_name },
     { "replay_master_volume_ramps_two_a_tick", test_replay_master_volume_ramps_two_a_tick },
+    { "anim_byterun1_body_fills_five_planes_row_by_row", test_anim_byterun1_body_fills_five_planes_row_by_row },
+    { "anim_op5_delta_writes_down_columns", test_anim_op5_delta_writes_down_columns },
+    { "anim_real_files_hold_eight_animations", test_anim_real_files_hold_eight_animations },
 };
 
 int main(int argc, char **argv) {

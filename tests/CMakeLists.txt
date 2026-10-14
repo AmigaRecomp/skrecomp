@@ -62,7 +62,8 @@ add_executable(sk_tests
   test_savegame.c
   test_attract.c
   test_obj_front.c
-  test_savescreen.c)
+  test_savescreen.c
+  test_anim.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -481,7 +482,10 @@ set(SK_TEST_NAMES
   resume_list_escape_cancels_and_fire_picks
   save_before_a_map_and_resume_it
   window_typed_keys_for_the_save_name
-  replay_master_volume_ramps_two_a_tick)
+  replay_master_volume_ramps_two_a_tick
+  anim_byterun1_body_fills_five_planes_row_by_row
+  anim_op5_delta_writes_down_columns
+  anim_real_files_hold_eight_animations)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
