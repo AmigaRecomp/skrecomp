@@ -344,7 +344,8 @@ set(SK_TEST_NAMES
   crab_18_wakes_attacks_and_explodes
   random_matches_the_shift_register
   popper_33_appears_throws_and_sinks
-  walker_80_walks_and_turns)
+  walker_80_walks_and_turns
+  press_19_rises_slams_and_fills_its_column)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

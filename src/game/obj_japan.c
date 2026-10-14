@@ -7,6 +7,7 @@
 #include "game/obj_italy.h"
 #include "game/platforms.h"
 #include "game/resources.h"
+#include "game/world.h"
 
 static const uint8_t insect_script[] = { 0, 4, 0, 2, 0, 1, 2, 3, 4, 5, 6, 7 };                 /* 0x11088E */
 static const uint8_t th67_idle_script[] = { 0, 2, 0, 12, 0, 1, 2, 3 };                         /* 0x118C1C */
@@ -392,11 +393,55 @@ static void obj_walker80_update(sk_game *g, sk_slot *s, int index) {          /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 19: the press (slot 21): rises (param & 7) * 16, slams down; its shaft is tile 0x17F while it falls ---- */
+static void obj_press_init(sk_game *g, sk_slot *s, int x, int y) {            /* 0x110122 */
+    init_object_slot(g, s, x - 8, y, s->type4);
+    s->vx = 0;
+    s->t0 = (int16_t)((g->objs.marker_param & 7) << 4);
+    s->vy = -2;
+    set_aux_c(s, 0);
+    const uint8_t *f = res(g, 21);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 16, f, 1);                                  /* sub_107A7C */
+}
+static void obj_press_update(sk_game *g, sk_slot *s, int index) {             /* 0x110160 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    int d6 = (int16_t)(d->y - s->y);
+    if (d6 >= 8 && s->vy != -2) { play_sfx(g, 0x16); s->vy = -2; }  /* down: back up */
+    else if (!(d6 > -(s->t0 + 1))) s->vy = 16;                       /* up: slam */
+    int tile = 0x17F, state = 1;
+    if (s->vy < 0) { tile = 0; state = 0; }
+    int before = d->y;
+    d->y = (int16_t)(d->y + (s->vy >> 1));
+    int y = d->y, dr = (int16_t)((d->y & 0xFFF0) - (before & 0xFFF0));
+    if (dr != 0) {                                                  /* a new row: fill it falling, clear the old rising */
+        if (dr < 0) y = before;
+        set_tile_at(g, d->x + 8, y, tile, state);
+        g->mask.dirty = true;
+        g->bw.mask_dirty = true;
+    }
+    if (s->vy >= 0) {
+        g->player.fall_flags |= 1;                                  /* bset #0 at 0x302B6D: a hit squashes the kid */
+        touch_player(g, d->x + 2, d->y, 28, 16);
+        g->player.fall_flags &= (uint8_t)~1;
+    }
+    if (object_offscreen(g, d->x, d->y, 160) >= 0) return;
+    fill_cells(g, s->x + 8, s->y - s->t0, 0x17F, 1, (uint16_t)s->t0 >> 4);   /* off the view: the whole shaft solid */
+    if (s->marker_cell >= 0) {                                      /* ori.b #$c0 on the marker cell: it never comes back */
+        g->world.live[s->marker_cell] |= 0xC000;
+        g->world.tile[s->marker_cell] &= (uint16_t)~SK_MARKER_BIT;
+    }
+    free_object(g, s);
+}
+
 void obj_japan_install(void) {
     object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
     object_init_table[18] = obj_crab_init;             object_update_table[18] = obj_crab_update;
     object_init_table[33] = obj_popper_init;           object_update_table[33] = obj_popper_update;
     object_init_table[80] = obj_walker80_init;         object_update_table[80] = obj_walker80_update;
+    object_init_table[19] = obj_press_init;            object_update_table[19] = obj_press_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;

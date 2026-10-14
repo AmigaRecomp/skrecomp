@@ -156,3 +156,18 @@ void test_walker_80_walks_and_turns(void) {                         /* type 80 *
     CHECK_EQ(s->draw->x, x - 8);                                     /* facing left, 2 px a frame */
     drop_game();
 }
+
+void test_press_19_rises_slams_and_fills_its_column(void) {         /* type 19 */
+    CHECK(make_game());
+    sk_slot *s = spawn(168, 11 * 16, 19, 3);                         /* travels 48 px */
+    CHECK_EQ(s->x, 160); CHECK_EQ(s->t0, 48); CHECK_EQ(s->vy, -2); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 16);
+    int i = 0;
+    while (s->vy != 16 && i++ < 100) tick(1);
+    CHECK_EQ(s->vy, 16); CHECK((int16_t)(s->draw->y - s->y) <= -41);   /* reached -49, then the first 8 px of the slam */
+    int cell = ((s->y - 16) >> 4) * g_g.world.w + ((s->draw->x + 8) >> 4);
+    i = 0;
+    while (s->vy != -2 && i++ < 40) tick(1);
+    CHECK_EQ(s->vy, -2); CHECK_EQ(g_g.sfx_last, 0x16);               /* landed: rising again */
+    CHECK_EQ(g_g.world.tile[cell] & SK_INDEX_MASK, 0x17F);           /* its shaft filled on the way down */
+    drop_game();
+}
