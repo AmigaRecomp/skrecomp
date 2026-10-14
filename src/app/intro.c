@@ -56,6 +56,9 @@ static bool fade_tick(sk_intro *it) {                            /* fade_palette
 
 static void tw_start(sk_intro *it, int text) {                  /* typewriter_start 0x100B62 */
     it->tw_text = image_ptr(&it->anim, texts[text], 1);
+    it->tw_end = NULL;
+    for (uint32_t k = 1; it->tw_text && k <= 512; k++)           /* port guard: the text ends inside its hunk */
+        if (image_ptr(&it->anim, texts[text], k)) it->tw_end = it->tw_text + k; else break;
     it->tw_active = it->tw_text != NULL;
     it->tw_cell = 0; it->tw_line = 0; it->tw_countdown = 0;
 }
@@ -79,6 +82,7 @@ static void tw_tick(sk_intro *it) {                             /* typewriter_ti
     if (!it->tw_active) return;
     if (it->tw_countdown) { it->tw_countdown--; return; }
     for (;;) {
+        if (it->tw_text >= it->tw_end) { it->tw_active = false; return; }
         uint8_t c = *it->tw_text;
         if (!c) { it->tw_active = false; return; }
         it->tw_text++;

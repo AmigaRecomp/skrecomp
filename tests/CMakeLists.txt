@@ -501,7 +501,8 @@ set(SK_TEST_NAMES
   escape_is_ignored_in_a_demo_or_while_the_curtain_moves
   f10_pauses_with_the_help_box
   escape_leaves_a_game_for_the_title_and_quits_from_the_title
-  typed_keys_queue_between_frames)
+  typed_keys_queue_between_frames
+  anim_open_survives_huge_chunk_lengths)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

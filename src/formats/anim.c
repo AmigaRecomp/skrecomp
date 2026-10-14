@@ -9,15 +9,15 @@ bool anim_open(const uint8_t *file, size_t n, int index, sk_anim *a, sk_err *e) 
     if (n < 4 || index < 0 || (size_t)(index + 1) * 4 > be32(file) || (size_t)(index + 1) * 4 > n) return sk_fail(e, "anim: no animation %d", index);
     uint32_t at = be32(file + 4 * (size_t)index);
     if ((size_t)at + 12 > n || !tag(file + at, "FORM") || !tag(file + at + 8, "ANIM")) return sk_fail(e, "anim %d: not a FORM ANIM", index);
-    size_t end = at + 8 + be32(file + at + 4);
-    if (end > n) end = n;
+    size_t end = be32(file + at + 4) > n - at - 8 ? n : at + 8 + be32(file + at + 4);   /* compared as what is left: no wrap */
     for (size_t p = at + 12; p + 12 <= end; ) {                  /* the FORM ILBMs */
-        size_t form_end = p + 8 + be32(file + p + 4);
-        if (!tag(file + p, "FORM") || form_end > end) return sk_fail(e, "anim %d: a bad FORM at %zu", index, p);
+        size_t flen = be32(file + p + 4);
+        if (!tag(file + p, "FORM") || flen > end - p - 8) return sk_fail(e, "anim %d: a bad FORM at %zu", index, p);
+        size_t form_end = p + 8 + flen;
         sk_anim_frame f = { false, NULL, 0, NULL };
         for (size_t c = p + 12; c + 8 <= form_end; ) {           /* its chunks */
             size_t len = be32(file + c + 4);
-            if (c + 8 + len > form_end) break;
+            if (len > form_end - c - 8) break;
             if (tag(file + c, "CMAP") && len >= 96) f.cmap = file + c + 8;
             if (tag(file + c, "BODY")) { f.key = true; f.data = file + c + 8; f.n = len; }
             if (tag(file + c, "DLTA")) { f.data = file + c + 8; f.n = len; }

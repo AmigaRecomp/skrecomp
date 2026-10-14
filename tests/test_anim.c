@@ -61,3 +61,16 @@ void test_anim_open_bounds_the_offset_table(void) {
     sk_anim a; sk_err e = {0};
     CHECK(!anim_open(f, sizeof f, 4, &a, &e));
 }
+
+void test_anim_open_survives_huge_chunk_lengths(void) {
+    uint8_t f[4 + 12 + 12 + 8 + 8];
+    memset(f, 0, sizeof f);
+    f[3] = 4;                                                    /* one animation at offset 4 */
+    memcpy(f + 4, "FORM", 4); f[8] = 0; f[9] = 0; f[10] = 0; f[11] = 32; memcpy(f + 12, "ANIM", 4);
+    memcpy(f + 16, "FORM", 4); f[20] = 0xFF; f[21] = 0xFF; f[22] = 0xFF; f[23] = 0xF0; memcpy(f + 24, "ILBM", 4);   /* runs past */
+    sk_anim a; sk_err e = {0};
+    CHECK(!anim_open(f, sizeof f, 0, &a, &e));
+    memcpy(f + 16, "FORM", 4); f[20] = 0; f[21] = 0; f[22] = 0; f[23] = 20;                                      /* fits: one chunk */
+    memcpy(f + 28, "BODY", 4); f[32] = 0xFF; f[33] = 0xFF; f[34] = 0xFF; f[35] = 0xF8;                              /* a chunk running past */
+    CHECK(!anim_open(f, sizeof f, 0, &a, &e));                   /* no key frame, no read past */
+}

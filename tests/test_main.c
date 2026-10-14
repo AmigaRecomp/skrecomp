@@ -436,6 +436,7 @@ void test_escape_is_ignored_in_a_demo_or_while_the_curtain_moves(void);
 void test_f10_pauses_with_the_help_box(void);
 void test_escape_leaves_a_game_for_the_title_and_quits_from_the_title(void);
 void test_typed_keys_queue_between_frames(void);
+void test_anim_open_survives_huge_chunk_lengths(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -869,6 +870,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "f10_pauses_with_the_help_box", test_f10_pauses_with_the_help_box },
     { "escape_leaves_a_game_for_the_title_and_quits_from_the_title", test_escape_leaves_a_game_for_the_title_and_quits_from_the_title },
     { "typed_keys_queue_between_frames", test_typed_keys_queue_between_frames },
+    { "anim_open_survives_huge_chunk_lengths", test_anim_open_survives_huge_chunk_lengths },
 };
 
 int main(int argc, char **argv) {

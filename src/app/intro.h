@@ -25,7 +25,7 @@ typedef struct {
     bool quit_req;                      /* quit_flag: a key, the mouse or fire since the start */
     bool fade_in_flag; int cue_pending, hold_ticks; const char *pending_text;
     /* typewriter (0x100B62 / 0x100BB2) */
-    bool tw_active; int tw_countdown, tw_reload; const uint8_t *tw_text; int tw_cell, tw_line;
+    bool tw_active; int tw_countdown, tw_reload; const uint8_t *tw_text, *tw_end; int tw_cell, tw_line;
     /* the script */
     int op, sub, wait, node, fade_step;
     uint16_t fade_from[32]; const uint16_t *fade_to;
