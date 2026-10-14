@@ -71,7 +71,7 @@ static const sk_motion fboss_motions[19] = {                                    
 static const uint8_t fboss_pair_script[] = { 0, 2, 0, 4, 0, 0, 1, 1 };                         /* 0x114D44 */
 static const int16_t rock_delays[4] = { 0x50, 0x6E, 0x14, 0x32 };                           /* 0x114F42 */
 
-static const uint8_t warning_script[] = { 0, 8, 0, 5, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF };   /* 0x111646 */
+static const uint8_t warning_script[] = { 0, 8, 0, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0 };   /* 0x111646: on 10, off 5 */
 static const uint8_t passer_steps[] = { 5, 20, 4, 20, 3, 20, 0xFF, 0, 2, 0xEC, 1, 0xEC, 0, 0xEC, 0, 0xEC, 0, 0xEC, 0, 0xEC };   /* 0x111728: (frame, dx) */
 
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
@@ -266,6 +266,7 @@ static void crab_explode(sk_game *g, sk_slot *s, sk_draw *d) {      /* 0x10FAC4 
     g->flash_table = 0;                                             /* 0x3012BA, or 0x30169A in the train's dark (sub_1049C8) */
     if (g->train_fade < 0 || (g->train_fade == 0 && (g->train_flags & 0x20))) g->flash_table = 1;
     g->train_fade = 0;
+    if (g->scroll_mode == 1) g->train_level = g->flash_table ? 4 : 15;   /* the colours the flash ends on stay */
     free_object_deferred(g, s);
 }
 static void obj_crab_update(sk_game *g, sk_slot *s, int index) {              /* 0x10F850 */
@@ -854,7 +855,7 @@ static void obj_post_init(sk_game *g, sk_slot *s, int x, int y) {             /*
     const uint8_t *f = res(g, 36);
     if (!need(g, s, f)) return;
     frames_wh(g, s, 16, 176, f, 1);                                 /* sub_1079D2 */
-    s->draw->dflags |= 4;
+    if (s->draw) s->draw->dflags |= 4;
 }
 static void obj_post_update(sk_game *g, sk_slot *s, int index) {              /* 0x111560 */
     (void)index;
@@ -914,7 +915,7 @@ static void obj_post_piece_init(sk_game *g, sk_slot *s, int x, int y) {       /*
     if (!need(g, s, f)) return;
     frames_wh(g, s, 32, 32, f, 1);                                  /* sub_107BF2 */
     set_frame2(s, 5, 5, 0);
-    s->draw->x = (int16_t)(s->draw->x + 20);
+    if (s->draw) s->draw->x = (int16_t)(s->draw->x + 20);
     s->anim = 20;
 }
 static void obj_post_piece_update(sk_game *g, sk_slot *s, int index) {        /* 0x1116A4 */

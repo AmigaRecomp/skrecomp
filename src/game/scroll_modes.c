@@ -25,9 +25,9 @@ void scroll_modes_setup(sk_game *g, int data_index) {
         g->scroll_mode = 1;
         g->train_timer = 500;
         g->train_flags = 5;                                      /* bit 0 start, bit 2 speeding up */
+        g->player.facing = -1;                                   /* dat_302B32 = -1 */
         stream_window(g, max_x - 0x20, 0x130);
     } else return;
-    g->player.facing = -1;                                       /* dat_302B32 = -1 */
     g->view.bg_x = g->stream.base + 32;                          /* sub_1068EE on the full redraw */
     g->stream.last = g->view.bg_x;
     for (int k = 0; k < 32; k++) {                               /* the first view: the map as it is */

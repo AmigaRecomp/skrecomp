@@ -360,3 +360,29 @@ void test_press_despawn_keeps_its_marker_and_attribute(void) {      /* review I1
     CHECK(g_g.world.tile[cell] & SK_MARKER_BIT); CHECK_EQ(g_g.world.tile[cell] & SK_SPAWNED_BIT, 0);   /* it can come back */
     drop_game();
 }
+
+void test_crab_flash_in_the_tunnel_ends_dark(void) {               /* review M2: 0x30169A starts from the dark colours */
+    CHECK(make_game());
+    g_g.scroll_mode = 1; g_g.train_fade = -5; g_g.train_level = 9; g_g.train_flags = 0x20;
+    sk_slot *s = spawn(200, 11 * 16, 18, 0);
+    s->flags |= 2; s->t0 = 49; s->timer = 1;                         /* dying, one step from the burst */
+    int i = 0;
+    while (!g_g.flash_timer && i++ < 40) tick(1);
+    CHECK_EQ(g_g.flash_timer > 0, 1); CHECK_EQ(g_g.flash_table, 1); CHECK_EQ(g_g.train_fade, 0);
+    CHECK_EQ(g_g.train_level, 4);                                    /* the flash table's end: the tunnel's colours */
+    drop_game();
+}
+
+void test_train_warning_blinks_on_ten_off_five(void) {             /* review M1: 0x111646 is 00 00 FF 00 00 FF 00 00 */
+    CHECK(make_game());
+    g_g.camera_x = 100; g_g.camera_y = g_g.world.fg_max_y;
+    spawn(200, 10 * 16, 23, 0);
+    tick(35);
+    sk_slot *w = NULL;
+    for (int k = 0; k < 16; k++) if (g_g.objs.slot[k].x >= 0 && (g_g.objs.slot[k].type4 & 0x1FF) == 108 * 4) w = &g_g.objs.slot[k];
+    CHECK(w != NULL); if (!w) { drop_game(); return; }
+    int vis = 0;
+    for (int f = 0; f < 15; f++) { tick(1); if (!(w->draw->dflags & 4)) vis++; }
+    CHECK_EQ(vis, 10);
+    drop_game();
+}

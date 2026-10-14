@@ -171,11 +171,11 @@ void play_draw(sk_play *p) {
     if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit_current, p->game.kit_extra);   /* the shade attributes */
     if (p->game.flash_timer && p->game.flash_timer < 16) {       /* sub_104C78: the fade table step (toward white, 0x200ED6) */
         for (int k = 1; k < 16; k++)
-            p->scene.palette.xrgb[k] = rgb12_to_xrgb(fade_colour(lv->tiles_a.colours[k], 0xFFF, p->game.flash_timer));
+            p->scene.palette.xrgb[k] = rgb12_to_xrgb(fade_colour(p->game.flash_table ? train_scale_colour(lv->tiles_a.colours[k], 4) : lv->tiles_a.colours[k], 0xFFF, p->game.flash_timer));
         for (int k = 0; k < 15 && p->game.sk; k++)
             p->scene.palette.xrgb[49 + k] = rgb12_to_xrgb(fade_colour(image_u16(p->game.sk, SK_KIT_BASE_ADDR + 2u * (uint32_t)k), 0xFFF, p->game.flash_timer));
     }
-    if (p->game.train_level < 15) {                              /* apply_fade_step: TRAIN's tunnel, playfield and sprite colours */
+    if (p->game.train_level < 15 && !p->game.flash_timer) {                              /* apply_fade_step: TRAIN's tunnel, playfield and sprite colours */
         for (int k = 1; k < 16; k++)
             p->scene.palette.xrgb[k] = rgb12_to_xrgb(train_scale_colour(lv->tiles_a.colours[k], p->game.train_level));
         for (int k = 0; k < 15 && p->game.sk; k++)
