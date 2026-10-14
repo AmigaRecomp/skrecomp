@@ -116,3 +116,30 @@ void test_skater_7_pushes_on_the_flat(void) {                       /* type 7 */
     CHECK_EQ(aux_c(s), 16); CHECK_EQ(s->vx, 0x5A);                   /* pushing: the speed held at its cap */
     drop_game();
 }
+
+void test_bouncer_29_bounces_and_is_turned_by_the_ball(void) {     /* type 29 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 29, 0);
+    CHECK_EQ(s->y, 11 * 16 - 5); CHECK_EQ(s->vx, 4); CHECK(s->flags & 4); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 21);
+    int i = 0;
+    while (s->vy != -18 && i++ < 60) tick(1);
+    CHECK_EQ(s->vy, -18);                                            /* landed: bounces */
+    g_g.ball.x = (s->draw->x + 20) << 16; g_g.ball.y = (s->draw->y + 10) << 16; g_g.ball.vx = -(3 << 16); g_g.player.ball_free = 1;
+    tick(1);
+    CHECK_EQ(s->timer, 6); CHECK_EQ(s->flags & 1, 0);                /* the ball bounced back right: it faces left */
+    drop_game();
+}
+
+void test_egg_30_hatches_a_walker(void) {                            /* type 30 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 11 * 16, 30, 0);
+    CHECK_EQ(s->y, 11 * 16 - 6); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 26); CHECK_EQ(s->hits, 1);
+    tick(99);
+    CHECK_EQ(aux_c(s), 0); CHECK_EQ(count_type(116), 0);
+    tick(1);
+    CHECK_EQ(aux_c(s), 1); CHECK_EQ(count_type(116), 2); CHECK_EQ(s->vy, -10);   /* the shell splits, it hops out */
+    int i = 0;
+    while (aux_c(s) == 1 && i++ < 60) tick(1);
+    CHECK_EQ(aux_c(s), 2); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 13); CHECK_EQ(s->flags & 4, 0);
+    drop_game();
+}

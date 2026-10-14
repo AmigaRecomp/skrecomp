@@ -19,6 +19,9 @@ static const int8_t skater_offsets[20][2] = {                                   
     { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 },
     { 8, 4 }, { 22, 4 }, { 8, 4 }, { 22, 4 }, { 28, 8 }, { 5, 6 }, { 28, 6 }, { 5, 5 } };
 
+static const uint8_t bouncer_script[] = { 0, 8, 0, 4, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7 };   /* 0x110FBA */
+static const uint8_t hatchling_script[] = { 0, 4, 0, 6, 0, 1, 2, 3, 4, 5, 6, 7 };              /* 0x110CE2 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 
@@ -287,9 +290,99 @@ static void obj_skater_update(sk_game *g, sk_slot *s, int index) {            /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 29: the bouncer (slot 30, 32 x 21, READING a beach ball): bounces along; the ball sends it back the other way ---- */
+static void obj_bouncer_init(sk_game *g, sk_slot *s, int x, int y) {          /* 0x110EDE */
+    init_object_slot(g, s, x, y - 5, s->type4);
+    s->vx = 4; s->vy = 0;
+    s->flags |= 8 | 4;
+    s->hits = 1;
+    const uint8_t *f = res(g, 30);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 21, f, 1);                                  /* sub_107AE2 */
+}
+static void obj_bouncer_update(sk_game *g, sk_slot *s, int index) {           /* 0x110F18 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    step_animation_simple(s, bouncer_script, s->flags);
+    if (s->vy >= 0 && probe_rows_below(g, s, 12, 5) < 0) {         /* lands: a slope may turn it, then up again */
+        int slope = 0;
+        if (ledge_distance(g, s, 12, 0, &slope)) {
+            if (!(s->flags & 1) ? slope < 0 : slope >= 0) s->flags ^= 1;
+        }
+        s->vy = -18;
+    }
+    if ((int8_t)--s->timer < 0) {
+        s->timer = 0;
+        if (ball_overlap(g, d->x, d->y, 24, 20) == 1) {            /* a side hit: off the other way */
+            s->timer = 6;
+            s->flags &= ~1;
+            if ((int16_t)(g->ball.vx >> 16) < 0) s->flags |= 1;
+        }
+    }
+    touch_player(g, d->x, d->y, 24, 20);
+    despawn_if_far(g, s);
+}
+
+/* ---- type 30: the egg (slots 77 egg, 78 shell halves as type 116, 76 the hatchling 48 x 13): rocks 100 frames, hatches ---- */
+static void obj_egg_init(sk_game *g, sk_slot *s, int x, int y) {              /* 0x110B48 */
+    init_object_slot(g, s, x, y - 6, s->type4);
+    s->vx = 2; s->vy = 0;
+    s->flags |= 8;
+    s->hits = 1;
+    const uint8_t *f = res(g, 77);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 32, 26, f, 1);                                  /* sub_107B48 */
+}
+static void obj_egg_update(sk_game *g, sk_slot *s, int index) {               /* 0x110B7C */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (s->flags & 2) { despawn_if_far(g, s); return; }
+    int st = aux_c(s);
+    if (st == 0) {                                                  /* rocking */
+        if (!(g->frame_ticks & 1)) s->flags ^= 1;
+        if ((uint16_t)++s->t0 < 100) { despawn_if_far(g, s); return; }
+        set_frame2(s, 1, 1, 0);
+        sk_objects *o = &g->objs;
+        const uint8_t *halves = res(g, 78);
+        o->child_frames = halves; o->child_vx = 4; o->child_vy = -10; o->child_w = 16; o->child_h = 15;
+        spawn_object(g, d->x, d->y, 116);
+        o->child_frames = halves ? halves + 0x78 : NULL;
+        o->child_vx = -4; o->child_vy = -10;
+        spawn_object(g, d->x, d->y, 116);
+        s->vx = 2; s->vy = -10;
+        set_aux_c(s, 1);
+        s->flags |= 4;
+        st = 1;
+    }
+    if (st == 1) {                                                  /* the hop out */
+        if (s->vy < 10) { despawn_if_far(g, s); return; }
+        s->flags &= ~4;
+        set_aux_c(s, 2);
+        s->vx = 2;
+        d->x = (int16_t)(d->x - 8); d->y = (int16_t)(d->y + 9);
+        size_frames(g, d, 48, 13, res(g, 76));
+    }
+    int wrapped = 0;                                                /* walking */
+    step_animation(s, hatchling_script, s->flags, &wrapped);
+    if (ground_ahead(g, s, s->flags)) s->flags ^= 1;
+    touch_player(g, d->x, d->y, 48, 13);
+    if (ball_hits_object(g, s, 0, 0, 48, 13, 0, 0x200) >= 0) {
+        size_frames(g, d, 32, 26, res(g, 77));
+        set_frame2(s, 1, 1, 0);
+        d->y = (int16_t)(d->y - 13);
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_usa_install(void) {
     object_init_table[3] = obj_hedgehog_init;          object_update_table[3] = obj_hedgehog_update;
     object_init_table[7] = obj_skater_init;            object_update_table[7] = obj_skater_update;
+    object_init_table[29] = obj_bouncer_init;          object_update_table[29] = obj_bouncer_update;
+    object_init_table[30] = obj_egg_init;              object_update_table[30] = obj_egg_update;
     object_init_table[47] = obj_roller_init;           object_update_table[47] = obj_roller_update;
     object_init_table[69] = obj_gunman_init;           object_update_table[69] = obj_gunman_update;
     object_init_table[73] = obj_rock73_init;           object_update_table[73] = obj_rock73_update;

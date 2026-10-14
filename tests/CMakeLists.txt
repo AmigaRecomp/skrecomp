@@ -379,7 +379,9 @@ set(SK_TEST_NAMES
   roller_47_bounces_and_is_knocked_by_the_ball
   gunman_69_shoots_a_kid_in_front
   rock_73_shakes_drops_and_breaks
-  skater_7_pushes_on_the_flat)
+  skater_7_pushes_on_the_flat
+  bouncer_29_bounces_and_is_turned_by_the_ball
+  egg_30_hatches_a_walker)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
