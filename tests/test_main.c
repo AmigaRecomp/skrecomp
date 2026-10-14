@@ -402,6 +402,13 @@ void test_kit_design_grows_its_panel_and_changes_the_kit(void);
 void test_options_toggle_music_and_ask_for_the_tutorial(void);
 void test_panel_text_draws_body_and_outline_colours(void);
 void test_tab_shows_the_version_box_and_holds_the_menu(void);
+void test_hiscore_rows_are_written_as_tiles(void);
+void test_name_entry_scrolls_four_pixels_a_frame_and_types(void);
+void test_name_entry_scrolls_left_and_wraps(void);
+void test_letter_strip_lands_in_the_hud(void);
+void test_demo_banner_102_sits_at_the_bottom_of_the_view(void);
+void test_tutorial_86_shows_the_joystick_moves_then_closes(void);
+void test_fire_ends_a_demo_at_once(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -801,6 +808,13 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "options_toggle_music_and_ask_for_the_tutorial", test_options_toggle_music_and_ask_for_the_tutorial },
     { "panel_text_draws_body_and_outline_colours", test_panel_text_draws_body_and_outline_colours },
     { "tab_shows_the_version_box_and_holds_the_menu", test_tab_shows_the_version_box_and_holds_the_menu },
+    { "hiscore_rows_are_written_as_tiles", test_hiscore_rows_are_written_as_tiles },
+    { "name_entry_scrolls_four_pixels_a_frame_and_types", test_name_entry_scrolls_four_pixels_a_frame_and_types },
+    { "name_entry_scrolls_left_and_wraps", test_name_entry_scrolls_left_and_wraps },
+    { "letter_strip_lands_in_the_hud", test_letter_strip_lands_in_the_hud },
+    { "demo_banner_102_sits_at_the_bottom_of_the_view", test_demo_banner_102_sits_at_the_bottom_of_the_view },
+    { "tutorial_86_shows_the_joystick_moves_then_closes", test_tutorial_86_shows_the_joystick_moves_then_closes },
+    { "fire_ends_a_demo_at_once", test_fire_ends_a_demo_at_once },
 };
 
 int main(int argc, char **argv) {

@@ -11,7 +11,7 @@
 
 typedef struct sk_game sk_game;
 
-typedef enum { SK_OUTCOME_RUNNING, SK_OUTCOME_NEXT_LEVEL, SK_OUTCOME_GAME_OVER } sk_outcome;
+typedef enum { SK_OUTCOME_RUNNING, SK_OUTCOME_NEXT_LEVEL, SK_OUTCOME_GAME_OVER, SK_OUTCOME_LEFT } sk_outcome;   /* LEFT: a demo ended without a next level */
 
 void game_new_game(sk_game *g);                  /* lives 3, score 0, level_number 0 */
 bool game_setup_level(sk_game *g, const sk_level *lv, int data_index);   /* builds the world; false = out of memory */

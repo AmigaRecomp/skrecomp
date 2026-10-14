@@ -228,10 +228,15 @@ void game_frame_step(sk_game *g, uint8_t input, sk_sprite *kid) {
     step(g, 27); update_objects(g);
     step(g, 29); run_curtain(g);
     step(g, 32);                                                 /* request flags: the window handles Escape */
+    if ((g->game_flags & 4) && (input & SK_IN_FIRE)) {           /* 0x1044F4: a demo ends at once on fire */
+        g->level_end = true;
+        g->game_flags &= (uint8_t)~2;
+    }
 }
 
 
 sk_outcome game_outcome(const sk_game *g) {
+    if (g->game_flags && g->level_end) return SK_OUTCOME_LEFT;   /* a demo, the tutorial: back to the title */
     if (g->level_end && (g->level_outcome & 0x80)) return SK_OUTCOME_NEXT_LEVEL;
     if (g->player.state == 64 && g->player.lives < 0) return SK_OUTCOME_GAME_OVER;   /* state 64 alone is "frozen": the lift tube uses it */
     return SK_OUTCOME_RUNNING;

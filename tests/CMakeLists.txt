@@ -59,7 +59,9 @@ add_executable(sk_tests
   test_obj_bonus.c
   test_front.c
   test_frontend.c
-  test_savegame.c)
+  test_savegame.c
+  test_attract.c
+  test_obj_front.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -462,7 +464,14 @@ set(SK_TEST_NAMES
   kit_design_grows_its_panel_and_changes_the_kit
   options_toggle_music_and_ask_for_the_tutorial
   panel_text_draws_body_and_outline_colours
-  tab_shows_the_version_box_and_holds_the_menu)
+  tab_shows_the_version_box_and_holds_the_menu
+  hiscore_rows_are_written_as_tiles
+  name_entry_scrolls_four_pixels_a_frame_and_types
+  name_entry_scrolls_left_and_wraps
+  letter_strip_lands_in_the_hud
+  demo_banner_102_sits_at_the_bottom_of_the_view
+  tutorial_86_shows_the_joystick_moves_then_closes
+  fire_ends_a_demo_at_once)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
