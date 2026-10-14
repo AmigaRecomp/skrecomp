@@ -6,7 +6,7 @@ static bool tag(const uint8_t *p, const char *t) { return memcmp(p, t, 4) == 0; 
 
 bool anim_open(const uint8_t *file, size_t n, int index, sk_anim *a, sk_err *e) {
     memset(a, 0, sizeof *a);
-    if (n < 4 || index < 0 || (size_t)(index + 1) * 4 > be32(file)) return sk_fail(e, "anim: no animation %d", index);
+    if (n < 4 || index < 0 || (size_t)(index + 1) * 4 > be32(file) || (size_t)(index + 1) * 4 > n) return sk_fail(e, "anim: no animation %d", index);
     uint32_t at = be32(file + 4 * (size_t)index);
     if ((size_t)at + 12 > n || !tag(file + at, "FORM") || !tag(file + at + 8, "ANIM")) return sk_fail(e, "anim %d: not a FORM ANIM", index);
     size_t end = at + 8 + be32(file + at + 4);

@@ -55,3 +55,9 @@ void test_anim_real_files_hold_eight_animations(void) {         /* ROM-backed: 3
     }
     disks_close(&dk);
 }
+
+void test_anim_open_bounds_the_offset_table(void) {
+    uint8_t f[8] = { 0x7F, 0xFF, 0xFF, 0xFF, 0, 0, 0, 0 };        /* a huge first offset, 8 bytes in all */
+    sk_anim a; sk_err e = {0};
+    CHECK(!anim_open(f, sizeof f, 4, &a, &e));
+}

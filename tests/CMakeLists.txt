@@ -494,7 +494,9 @@ set(SK_TEST_NAMES
   play_starts_with_the_intro_and_fire_skips_it
   resume_waits_for_fire_to_be_let_go
   tutorial_survives_the_fire_that_chose_it
-  savegame_rejects_a_level_past_the_sequence)
+  savegame_rejects_a_level_past_the_sequence
+  intro_keeps_a_tap_until_its_next_poll_and_fades_text_one
+  anim_open_bounds_the_offset_table)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

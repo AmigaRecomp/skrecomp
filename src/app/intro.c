@@ -154,6 +154,7 @@ static bool run_op(sk_intro *it, bool skip) {
     case OP_TEXT_ON_BLACK:                                       /* text_on_black 0x100ABA */
         memset(it->screen[it->shown], 0, sizeof it->screen[0]);
         copper_palette(it, it->pal_full); it->copper[31] = 0xEEE;
+        memcpy(it->pal_current, it->copper, sizeof it->pal_current);   /* 0x100ABA writes palette_current too */
         it->bplcon0 = 0x5200;
         tw_start(it, a);
         return true;
@@ -269,6 +270,8 @@ static bool run_op(sk_intro *it, bool skip) {
 
 void intro_step(sk_intro *it, bool skip) {
     if (it->done) return;
+    it->quit_req |= skip;                                        /* frame_interrupt sets quit_flag; it stays set */
+    skip = it->quit_req;
     it->tick_counter++;                                          /* frame_interrupt */
     tw_tick(it);
     for (int guard = 0; guard < 64; guard++) {

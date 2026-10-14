@@ -54,3 +54,24 @@ void test_intro_plays_through_in_about_111_seconds(void) {     /* ROM-backed: th
     CHECK(coloured > 20000);                                     /* the space ship, not a black screen */
     intro_free(&it); sound_free(&snd); disks_close(&d);
 }
+
+void test_intro_keeps_a_tap_until_its_next_poll_and_fades_text_one(void) {   /* frame_interrupt's quit_flag, text_on_black */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_disks d = {0}; sk_err e = {0};
+    static sk_sound snd;
+    CHECK(disks_open(&d, roms, &e));
+    sound_init(&snd, NULL, 48000);
+    CHECK(intro_open(&it, &d, &snd, &e));
+    while (it.op < 6 && !it.done) intro_step(&it, false);        /* text 1 typed: the fade to black */
+    intro_step(&it, false);
+    CHECK(it.copper[31] != 0);                                   /* fades from 0xEEE over 17 ticks, not cut */
+    while (it.op < 8 && !it.done) intro_step(&it, false);        /* animation 1/0 */
+    for (int i = 0; i < 30; i++) intro_step(&it, false);         /* among its delta frames: no poll here */
+    intro_step(&it, true);                                       /* a tap */
+    CHECK(!it.done);
+    int n = 0;
+    while (!it.done && n < 400) { intro_step(&it, false); n++; }
+    CHECK(it.done);                                              /* at the next key frame */
+    intro_free(&it); sound_free(&snd); disks_close(&d);
+}

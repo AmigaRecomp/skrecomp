@@ -429,6 +429,8 @@ void test_play_starts_with_the_intro_and_fire_skips_it(void);
 void test_resume_waits_for_fire_to_be_let_go(void);
 void test_tutorial_survives_the_fire_that_chose_it(void);
 void test_savegame_rejects_a_level_past_the_sequence(void);
+void test_intro_keeps_a_tap_until_its_next_poll_and_fades_text_one(void);
+void test_anim_open_bounds_the_offset_table(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -855,6 +857,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "resume_waits_for_fire_to_be_let_go", test_resume_waits_for_fire_to_be_let_go },
     { "tutorial_survives_the_fire_that_chose_it", test_tutorial_survives_the_fire_that_chose_it },
     { "savegame_rejects_a_level_past_the_sequence", test_savegame_rejects_a_level_past_the_sequence },
+    { "intro_keeps_a_tap_until_its_next_poll_and_fades_text_one", test_intro_keeps_a_tap_until_its_next_poll_and_fades_text_one },
+    { "anim_open_bounds_the_offset_table", test_anim_open_bounds_the_offset_table },
 };
 
 int main(int argc, char **argv) {

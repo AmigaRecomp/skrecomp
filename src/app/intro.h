@@ -21,7 +21,8 @@ typedef struct {
     uint16_t pal_full[32], pal_half[32], pal_current[32], copper[32];
     uint16_t bplcon0;                   /* 0x5200, or 0x6200 (Extra Half-Brite) */
     int tick_counter;                   /* 0x300244 */
-    bool quit;                          /* quit_flag */
+    bool quit;                          /* the script reached a polling point with the request set: exit_intro */
+    bool quit_req;                      /* quit_flag: a key, the mouse or fire since the start */
     bool fade_in_flag; int cue_pending, hold_ticks; const char *pending_text;
     /* typewriter (0x100B62 / 0x100BB2) */
     bool tw_active; int tw_countdown, tw_reload; const uint8_t *tw_text; int tw_cell, tw_line;
