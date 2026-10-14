@@ -57,7 +57,10 @@ void test_spawn_marker_ignores_types_beyond_the_table(void) {   /* Review Focus 
 
 void test_slots_fill_up_at_sixteen(void) {
     CHECK(make_game());
-    for (int i = 0; i < 20; i++) spawn_object(&g_g, 100, 100, 7);
+    int stub = 127;                                              /* a type with no frames to load */
+    while (stub > 0 && object_init_table[stub] != obj_stub_init) stub--;
+    CHECK(stub > 0);
+    for (int i = 0; i < 20; i++) spawn_object(&g_g, 100, 100, stub);
     CHECK_EQ(g_g.object_count, 16);
     CHECK(find_free_slot(&g_g) == NULL);
     drop_game();

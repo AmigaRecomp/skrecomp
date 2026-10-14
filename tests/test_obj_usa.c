@@ -102,3 +102,17 @@ void test_rock_73_shakes_drops_and_breaks(void) {                    /* type 73 
     CHECK_EQ(aux_c(s), 2); CHECK_EQ(count_type(116), 1); CHECK_EQ(s->vx, 4); CHECK(s->flags & 1);
     drop_game();
 }
+
+void test_skater_7_pushes_on_the_flat(void) {                       /* type 7 */
+    CHECK(make_game());
+    sk_slot *s = spawn(100, 11 * 16, 7, 4);                          /* param 4: three hits, facing bit clear */
+    CHECK_EQ(s->y, 11 * 16 - 28); CHECK_EQ(s->hits, 3); CHECK_EQ(s->vx, 0x5A); CHECK_EQ(s->draw->w, 32); CHECK_EQ(s->draw->h, 44);
+    tick(1);
+    CHECK_EQ(s->t1, 0x14); CHECK_EQ(s->t0, 1); CHECK_EQ(aux_c(s), 1); CHECK_EQ(s->frame, 2);   /* crouched, the offsets taken */
+    int x = s->draw->x;
+    tick(1);
+    CHECK_EQ(s->draw->x, x + 4);                                     /* (0x5A * 3 / 2) >> 5 */
+    tick(20);
+    CHECK_EQ(aux_c(s), 16); CHECK_EQ(s->vx, 0x5A);                   /* pushing: the speed held at its cap */
+    drop_game();
+}
