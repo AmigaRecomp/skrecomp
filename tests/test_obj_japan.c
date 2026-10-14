@@ -146,3 +146,13 @@ void test_popper_33_appears_throws_and_sinks(void) {                /* type 33, 
     CHECK_EQ(aux_c(s), 0); CHECK_EQ(s->t0, 40); CHECK(s->draw->dflags & 4);   /* sunk: 40 frames hidden */
     drop_game();
 }
+
+void test_walker_80_walks_and_turns(void) {                         /* type 80 */
+    CHECK(make_game());
+    sk_slot *s = spawn(200, 12 * 16 - 16, 80, 0);
+    CHECK_EQ(s->vx, 4); CHECK_EQ(s->hits, 2); CHECK(s->flags & 8); CHECK_EQ(s->draw->w, 48); CHECK_EQ(s->draw->h, 16);
+    int x = s->draw->x;
+    tick(4);
+    CHECK_EQ(s->draw->x, x - 8);                                     /* facing left, 2 px a frame */
+    drop_game();
+}

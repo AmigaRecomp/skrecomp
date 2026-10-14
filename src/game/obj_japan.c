@@ -34,6 +34,8 @@ static const uint8_t popper_data[0x60] = {                                      
 #define POPPER_THROW (popper_data + 0x38)   /* 0x1118F0 */
 #define POPPER_SINK (popper_data + 0x4E)    /* 0x111906 */
 
+static const uint8_t walker80_script[] = { 0, 4, 0, 6, 4, 5, 6, 7, 0, 1, 2, 3 };              /* 0x119E88 */
+
 static const uint8_t *res(const sk_game *g, int slot) { return g->res ? resource_slot(g->res, slot, NULL) : NULL; }
 static bool need(sk_game *g, sk_slot *s, const uint8_t *f) { if (f) return true; free_object(g, s); return false; }
 static void reset_animation(sk_slot *s) { s->anim_tick = 0; s->anim_index = 0; }   /* 0x10DF62 */
@@ -362,10 +364,39 @@ static void obj_popper_update(sk_game *g, sk_slot *s, int index) {            /*
     despawn_if_far(g, s);
 }
 
+/* ---- type 80: the small walker (slot 107; slot 105 knocked) ---- */
+static void obj_walker80_init(sk_game *g, sk_slot *s, int x, int y) {         /* 0x119DC2 */
+    init_object_slot(g, s, x, y, s->type4);
+    s->vx = 4; s->vy = 0; s->hits = 2;
+    s->flags |= 8;
+    const uint8_t *f = res(g, 107);
+    if (!need(g, s, f)) return;
+    frames_wh(g, s, 48, 16, f, 1);                                  /* sub_107D68 */
+}
+static void obj_walker80_update(sk_game *g, sk_slot *s, int index) {          /* 0x119DF8 */
+    (void)index;
+    sk_draw *d = slot_draw_record(g, s);
+    if (!d) return;
+    apply_velocity(s);
+    if (!(s->flags & 2)) {
+        int wrapped = 0;
+        step_animation(s, walker80_script, s->flags, &wrapped);
+        if (ground_ahead(g, s, s->flags)) s->flags ^= 1;
+        touch_player(g, d->x, d->y, 32, 16);
+        if (ball_hits_object(g, s, 0, -16, 40, 32, 16, 0x300) >= 0) {
+            d->y = (int16_t)(d->y - 16);
+            size_frames(g, d, 32, 45, res(g, 105));
+            set_frame2(s, 16, 16, 0);
+        }
+    }
+    despawn_if_far(g, s);
+}
+
 void obj_japan_install(void) {
     object_init_table[6] = obj_wheel_init;             object_update_table[6] = obj_wheel_update;
     object_init_table[18] = obj_crab_init;             object_update_table[18] = obj_crab_update;
     object_init_table[33] = obj_popper_init;           object_update_table[33] = obj_popper_update;
+    object_init_table[80] = obj_walker80_init;         object_update_table[80] = obj_walker80_update;
     object_init_table[25] = obj_insect_init;           object_update_table[25] = obj_insect_update;
     object_init_table[67] = obj_th67_init;             object_update_table[67] = obj_th67_update;
     object_init_table[107] = obj_piece_init;           object_update_table[107] = obj_piece_update;
