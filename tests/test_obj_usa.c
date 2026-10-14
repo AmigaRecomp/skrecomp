@@ -94,7 +94,7 @@ void test_rock_73_shakes_drops_and_breaks(void) {                    /* type 73 
     sk_slot *s = spawn(200, 9 * 16, 73, 0);
     CHECK_EQ(s->y, 9 * 16 - 10); CHECK_EQ(s->t1, 100); CHECK_EQ(s->draw->w, 16);
     tick(1);
-    CHECK_EQ(s->draw->x, s->x + 1);                                  /* the shake: 0, +1, -1, 0 */
+    CHECK_EQ(s->draw->x, s->x);                                      /* the shake: t0 1 of 1, 0, -1, 0 (0x119972) */
     tick(99);
     CHECK_EQ(aux_c(s), 1); CHECK(s->flags & 4);
     int i = 0;
@@ -220,7 +220,7 @@ void test_final_boss_9_brings_its_parts(void) {                     /* types 9, 
     drop_game();
 }
 
-void test_final_boss_9_last_phase_ends_the_game(void) {             /* phase 22 -> motion 0x34 */
+void test_final_boss_9_last_phase_ends_the_game(void) {             /* phases 19, 20, then 21: motion 0x34 */
     CHECK(make_game());
     sk_slot *s = spawn(300, 11 * 16, 9, 0);
     s->hits = 0xFF;                                                  /* beaten */
@@ -302,4 +302,18 @@ void test_usa_slots_cover_the_frames(void) {                      /* ROM-backed 
     }
     CHECK(seen >= 15);
     tables_free(&t); image_free(&img); disks_close(&d);
+}
+
+void test_jumper_17_ignores_a_low_step(void) {                       /* review: sub_10DC0A tests rows 0..15 of one cell */
+    CHECK(make_game());
+    int t = g_lv.tiles_a.count - 1;                                  /* a step: only its bottom four rows solid */
+    uint8_t *m = g_lv.tiles_a.tails + (size_t)t * SK_TILE_TAIL;
+    for (int r = 0; r < 16; r++) m[2 * r] = m[2 * r + 1] = r >= 12 ? 0xFF : 0;
+    sk_slot *s = spawn(200, 11 * 16, 17, 0x18 | 2 | 1);
+    int cx = (s->draw->x + 16 + 30 - 3 + 4) >> 4;                    /* the cell 30 px ahead, above the floor */
+    g_g.world.tile[11 * g_g.world.w + cx] = (uint16_t)t;
+    CHECK(!solid_column_ahead(&g_g, s, 1, 16 + 30));                 /* a 4 px step is not a wall */
+    for (int r = 0; r < 16; r++) m[2 * r] = m[2 * r + 1] = 0xFF;
+    CHECK(solid_column_ahead(&g_g, s, 1, 16 + 30));                  /* a full cell is */
+    drop_game();
 }

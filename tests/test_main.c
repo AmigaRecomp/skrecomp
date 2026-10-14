@@ -342,6 +342,7 @@ void test_hoop_36_scores_baskets_and_an_extra_life(void);
 void test_usa_markers_spawn_real_types(void);
 void test_usa_slots_cover_the_frames(void);
 void test_usa_run_without_a_crash(void);
+void test_jumper_17_ignores_a_low_step(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -681,6 +682,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "usa_markers_spawn_real_types", test_usa_markers_spawn_real_types },
     { "usa_slots_cover_the_frames", test_usa_slots_cover_the_frames },
     { "usa_run_without_a_crash", test_usa_run_without_a_crash },
+    { "jumper_17_ignores_a_low_step", test_jumper_17_ignores_a_low_step },
 };
 
 int main(int argc, char **argv) {

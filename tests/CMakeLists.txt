@@ -394,7 +394,8 @@ set(SK_TEST_NAMES
   hoop_36_scores_baskets_and_an_extra_life
   usa_markers_spawn_real_types
   usa_slots_cover_the_frames
-  usa_run_without_a_crash)
+  usa_run_without_a_crash
+  jumper_17_ignores_a_low_step)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

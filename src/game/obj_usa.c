@@ -13,7 +13,7 @@ static const uint8_t roller_script[] = { 0, 4, 0, 4, 3, 2, 1, 0, 0, 1, 2, 3 };  
 static const uint8_t gunman_walk_script[] = { 0, 6, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };   /* 0x118FD2 */
 static const uint8_t gunman_shoot_script[] = { 0, 6, 0, 4, 0, 1, 2, 2, 2, 2, 3, 4, 5, 5, 5, 5 };   /* 0x118FE2 */
 static const uint8_t gunman_shot_script[] = { 0, 8, 0, 3, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7 };   /* 0x118FF2 */
-static const int16_t rock_shake[4] = { 0, 1, -1, 0 };                                         /* 0x119972 */
+static const int16_t rock_shake[4] = { 1, 0, -1, 0 };                                         /* 0x119972 */
 
 static const int8_t skater_offsets[20][2] = {                                                  /* 0x200F12: (dx, dy) by frame */
     { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 }, { 16, 0 },
@@ -308,7 +308,7 @@ static void obj_skater_update(sk_game *g, sk_slot *s, int index) {            /*
         } else {
             s->vx++;
             int keep = s->frame;                                    /* sub_10DE14: the frame pointer by frame_ticks, $1E untouched */
-            set_object_frame(s, (int)((uint32_t)(g->frame_ticks >> 2) % 6) + ((s->flags & 1) ? 6 : 0));
+            set_object_frame(s, (int)(((uint16_t)g->frame_ticks >> 2) % 6) + ((s->flags & 1) ? 6 : 0));
             s->frame = (uint8_t)keep;
         }
         mode = 3; dy = 1;
