@@ -38,6 +38,8 @@ typedef struct {
 
 bool scene_open(sk_scene *s, const sk_args *a, sk_err *e);
 bool scene_load_level(sk_scene *s, int data_index, sk_err *e);
+/* A level file by disk and number (the frontend's file076 / file077); tag becomes level_index. */
+bool scene_load_level_file(sk_scene *s, int disk, int file, int tag, sk_err *e);
 /* frame_w == 0: estimate the geometry from the data. */
 bool scene_load_section(sk_scene *s, const char *file_name, int section, int frame_w, int frame_h, sk_err *e);
 void scene_set_camera(sk_scene *s, int x, int y);

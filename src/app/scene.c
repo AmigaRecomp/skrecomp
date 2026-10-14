@@ -174,31 +174,35 @@ void scene_set_camera(sk_scene *s, int x, int y) {
     s->cam_y = y;
 }
 
-bool scene_load_level(sk_scene *s, int data_index, sk_err *e) {
-    if (data_index < 0 || data_index >= SK_LEVEL_RECORDS)
-        return sk_fail(e, "level %d: no such level (0..%d)", data_index, SK_LEVEL_RECORDS - 1);
-    const sk_level_record *rec = &s->tables.record[data_index];
-    int disk = rec->disk + 1;
+bool scene_load_level_file(sk_scene *s, int disk, int file, int tag, sk_err *e) {
     uint8_t *data;
     size_t n;
     sk_err inner = {0};
-    int file = data_index >= 30 ? data_index + 100 : data_index;      /* load_level_resources 0x103056: the bonus levels and ALIEN */
     if (!disks_read_file_no(&s->disks, disk, file, false, &data, &n, &inner))
-        return sk_fail(e, "level %d: %s", data_index, inner.msg);
+        return sk_fail(e, "level %d: %s", tag, inner.msg);
     sk_level lv = {0};
     bool ok = level_parse(data, n, &lv, &inner);
     free(data);
-    if (!ok) return sk_fail(e, "level %d (disk %d file%03d): %s", data_index, disk, data_index, inner.msg);
+    if (!ok) return sk_fail(e, "level %d (disk %d file%03d): %s", tag, disk, file, inner.msg);
     drop_section(s);
     if (s->has_level) level_free(&s->level);
     s->level = lv;
     s->has_level = true;
-    s->level_index = data_index;
+    s->level_index = tag;
     s->level_disk = disk;
     palette_from_tilesets(&s->palette, &lv.tiles_a, &lv.tiles_b);
     s->max_cam_x = clamp_max(lv.map.width * 16, SK_CAM_MARGIN_W);
     s->max_cam_y = clamp_max(lv.map.height * 16, SK_CAM_MARGIN_H);
     scene_set_camera(s, s->cam_x, s->cam_y);
+    return true;
+}
+
+bool scene_load_level(sk_scene *s, int data_index, sk_err *e) {
+    if (data_index < 0 || data_index >= SK_LEVEL_RECORDS)
+        return sk_fail(e, "level %d: no such level (0..%d)", data_index, SK_LEVEL_RECORDS - 1);
+    const sk_level_record *rec = &s->tables.record[data_index];
+    int file = data_index >= 30 ? data_index + 100 : data_index;      /* load_level_resources 0x103056: the bonus levels and ALIEN */
+    if (!scene_load_level_file(s, rec->disk + 1, file, data_index, e)) return false;
     /* the record's first graphics set, when it holds frames */
     if (rec->n_res > 0) {
         const sk_resource *r = tables_resource(&s->tables, rec->disk, rec->res[0]);

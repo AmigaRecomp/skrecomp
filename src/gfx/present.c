@@ -70,5 +70,5 @@ void present_screen(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky, c
     for (int i = 0; i < 16; i++) colours[i] = i ? rgb12_to_xrgb(hud->palette12[i]) : pal->xrgb[0];
     for (int y = 0; y < SK_HUD_H; y++)
         for (int x = 0; x < SK_SCREEN_W; x++)                     /* panel pixel x + SK_HUD_FETCH_X at frame x (display_model.h) */
-            out[(size_t)(SK_HUD_Y + y) * SK_SCREEN_W + x] = colours[hud_pixel(hud, x + SK_HUD_FETCH_X, y)];
+            out[(size_t)(SK_HUD_Y + y) * SK_SCREEN_W + x] = x - hud->shift < 0 ? colours[0] : colours[hud_pixel(hud, x - hud->shift + SK_HUD_FETCH_X, y)];
 }

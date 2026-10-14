@@ -471,7 +471,10 @@ set(SK_TEST_NAMES
   letter_strip_lands_in_the_hud
   demo_banner_102_sits_at_the_bottom_of_the_view
   tutorial_86_shows_the_joystick_moves_then_closes
-  fire_ends_a_demo_at_once)
+  fire_ends_a_demo_at_once
+  title_idle_runs_the_hiscore_pan_then_the_demo
+  options_tutorial_runs_and_returns
+  a_qualifying_score_asks_for_a_name)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

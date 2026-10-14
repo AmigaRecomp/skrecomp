@@ -486,3 +486,79 @@ void test_play_starts_at_the_language_screen_and_the_title(void) {   /* ROM-back
     CHECK_EQ(p.fe.mode, SK_FE_MENU);
     play_close(&p);
 }
+
+static void to_title(sk_play *p) {                                  /* language screen: fire, then let go */
+    play_step(p, 0); play_step(p, SK_IN_FIRE); play_step(p, 0);
+}
+
+void test_title_idle_runs_the_hiscore_pan_then_the_demo(void) {    /* ROM-backed: level_session's attract cycle */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    to_title(&p);
+    for (int i = 0; i < 760 && p.fe.mode == SK_FE_MENU; i++) play_step(&p, 0);
+    CHECK_EQ(p.attract, SK_ATTRACT_PAN);
+    CHECK_EQ(p.game.camera_x, 2);                                   /* the table at x 30 of the view */
+    CHECK_EQ(curtain_rows(&p.game), 0);                             /* DIW 0x2D91 / 0x06B1: the window open */
+    CHECK_EQ(p.game.world.tile[2 * p.game.world.w + 2] & 0x1FF, 'N' - 0x41 + 2);   /* NEZZA */
+    int x0 = p.attract_x;
+    for (int i = 0; i < 10; i++) play_step(&p, 0);
+    CHECK_EQ(p.attract_x, x0 + 10);                                 /* the backdrop pans a pixel a frame */
+    for (int i = 0; i < 600 && p.attract == SK_ATTRACT_PAN; i++) play_step(&p, 0);
+    CHECK_EQ(p.fe.mode, SK_FE_MENU);                                /* 500 frames, then the menu again */
+    for (int i = 0; i < 760 && p.fe.mode == SK_FE_MENU; i++) play_step(&p, 0);
+    CHECK_EQ(p.attract, SK_ATTRACT_PAN);
+    for (int i = 0; i < 600 && p.attract == SK_ATTRACT_PAN; i++) play_step(&p, 0);
+    CHECK_EQ(p.attract, SK_ATTRACT_DEMO);                           /* the second pan leads to the demo */
+    CHECK_EQ(p.scene.level_index, 0); CHECK_EQ(p.game.game_flags, 0xFE);
+    for (int i = 0; i < 300; i++) play_step(&p, 0);
+    play_step(&p, SK_IN_FIRE);                                      /* fire ends it at once */
+    play_step(&p, 0);
+    CHECK_EQ(p.attract, SK_ATTRACT_NONE); CHECK_EQ(p.fe.mode, SK_FE_MENU);
+    CHECK(p.snd.slot[0] != NULL);                                   /* the title music still there */
+    play_close(&p);
+}
+
+void test_options_tutorial_runs_and_returns(void) {                 /* ROM-backed: run_demo_level_b */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    to_title(&p);
+    play_step(&p, SK_IN_UP); play_step(&p, 0); play_step(&p, SK_IN_FIRE); play_step(&p, 0);   /* OPTIONS */
+    for (int i = 0; i < 20; i++) play_step(&p, 0);
+    play_step(&p, SK_IN_UP); play_step(&p, 0); play_step(&p, SK_IN_UP); play_step(&p, 0);    /* EXIT -> RESUME -> TUTORIAL */
+    play_step(&p, SK_IN_FIRE); play_step(&p, 0); play_step(&p, 0);
+    CHECK_EQ(p.attract, SK_ATTRACT_TUTORIAL);
+    int n = 0;
+    while (p.attract == SK_ATTRACT_TUTORIAL && n < 4000) { play_step(&p, 0); n++; }
+    CHECK(n > 3100 && n < 3300);                                    /* the script closes the curtain after 3160 frames */
+    CHECK_EQ(p.fe.mode, SK_FE_MENU);
+    play_close(&p);
+}
+
+void test_a_qualifying_score_asks_for_a_name(void) {               /* ROM-backed: attract_hiscores after a game */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = -1, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    to_title(&p);
+    play_step(&p, SK_IN_FIRE);                                      /* START GAME */
+    for (int i = 0; i < 260; i++) play_step(&p, 0);
+    p.game.player.score = 0x95000;                                  /* second place */
+    p.game.player.lives = -1; p.game.player.state = 64;
+    for (int i = 0; i < 400 && p.attract != SK_ATTRACT_NAME; i++) play_step(&p, 0);
+    CHECK_EQ(p.attract, SK_ATTRACT_NAME); CHECK_EQ(p.name.rank, 1);
+    CHECK_EQ(p.game.camera_x, 290);
+    for (int i = 0; i < 20; i++) play_step(&p, 0);
+    play_step(&p, SK_IN_FIRE);                                      /* 'J' */
+    CHECK_EQ(image_u8(&p.scene.sk, 0x200934 + 16), 'J');
+    p.name.ac = 18; p.name.rep = 0;                                 /* END */
+    play_step(&p, SK_IN_FIRE);
+    CHECK_EQ(p.attract, SK_ATTRACT_NONE); CHECK_EQ(p.fe.mode, SK_FE_MENU);
+    play_close(&p);
+}

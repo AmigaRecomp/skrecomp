@@ -9,6 +9,7 @@
 #include "game/camera.h"
 #include "game/level_flow.h"
 #include "game/objects.h"
+#include "game/attract.h"
 #include "game/front.h"
 #include "game/scoreboard.h"
 #include "gfx/display_model.h"
@@ -177,6 +178,16 @@ static void title_music(sk_play *p, bool on) {                      /* frontend_
     sound_music(&p->snd, SK_MUSIC_LEVEL, 0);
 }
 
+static void attract_start(sk_play *p, sk_attract kind);
+
+static void session_menu(sk_play *p) {                              /* loop_b: title_menu */
+    sk_err e = {0};
+    p->attract = SK_ATTRACT_NONE;
+    p->game.game_flags = 0xFF;
+    p->game.hud.shift = 0;
+    if (!frontend_menu_from(&p->fe, &p->scene.sk, p->fe.title, SK_TITLE_SIZE, &e)) fail(p, &e);
+}
+
 static void session_start(sk_play *p) {                             /* level_session */
     sk_err e = {0};
     pictures_free(&p->pic);
@@ -184,7 +195,92 @@ static void session_start(sk_play *p) {                             /* level_ses
     p->game.game_flags = 0xFF;
     title_music(p, true);
     p->fe.music_off = &p->snd.music_off; p->fe.sfx_muted = &p->snd.sfx_muted;
-    if (!frontend_menu(&p->fe, &p->scene.sk, &p->scene.disks, &e)) fail(p, &e);
+    if (!frontend_menu(&p->fe, &p->scene.sk, &p->scene.disks, &e)) { fail(p, &e); return; }
+    p->session_round = 1;                                           /* loop_a */
+    int rank = p->game.player.score ? hiscore_insert(&p->scene.sk, p->game.player.score, p->fe.shirt, p->fe.shorts) : -1;
+    if (rank >= 0) { p->name.rank = rank; attract_start(p, SK_ATTRACT_NAME); }   /* attract_hiscores */
+}
+
+/* ---- the frontend's levels: the hi-score pan and the name entry (file077), the demo (level 0), the tutorial (file076) ---- */
+static bool attract_load(sk_play *p, int data_index, int disk, int file) {
+    sk_err e = {0};
+    bool ok = data_index >= 0 ? scene_load_level(&p->scene, data_index, &e) : scene_load_level_file(&p->scene, disk, file, 1000 + file, &e);
+    resources_free(&p->res);
+    if (ok && data_index >= 0) ok = resources_load(&p->res, &p->scene.disks, &p->scene.tables, data_index, &e);   /* ruling: the record's sets */
+    p->game.res = &p->res;
+    if (ok && !game_setup_level(&p->game, &p->scene.level, data_index >= 0 ? data_index : 0)) ok = sk_fail(&e, "out of memory");
+    if (!ok) { fail(p, &e); return false; }
+    if (p->game.sk) kit_palette(&p->scene.palette, p->game.sk, p->game.kit, p->game.kit);
+    memset(&p->sprites, 0, sizeof p->sprites);
+    p->level_pos = -1;
+    return true;
+}
+
+static void attract_start(sk_play *p, sk_attract kind) {
+    p->fe.mode = SK_FE_OFF;
+    p->attract = kind;
+    p->attract_frames = 0;
+    sk_game *g = &p->game;
+    if (kind == SK_ATTRACT_PAN || kind == SK_ATTRACT_NAME) {        /* demo_level_load(0 / 0x12) */
+        int d0 = kind == SK_ATTRACT_PAN ? 0 : 0x12;
+        g->game_flags = 0xFF;
+        if (!attract_load(p, -1, 1, 77)) return;
+        g->world.start_x = (d0 + 6) * 16; g->world.start_y = 0;
+        init_player(g);
+        g->camera_x = g->world.start_x - 94; g->camera_y = 0;       /* update_camera on the static kid */
+        hiscore_tiles(g, 2 + d0, -1);
+        memset(g->hud.bits, 0, sizeof g->hud.bits);                 /* hud_clear_bitmap */
+        g->curtain_flags = 0; g->curtain_top = g->curtain_bottom = 0;   /* DIW 0x2D91 / 0x06B1: the window open, no curtain */
+        p->attract_x = 0x20; p->attract_dx = 1;
+        if (kind == SK_ATTRACT_NAME) {                              /* hud_palette_attract, BPLCON1 0x88 */
+            int rank = p->name.rank;
+            name_entry_start(&p->name, rank);
+            for (int i = 0; i < 15 && g->sk; i++) g->hud.palette12[1 + i] = image_u16(g->sk, 0x200E9Au + 2u * (uint32_t)i);
+            g->hud.shift = 8;
+            g->frame_ticks = 0;
+        }
+        return;
+    }
+    g->game_flags = 0xFE;                                           /* run_demo_level / run_demo_level_b */
+    p->saved_muted = p->snd.sfx_muted;
+    p->snd.sfx_muted = true;
+    if (kind == SK_ATTRACT_DEMO) { if (!attract_load(p, 0, 0, 0)) return; spawn_object(g, 0, 0, 102); }
+    else { if (!attract_load(p, -1, 1, 76)) return; spawn_object(g, 0, 0, 86); }
+}
+
+static void attract_end(sk_play *p, bool fired) {                  /* back into level_session's loop */
+    sk_attract kind = p->attract;
+    if (kind == SK_ATTRACT_DEMO || kind == SK_ATTRACT_TUTORIAL) p->snd.sfx_muted = p->saved_muted;
+    if (kind == SK_ATTRACT_PAN && !fired && --p->session_round < 0) { attract_start(p, SK_ATTRACT_DEMO); return; }
+    if (kind != SK_ATTRACT_PAN || fired) p->session_round = 1;
+    session_menu(p);
+}
+
+static void attract_frame(sk_play *p, uint8_t in) {
+    sk_game *g = &p->game;
+    if (p->attract == SK_ATTRACT_DEMO || p->attract == SK_ATTRACT_TUTORIAL) {
+        p->game.ball_sprite = &p->sprites.spr[1];
+        game_frame_step(g, in, &p->sprites.spr[0]);
+        uint8_t lf = g->layer_flags;
+        p->sprites.spr[0].in_front = (lf & 1) != 0; p->sprites.spr[1].in_front = (lf & 2) != 0;
+        p->sprites.front = lf == 1 ? 0 : 1;
+        if (game_outcome(g) != SK_OUTCOME_RUNNING) attract_end(p, false);
+        return;
+    }
+    g->frame_ticks++;                                               /* attract_loop / the name entry loop */
+    p->attract_x += p->attract_dx;
+    int bg_max = p->scene.level.backdrop.width * 16 - 0x160 + 0x20;     /* bg_scroll_max_x */
+    if ((unsigned)p->attract_x >= (unsigned)bg_max) p->attract_dx = -p->attract_dx;
+    if (p->attract_x < 0x10) p->attract_dx = -p->attract_dx;
+    if (p->attract == SK_ATTRACT_PAN) {
+        if (in & SK_IN_FIRE) { attract_end(p, true); return; }
+        if (++p->attract_frames >= 0x1F4) attract_end(p, false);   /* 500 frames */
+        return;
+    }
+    if (!(g->frame_ticks & 0x1F)) p->name.blink ^= 0xFF;
+    if (name_entry_step(g, &p->name, in) < 0) { g->hud.shift = 0; attract_end(p, true); return; }
+    hiscore_tiles(g, 20, p->name.rank);
+    name_entry_hud(g, &p->name);
 }
 
 static void start_game(sk_play *p) {                                /* START GAME: frontend_teardown, then the outer loop */
@@ -217,7 +313,9 @@ static void frontend_frame(sk_play *p, uint8_t in) {
     }
     case SK_FE_START: start_game(p); break;
     case SK_FE_QUIT: p->quit = true; break;
-    case SK_FE_IDLE: case SK_FE_TUTORIAL: case SK_FE_RESUME:          /* the attract cycle, the tutorial and RESUME come next */
+    case SK_FE_IDLE: attract_start(p, SK_ATTRACT_PAN); break;       /* attract_loop */
+    case SK_FE_TUTORIAL: attract_start(p, SK_ATTRACT_TUTORIAL); break;
+    case SK_FE_RESUME:                                              /* RESUME comes with the save screens */
         if (!frontend_menu_from(&p->fe, &p->scene.sk, p->fe.title, SK_TITLE_SIZE, &e)) fail(p, &e);
         break;
     default: break;
@@ -263,6 +361,11 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
     p->game.snd = &p->snd;
     if (p->fe.mode != SK_FE_OFF) {
         frontend_frame(p, p->script ? script_input(p) : keyboard_input);
+        sound_step(p);
+        return;
+    }
+    if (p->attract != SK_ATTRACT_NONE) {
+        attract_frame(p, p->script ? script_input(p) : keyboard_input);
         sound_step(p);
         return;
     }
@@ -360,6 +463,7 @@ void play_draw(sk_play *p) {
     int bg_x, bg_y;
     scene_backdrop_pos(lv, p->game.camera_x, p->game.camera_y, &bg_x, &bg_y);
     if (p->game.scroll_mode) bg_x = p->game.view.bg_x;          /* the backdrop streams by itself (backdrop_stream_step) */
+    if (p->attract == SK_ATTRACT_PAN || p->attract == SK_ATTRACT_NAME) { bg_x = p->attract_x; bg_y = 0x28; }   /* backdrop_scroll 0x106662 */
     p->game.view.bg_x = bg_x;
     p->game.view.bg_y = bg_y;
     if (p->scene.backdrop) {

@@ -12,6 +12,7 @@ typedef struct sk_game sk_game;
 typedef struct sk_hud {
     uint8_t bits[SK_HUD_BYTES];         /* hud_bitmap_ptr's panel */
     uint16_t palette12[16];             /* COLOR00 (0) and the 15 words of hud_palette_game (0x200E7C) */
+    int shift;                          /* BPLCON1: the panel's pixels this far right (8 in the name entry) */
     const uint8_t *digits, *timer_font, *icons, *health;   /* digit_font_8, timer_font, hud_icons, health_icons */
 } sk_hud;
 

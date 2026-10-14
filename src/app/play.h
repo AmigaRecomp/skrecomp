@@ -8,11 +8,14 @@
 #include "app/scene.h"
 #include "app/pictures.h"
 #include "app/frontend.h"
+#include "game/attract.h"
 #include "game/between.h"
 #include "game/game.h"
 #include "game/resources.h"
 #include "audio/sound.h"
 #include "gfx/sprites.h"
+
+typedef enum { SK_ATTRACT_NONE, SK_ATTRACT_PAN, SK_ATTRACT_NAME, SK_ATTRACT_DEMO, SK_ATTRACT_TUTORIAL } sk_attract;
 
 typedef struct sk_play {
     sk_scene scene;
@@ -39,6 +42,11 @@ typedef struct sk_play {
     sk_frontend fe;                 /* the frontend's screens, when on */
     bool quit;                      /* the frontend asked to leave the program */
     bool with_frontend;             /* started without --level / --new-game: the game returns to the title */
+    sk_attract attract;             /* a frontend level running: the hi-score pan, the name entry, the demo, the tutorial */
+    int attract_x, attract_dx, attract_frames;   /* 0x3002A6 / 0x3002A4 / attract_counter */
+    int session_round;              /* level_session's d7: menu, pan, menu, pan, demo */
+    bool saved_muted;               /* sfx_muted before a demo */
+    sk_name_entry name;
     unsigned fe_keys;               /* SK_FE_KEY_* held this frame (the window sets them) */
 } sk_play;
 

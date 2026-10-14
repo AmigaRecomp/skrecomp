@@ -409,6 +409,9 @@ void test_letter_strip_lands_in_the_hud(void);
 void test_demo_banner_102_sits_at_the_bottom_of_the_view(void);
 void test_tutorial_86_shows_the_joystick_moves_then_closes(void);
 void test_fire_ends_a_demo_at_once(void);
+void test_title_idle_runs_the_hiscore_pan_then_the_demo(void);
+void test_options_tutorial_runs_and_returns(void);
+void test_a_qualifying_score_asks_for_a_name(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -815,6 +818,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "demo_banner_102_sits_at_the_bottom_of_the_view", test_demo_banner_102_sits_at_the_bottom_of_the_view },
     { "tutorial_86_shows_the_joystick_moves_then_closes", test_tutorial_86_shows_the_joystick_moves_then_closes },
     { "fire_ends_a_demo_at_once", test_fire_ends_a_demo_at_once },
+    { "title_idle_runs_the_hiscore_pan_then_the_demo", test_title_idle_runs_the_hiscore_pan_then_the_demo },
+    { "options_tutorial_runs_and_returns", test_options_tutorial_runs_and_returns },
+    { "a_qualifying_score_asks_for_a_name", test_a_qualifying_score_asks_for_a_name },
 };
 
 int main(int argc, char **argv) {
