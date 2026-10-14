@@ -3,6 +3,7 @@
 #include "game/attr_country_london.h"
 #include "game/attr_italy.h"
 #include "game/attr_russia.h"
+#include "game/attr_japan.h"
 #include "game/attr_england.h"
 #include "game/game.h"
 
@@ -17,6 +18,7 @@ void attrs_reset(sk_game *g) {
     attr_country_london_install();
     attr_italy_install();
     attr_russia_install();
+    attr_japan_install();
     if (!attr_table[2]) attr_table[2] = attr_checkpoint;
     if (!attr_table[13]) attr_table[13] = attr_exit;
     if (!attr_table[53]) attr_table[53] = attr_layer_switch_a;
@@ -37,6 +39,7 @@ static void run_cell(sk_game *g, int cx, int cy) {               /* the per-cell
 
 int probe_tile_attr(sk_game *g, int x, int y) {                 /* 0x11A57E */
     g->attrs.probe_kind = 2;
+    g->attrs.probe_x = x; g->attrs.probe_y = y;
     int cx = x >> 4, cy = y >> 4;
     if (!world_inside(&g->world, cx, cy)) return -1;
     int attr = world_attr(&g->world, cx, cy);

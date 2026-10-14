@@ -13,6 +13,7 @@ typedef struct sk_tile_change { int cell; int kind; int ticks; uint16_t start; b
 typedef struct sk_attrs {
     sk_tile_change queue[32];      /* tile_queue */
     int probe_kind;                /* 0x30024E: 0 player, 1 ball, 2 object, 0xFF consumed */
+    int probe_x, probe_y;          /* d6 / d7: the object probe's pixel */
     struct sk_slot *probe_slot;    /* a6 during the object probe (probe_kind 2) */
 } sk_attrs;
 

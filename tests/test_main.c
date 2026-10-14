@@ -302,6 +302,13 @@ void test_tube_22_carries_the_kid_up(void);
 void test_kicker_32_shoots_a_fire_trail(void);
 void test_factory_boss_34_stomps_and_drops_rocks(void);
 void test_train_23_warns_then_passes(void);
+void test_kit_shade_11_12_by_height(void);
+void test_freeze_18_holds_the_kick_animation(void);
+void test_gap_wind_45_carries_and_belts_46_47_push(void);
+void test_rail_arrows_48_to_51_steer_an_object(void);
+void test_rail_turn_21_turns_a_platform_a_quarter(void);
+void test_hide_56_to_59_by_half_cell(void);
+void test_train_trigger_78_starts_one_train(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -601,6 +608,13 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "kicker_32_shoots_a_fire_trail", test_kicker_32_shoots_a_fire_trail },
     { "factory_boss_34_stomps_and_drops_rocks", test_factory_boss_34_stomps_and_drops_rocks },
     { "train_23_warns_then_passes", test_train_23_warns_then_passes },
+    { "kit_shade_11_12_by_height", test_kit_shade_11_12_by_height },
+    { "freeze_18_holds_the_kick_animation", test_freeze_18_holds_the_kick_animation },
+    { "gap_wind_45_carries_and_belts_46_47_push", test_gap_wind_45_carries_and_belts_46_47_push },
+    { "rail_arrows_48_to_51_steer_an_object", test_rail_arrows_48_to_51_steer_an_object },
+    { "rail_turn_21_turns_a_platform_a_quarter", test_rail_turn_21_turns_a_platform_a_quarter },
+    { "hide_56_to_59_by_half_cell", test_hide_56_to_59_by_half_cell },
+    { "train_trigger_78_starts_one_train", test_train_trigger_78_starts_one_train },
 };
 
 int main(int argc, char **argv) {

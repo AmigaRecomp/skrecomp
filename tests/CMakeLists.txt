@@ -46,6 +46,7 @@ add_executable(sk_tests
   test_obj_japan.c
   test_attr_italy.c
   test_attr_russia.c
+  test_attr_japan.c
   test_attr_country_london.c
   test_obj_russia.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
@@ -350,7 +351,14 @@ set(SK_TEST_NAMES
   tube_22_carries_the_kid_up
   kicker_32_shoots_a_fire_trail
   factory_boss_34_stomps_and_drops_rocks
-  train_23_warns_then_passes)
+  train_23_warns_then_passes
+  kit_shade_11_12_by_height
+  freeze_18_holds_the_kick_animation
+  gap_wind_45_carries_and_belts_46_47_push
+  rail_arrows_48_to_51_steer_an_object
+  rail_turn_21_turns_a_platform_a_quarter
+  hide_56_to_59_by_half_cell
+  train_trigger_78_starts_one_train)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
