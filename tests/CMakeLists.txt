@@ -55,7 +55,8 @@ add_executable(sk_tests
   test_between.c
   test_mapsprites.c
   test_pictures.c
-  test_scoreboard.c)
+  test_scoreboard.c
+  test_obj_bonus.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -428,7 +429,9 @@ set(SK_TEST_NAMES
   new_game_clears_the_statistics
   ending_goes_black_while_the_music_fades
   bonus_check_sends_the_world_to_its_bonus_level
-  bonus_level_setup_keeps_its_clock_and_time_out)
+  bonus_level_setup_keeps_its_clock_and_time_out
+  cup_piece_81_waits_for_fifty_tokens_then_ends_the_bonus_level
+  bonus_token_80_counts_as_a_coin)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -25,17 +25,19 @@ static int cell(const sk_game *g, int cx, int cy) { return cy * g->world.w + cx;
 static bool ball_near15(const sk_game *g, int x, int y) { return in_open(bx(g) - x, -15, 15) && in_open(by(g) - y, -15, 15); }
 
 /* ---- attributes 0 and 19: coins ---- */
-static void coin(sk_game *g, int cx, int cy, int kind, int fallback) {   /* 0x11AD28 / 0x11ADAA */
+static bool coin(sk_game *g, int cx, int cy, int kind, int fallback) {   /* 0x11AD28 / 0x11ADAA */
     int x = cx * 16, y = cy * 16;
-    if (g->attrs.probe_kind == 1) { if (!ball_near15(g, x, y)) return; }
-    else if (g->attrs.probe_kind == 0) { if (!in_open(g->player.x - x, -8, 18)) return; }
-    else return;
+    if (g->attrs.probe_kind == 1) { if (!ball_near15(g, x, y)) return false; }
+    else if (g->attrs.probe_kind == 0) { if (!in_open(g->player.x - x, -8, 18)) return false; }
+    else return false;
     add_score(g, 0x20);
     play_sfx(g, 1);
     queue_tile_change(g, cx, cy, kind, fallback);
+    return true;
 }
 static void attr_coin(sk_game *g, int cx, int cy) { coin(g, cx, cy, 0, 0); }
 static void attr_coin_keep(sk_game *g, int cx, int cy) { coin(g, cx, cy, 1, 0x1EF); }
+static void attr_bonus_token(sk_game *g, int cx, int cy) { if (coin(g, cx, cy, 0, 0)) g->bonus_tokens++; }   /* 0x11C5E0: a coin that counts */
 
 /* ---- attributes 37 and 66: card pieces ---- */
 static void card(sk_game *g, int cx, int cy, bool keep_tile) {           /* 0x11AC50 / 0x11C240 */
@@ -267,6 +269,7 @@ static void attr_ball_target_a(sk_game *g, int cx, int cy) { ball_target(g, cx, 
 
 void attr_england_install(void) {
     attr_table[0] = attr_coin;               attr_table[1] = attr_drain;
+    attr_table[80] = attr_bonus_token;
     attr_table[5] = attr_shade_x;            attr_table[6] = attr_shade_x_rev;
     attr_table[7] = attr_shade_y;            attr_table[9] = attr_shade_x_dark;
     attr_table[10] = attr_shade_x_dark_rev;  attr_table[19] = attr_coin_keep;

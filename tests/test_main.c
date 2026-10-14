@@ -372,6 +372,8 @@ void test_new_game_clears_the_statistics(void);
 void test_ending_goes_black_while_the_music_fades(void);
 void test_bonus_check_sends_the_world_to_its_bonus_level(void);
 void test_bonus_level_setup_keeps_its_clock_and_time_out(void);
+void test_cup_piece_81_waits_for_fifty_tokens_then_ends_the_bonus_level(void);
+void test_bonus_token_80_counts_as_a_coin(void);
 
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
@@ -741,6 +743,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "ending_goes_black_while_the_music_fades", test_ending_goes_black_while_the_music_fades },
     { "bonus_check_sends_the_world_to_its_bonus_level", test_bonus_check_sends_the_world_to_its_bonus_level },
     { "bonus_level_setup_keeps_its_clock_and_time_out", test_bonus_level_setup_keeps_its_clock_and_time_out },
+    { "cup_piece_81_waits_for_fifty_tokens_then_ends_the_bonus_level", test_cup_piece_81_waits_for_fifty_tokens_then_ends_the_bonus_level },
+    { "bonus_token_80_counts_as_a_coin", test_bonus_token_80_counts_as_a_coin },
 };
 
 int main(int argc, char **argv) {

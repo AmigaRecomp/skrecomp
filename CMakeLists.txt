@@ -65,6 +65,7 @@ add_library(skcore STATIC
   src/game/attr_japan.c
   src/game/scroll_modes.c
   src/game/obj_usa.c
+  src/game/obj_bonus.c
   src/game/between.c
   src/game/scoreboard.c
   src/game/attr_usa.c
