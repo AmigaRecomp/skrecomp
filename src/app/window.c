@@ -178,6 +178,7 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
     if (audio_out_open(&audio, 48000)) { p->audio = &audio; w->audio = &audio; }   /* no device: silent */
     uint64_t last = SDL_GetTicksNS(), acc = 0;
     bool running = true;
+    int rc = 0;
     while (running) {
         uint64_t now = SDL_GetTicksNS();
         int steps = window_steps_for(&acc, now - last);
@@ -187,7 +188,7 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
             p->fe_keys = window_frontend_keys(SDL_GetKeyboardState(NULL));
             play_step(p, window_input_bits(SDL_GetKeyboardState(NULL)));
         }
-        if (p->load_failed) { fprintf(stderr, "soccerkid: %s\n", p->load_err.msg); running = false; }
+        if (p->load_failed) { fprintf(stderr, "soccerkid: %s\n", p->load_err.msg); running = false; rc = 1; }
         if (p->quit) running = false;
         play_draw(p);
         play_present(p, w->pixels);
@@ -197,7 +198,7 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
     }
     p->audio = NULL; w->audio = NULL;
     audio_out_close(&audio);
-    return 0;
+    return rc;
 }
 
 void window_close(sk_window *w) {

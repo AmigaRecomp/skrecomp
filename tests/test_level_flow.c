@@ -161,11 +161,33 @@ void test_f10_pauses_with_the_help_box(void) {                    /* sub_1045E4 
     CHECK(g_g.paused); CHECK(!(g_g.timer_flags & 0x80));          /* the clock stops */
     for (int i = 0; i < 99; i++) game_frame_step(&g_g, SK_IN_RIGHT, &kid);
     CHECK_EQ(g_g.player.x, x); CHECK_EQ(g_g.frame_ticks, ticks);  /* nothing moves */
-    CHECK_EQ(g_g.message_box_shown_kind, 0x38);
+    CHECK_EQ(g_g.message_box_kind, 0x38);                       /* 0x104612 */
     game_frame_step(&g_g, 0, &kid);
     CHECK(!g_g.msg_visible);                                     /* the box goes after 100 frames, the pause stays */
     CHECK(g_g.paused);
     game_request_pause(&g_g);
     CHECK(!g_g.paused); CHECK(g_g.timer_flags & 0x80);
+    drop_game();
+}
+
+void test_a_pause_does_not_survive_a_level_setup(void) {
+    CHECK(make_game());
+    game_request_pause(&g_g);
+    CHECK(g_g.paused);
+    CHECK(game_setup_level(&g_g, &g_lv, 0));
+    CHECK(!g_g.paused);
+    drop_game();
+}
+
+void test_the_pause_waits_for_a_message_box_and_lifts_its_own_box(void) {   /* sub_11C816 holds step 32; 0x10462C */
+    CHECK(make_game());
+    g_g.message_wait = 1;
+    game_request_pause(&g_g);
+    CHECK(!g_g.paused);                                          /* the box waiting for fire comes first */
+    g_g.message_wait = 0; g_g.message_box_shown_kind = 3;
+    game_request_pause(&g_g);
+    CHECK(g_g.paused); CHECK_EQ(g_g.message_box_shown_kind, 3); CHECK_EQ(g_g.msg_dy, -12);
+    game_request_pause(&g_g);
+    CHECK_EQ(g_g.msg_dy, 0);
     drop_game();
 }

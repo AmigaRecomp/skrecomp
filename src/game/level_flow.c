@@ -60,6 +60,7 @@ bool game_setup_level(sk_game *g, const sk_level *lv, int data_index) {   /* set
     g->message_box_timer = 0; g->message_box_request = 0; g->message_wait = 0;
     g->bump_restores = 0; g->flush_count = 0; g->bump_tile = -1; g->hud_card_flag = 0;   /* 0x104878 */
     g->msg_visible = 0; g->msg_w = 0; g->splash_done = 0;
+    g->paused = false; g->pause_frames = 0; g->msg_dy = 0;       /* port: no pause carried into a level */
     memset(g->card_anim, 0, sizeof g->card_anim);
     g->untouchable = false;
     if (g->world.live) world_free(&g->world);
@@ -260,17 +261,18 @@ void game_request_escape(sk_game *g) {                          /* frame step 32
 }
 
 void game_request_pause(sk_game *g) {                           /* F10: sub_1045E4 */
-    if (g->game_flags || g->level_data_index == 12) return;
+    if (g->game_flags || g->level_data_index == 12 || g->message_wait) return;   /* a box waiting for fire holds step 32 */
     if (!g->paused) {
         g->paused = true; g->pause_frames = 0;
         g->pause_timer_flags = g->timer_flags; g->timer_flags = 0;   /* the clock stops */
-        g->pause_box_kind = g->message_box_shown_kind;
-        g->message_box_shown_kind = 0x38;                        /* message 7 of the level: the help box */
+        g->pause_box_kind = g->message_box_kind;
+        g->message_box_kind = 0x38;                              /* message 7 of the level: the help box */
         message_box_build(g, 7);
+        g->msg_dy = -12;                                         /* subi.w #$c, $2(a0) (0x10462C) */
         return;
     }
     g->paused = false;                                           /* 0x1046EC: F10 again */
-    g->msg_visible = 0;
+    g->msg_visible = 0; g->msg_dy = 0;
     g->timer_flags = g->pause_timer_flags;
-    g->message_box_shown_kind = g->pause_box_kind;
+    g->message_box_kind = g->pause_box_kind;
 }

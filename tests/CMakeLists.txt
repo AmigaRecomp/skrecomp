@@ -502,7 +502,10 @@ set(SK_TEST_NAMES
   f10_pauses_with_the_help_box
   escape_leaves_a_game_for_the_title_and_quits_from_the_title
   typed_keys_queue_between_frames
-  anim_open_survives_huge_chunk_lengths)
+  anim_open_survives_huge_chunk_lengths
+  a_pause_does_not_survive_a_level_setup
+  the_pause_waits_for_a_message_box_and_lifts_its_own_box
+  pause_only_in_a_running_level)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

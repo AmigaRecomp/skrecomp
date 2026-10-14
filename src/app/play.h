@@ -57,8 +57,8 @@ typedef struct sk_play {
     int typed_key;                  /* last_ascii_key: this step's typed character */
     int typed_queue[8], typed_n;    /* the window's keys waiting for their frame */
     bool esc_key;                   /* Escape: a save screen cancels, a level closes its curtain, the frontend quits */
-    bool pause_key;
-    bool leaving;                   /* the fade before the title after ESC */                 /* F10 or P: the pause */
+    bool pause_key;                 /* F10 or P: the pause */
+    bool leaving;                   /* the fade before the title after ESC */
     unsigned fe_keys;               /* SK_FE_KEY_* held this frame (the window sets them) */
 } sk_play;
 

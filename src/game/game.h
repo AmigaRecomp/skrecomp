@@ -100,11 +100,11 @@ struct sk_game {
     uint8_t bonus_pending;              /* 0x300299: scoreboard_setup found 11 cards */
     int bonus_tokens;                   /* 0x300296: attribute 80's tokens taken (0x32 = all) */
     uint8_t token_digits[2];            /* 0x11A3DE: type 85's two characters (0x5D + digit) */
-    uint8_t token_bits[0x104];
-    uint8_t demo_banner[0x208];
-    bool demo_fire_released;
+    uint8_t token_bits[0x104];          /* dat_300070: type 85's 32 x 13 bob, four planes and the mask */
+    uint8_t demo_banner[0x208];         /* dat_300058: type 102's 64 x 13 bob, four planes and the mask */
+    bool demo_fire_released;            /* port: fire seen up since the demo began (the original's load gave time to let go) */
     bool paused; int pause_frames;      /* F10: sub_1045E4's loop (0x3002E8 counts the box's 100 frames) */
-    uint8_t pause_timer_flags; int pause_box_kind;            /* port: fire seen up since the demo began (the original's load gave time to let go) */         /* dat_300058: type 102's 64 x 13 bob, four planes and the mask */          /* dat_300070: type 85's 32 x 13 bob, four planes and the mask */
+    uint8_t pause_timer_flags; int pause_box_kind;   /* timer_flags and message_box_kind kept over the pause */
     struct {                            /* the ALIEN's parts (type 82): 0x300090 / 0x30007C / 0x300084 and their draw records */
         sk_slot *head, *piece_a, *piece_b;
         sk_draw *head_draw, *pa_draw, *pb_draw;
@@ -135,6 +135,7 @@ struct sk_game {
     int message_box_timer, message_box_kind, message_box_request;   /* 0x3001E0 / E2 / E4 */
     uint8_t message_shown[8];           /* the flags in the table at 0x200DA4: each message once a level */
     int message_box_shown_kind;         /* the box on screen (drawn by the HUD code) */
+    int msg_dy;                         /* the box above the centre: -12 for the pause (0x10462C) */
     uint8_t message_wait;               /* 0x3001DE: frame step 31 holds the game until fire */
     int flutter_max, flutter_last_cell; /* 0x300288 (5), 0x3002FA */
     uint8_t ball_target[8];             /* 0x300395 + n: hits per target attribute (67 68 69 70 71 72 73 74) */

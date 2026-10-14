@@ -699,3 +699,20 @@ void test_typed_keys_queue_between_frames(void) {
     int n = 0; while (play_next_typed(&p)) n++;
     CHECK_EQ(n, 8);
 }
+
+void test_pause_only_in_a_running_level(void) {                     /* ROM-backed */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 0, .scale = 1, .section = -1 };
+    static sk_play p; sk_err e = {0};
+    CHECK(play_open(&p, &a, &e));
+    for (int i = 0; i < 200; i++) play_step(&p, 0);
+    p.save.mode = SK_SAVE_ASK;                                      /* a save screen */
+    p.pause_key = true; play_step(&p, 0);
+    CHECK(!p.game.paused);
+    p.save.mode = SK_SAVE_OFF;
+    p.game.player.lives = -1; p.game.player.state = 64;            /* game over running out */
+    p.pause_key = true; play_step(&p, 0);
+    CHECK(!p.game.paused);
+    play_close(&p);
+}

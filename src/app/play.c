@@ -449,7 +449,8 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
             else { p->quit = true; return; }
         }
     }
-    if (pause && p->pic.kind == SK_PIC_OFF && p->fe.mode == SK_FE_OFF && p->attract == SK_ATTRACT_NONE && !p->intro && !p->fade_wait)
+    if (pause && p->pic.kind == SK_PIC_OFF && p->fe.mode == SK_FE_OFF && p->attract == SK_ATTRACT_NONE && !p->intro && !p->fade_wait &&
+        p->save.mode == SK_SAVE_OFF && game_outcome(&p->game) == SK_OUTCOME_RUNNING)
         game_request_pause(&p->game);
     if (p->intro) {                                                 /* the intro: any key or fire ends it at its polling points */
         uint8_t in = p->script ? script_input(p) : keyboard_input;
@@ -459,6 +460,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
             title_music(p, false);
             p->snd.pt.master_on = false;
             intro_free(p->intro); free(p->intro); p->intro = NULL;
+            p->typed_n = 0;                                         /* the taps that skipped it are spent */
             sk_err e = {0};
             if (!frontend_language(&p->fe, &p->scene.sk, &p->scene.disks, &e)) fail(p, &e);
             p->fe.prev_input = 0xFF;
@@ -594,7 +596,7 @@ void play_draw(sk_play *p) {
     if (g->msg_visible && g->msg_w > 0) {                        /* the message box: centred on the view (show_message_box) */
         int plane = g->msg_w / 8 * g->msg_h;
         sk_frame fr = { g->msg_w, g->msg_h, g->msg_w / 8, { g->msg_bits, g->msg_bits + plane, g->msg_bits + 2 * plane, g->msg_bits + 3 * plane }, g->msg_bits + 4 * plane };
-        fb_blit_bob(fb, &fr, 160 - g->msg_w / 2 - SK_BUFFER_WORLD_X, 100 - g->msg_h / 2, SK_GROUP_TILES_A);
+        fb_blit_bob(fb, &fr, 160 - g->msg_w / 2 - SK_BUFFER_WORLD_X, 100 - g->msg_h / 2 + g->msg_dy, SK_GROUP_TILES_A);
     }
 }
 
