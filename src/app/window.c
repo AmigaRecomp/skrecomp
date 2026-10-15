@@ -53,6 +53,7 @@ static void change_level(sk_scene *s, int delta) {
 
 static void change_section(sk_scene *s, int delta) {
     if (!s->has_sections) return;
+    if (!s->show_frames) { s->show_frames = true; return; }      /* the first press shows the current set */
     sk_err e = {0};
     int sec = s->section + delta;
     while (sec >= 0 && sec < s->sections.count) {

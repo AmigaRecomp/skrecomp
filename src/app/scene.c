@@ -219,7 +219,7 @@ bool scene_load_level(sk_scene *s, int data_index, sk_err *e) {
 bool scene_open(sk_scene *s, const sk_args *a, sk_err *e) {
     memset(s, 0, sizeof *s);
     s->backdrop = !a->no_backdrop;
-    s->show_frames = !a->no_frames;
+    s->show_frames = a->section_file && !a->no_frames;       /* a frame sheet only with --section (or [ ] in the viewer) */
     s->cam_x = a->cam_x;
     s->cam_y = a->cam_y;
     bool opened = a->roms ? disks_open(&s->disks, a->roms, e)

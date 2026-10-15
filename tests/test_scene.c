@@ -72,7 +72,7 @@ void test_scene_real_level0_screenshot(void) {       /* ROM-backed */
     CHECK(scene_open(&s, &a, &e));
     if (!SK_OK(&e)) printf("scene_open: %s\n", e.msg);
     CHECK_EQ(s.level.map.width, 546);
-    CHECK(s.has_frames && s.frames.count > 0);        /* the record's first graphics set is shown */
+    CHECK(s.has_frames && s.frames.count > 0);        /* the record's first graphics set is loaded for [ ] */
     CHECK_EQ(s.max_cam_x, 546 * 16 - SK_CAM_MARGIN_W);
     scene_draw(&s);
     uint32_t *out = calloc(SK_SCREEN_W * SK_SCREEN_H, sizeof *out);
@@ -150,4 +150,19 @@ void test_scene_backdrop_pos_and_sky(void) {
     scene_sky(&lv, 1000, &sky);
     CHECK_EQ(sky.c17_off, 312);
     level_free(&lv); free(d);
+}
+
+void test_viewer_shows_frames_only_when_asked(void) {   /* ROM-backed */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args a = { .roms = roms, .level = 0, .scale = 3, .section = -1 };
+    sk_scene s = {0};
+    sk_err e = {0};
+    CHECK(scene_open(&s, &a, &e));
+    CHECK(!s.show_frames);                               /* the plain level, no frame sheet across it */
+    scene_close(&s);
+    a.section_file = "file031"; a.section = 4;
+    CHECK(scene_open(&s, &a, &e));
+    CHECK(s.show_frames);                                /* --section asks for them */
+    scene_close(&s);
 }

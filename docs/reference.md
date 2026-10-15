@@ -82,7 +82,7 @@ Each level plays its ProTracker module through the game's own replay routine, wh
 
 ## Viewer
 
-Keys in the viewer (`--viewer`): arrows scroll, PageUp/PageDown change level, `[` and `]` change the graphics-set section shown. The window shows the 320x256 PAL frame with the game's 288x200 play area.
+Keys in the viewer (`--viewer`): arrows scroll, PageUp/PageDown change level, `[` and `]` lay a graphics set's frames over the level and step through its sections (a debugging aid; `--section` starts with one shown). The window shows the 320x256 PAL frame with the game's 288x200 play area.
 
 ## Why no widescreen
 

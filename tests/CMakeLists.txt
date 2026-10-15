@@ -523,7 +523,8 @@ set(SK_TEST_NAMES
   remap_help_stays_above_the_hud
   disks_read_from_an_archive
   disks_extract_matches_the_disks
-  scale_up_repeats_pixels_and_down_averages_them)
+  scale_up_repeats_pixels_and_down_averages_them
+  viewer_shows_frames_only_when_asked)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
