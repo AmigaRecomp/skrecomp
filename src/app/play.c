@@ -51,6 +51,12 @@ bool script_parse_step(const char **s, uint8_t *input, int *frames, sk_err *e) {
 bool play_start_level(sk_play *p, int pos, int data_index, sk_err *e) {
     if (pos >= 0) data_index = p->scene.tables.sequence[pos];
     if (!(p->scene.has_level && p->scene.level_index == data_index) && !scene_load_level(&p->scene, data_index, e)) return false;   /* the parsed level is pristine: a restart rebuilds the world from it */
+    if (p->has_custom && !p->custom_applied) {                      /* --custom: the setting with the level's own map */
+        p->custom_cleared = custom_clear_unknown_flags(&p->custom, &p->scene.level);
+        if (p->custom_cleared) fprintf(stderr, "soccerkid: %d cells used flags the setting does not have; cleared\n", p->custom_cleared);
+        if (!custom_apply(&p->custom, &p->scene.level)) return sk_fail(e, "out of memory");
+        p->custom_applied = true;
+    }
     if (p->game.tables) {                                           /* the level's graphics sets by slot */
         resources_free(&p->res);
         if (!resources_load(&p->res, &p->scene.disks, p->game.tables, data_index, e)) return false;
@@ -86,6 +92,7 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     sound_init(&p->snd, &p->scene.sk, 48000);
     p->game.sk = &p->scene.sk;
     p->game.tables = &p->scene.tables;
+    if (a->custom) { if (!custom_copy(&p->custom, a->custom)) { scene_close(&p->scene); return sk_fail(e, "out of memory"); } p->has_custom = true; }
     p->script = a->script;
     p->script_cursor = a->script;
     int pos = -1;
@@ -493,6 +500,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
         sound_step(p);
         if (--p->fade_wait > 0) return;
         if (p->leaving) { p->leaving = false; session_start(p); return; }   /* play_level returned: the outer loop, the title */
+        if (p->has_custom) { p->custom_done = true; p->quit = true; return; }   /* a custom level is played alone */
         play_advance(p);                                            /* play_level loops: level_number moved on by the exit */
         return;
     }
@@ -520,7 +528,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
         if (p->game_over_frames >= GAME_OVER_FRAMES) {
             int idx = p->scene.level_index, back = p->game.fulltime_level;
             game_new_game(&p->game);
-            if (idx >= 36 && idx <= 40) {                           /* a bonus level is not replayed untimed: on from its board */
+            if (idx >= 36 && idx <= 40 && !p->has_custom) {                           /* a bonus level is not replayed untimed: on from its board */
                 if (p->cup_arg >= 0) p->game.cup_pieces = (uint8_t)p->cup_arg;
                 p->game.level_number = back;
                 p->game_over_frames = 0;
@@ -619,6 +627,7 @@ void play_close(sk_play *p) {
     resources_free(&p->res);
     game_close(&p->game);
     scene_close(&p->scene);
+    custom_free(&p->custom);
 }
 void play_type(sk_play *p, int key) { if (p->typed_n < 8) p->typed_queue[p->typed_n++] = key; }
 

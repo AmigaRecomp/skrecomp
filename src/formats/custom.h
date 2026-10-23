@@ -11,11 +11,11 @@
 #include "formats/level.h"
 
 #define SK_CUSTOM_MAX_CELLS 16384   /* cell_state lives in the map chunk's 0x4000-byte gap */
-#define SK_CUSTOM_MIN_W 18          /* the 288 x 200 view */
+#define SK_CUSTOM_MIN_W 22          /* the 352-pixel scroll buffer: narrower, the camera cannot move and the exit walk (x - camera > 320) never ends */
 #define SK_CUSTOM_MIN_H 13
 
 typedef struct { int index; const char *name; const char *title; } sk_setting;
-typedef struct { int setting, w, h; uint16_t *cells; uint8_t *states; } sk_custom;
+typedef struct sk_custom_level { int setting, w, h; uint16_t *cells; uint8_t *states; } sk_custom;
 
 int custom_setting_count(void);
 const sk_setting *custom_setting_at(int i);

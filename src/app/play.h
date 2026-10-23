@@ -17,6 +17,7 @@
 #include "game/resources.h"
 #include "audio/sound.h"
 #include "gfx/sprites.h"
+#include "formats/custom.h"
 
 typedef enum { SK_ATTRACT_NONE, SK_ATTRACT_PAN, SK_ATTRACT_NAME, SK_ATTRACT_DEMO, SK_ATTRACT_TUTORIAL } sk_attract;
 
@@ -61,6 +62,10 @@ typedef struct sk_play {
     bool pause_key;                 /* F10 or P: the pause */
     bool leaving;                   /* the fade before the title after ESC */
     unsigned fe_keys;               /* SK_FE_KEY_* held this frame (the window sets them) */
+    sk_custom custom;               /* --custom: a private copy of the level, applied over its setting's map */
+    bool has_custom, custom_applied;
+    bool custom_done;               /* the custom level's exit was reached: the run ends */
+    int custom_cleared;             /* cells whose flags the setting does not have */
 } sk_play;
 
 bool play_open(sk_play *p, const sk_args *a, sk_err *e);

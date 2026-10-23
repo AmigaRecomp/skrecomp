@@ -8,6 +8,7 @@
 #include "app/args.h"
 #include "app/embedded.h"
 #include "core/zipfile.h"
+#include "formats/custom.h"
 #include "app/play.h"
 #include "app/scene.h"
 #include "app/window.h"
@@ -97,7 +98,14 @@ int main(int argc, char **argv) {
         a.data = file; a.data_len = file_n;
     } else if (!a.roms && sk_embedded_size) { a.data = sk_embedded_data; a.data_len = sk_embedded_size; }   /* the built-in game */
     if (a.version) { puts("soccerkid 0.2"); return 0; }
+    sk_custom custom = {0};
+    if (a.custom_path) {                                            /* --custom: a level made with skld on its setting */
+        if (!custom_load(a.custom_path, &custom, &e)) { fprintf(stderr, "soccerkid: %s\n", e.msg); free(file); return 2; }
+        a.level = custom.setting;
+        a.custom = &custom;
+    }
     int rc = a.viewer ? run_viewer(&a, &e) : run_play(&a, &e);
+    custom_free(&custom);
     free(file);
     return rc;
 }

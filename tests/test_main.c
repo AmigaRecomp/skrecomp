@@ -462,6 +462,9 @@ void test_custom_rejects_bad_files(void);
 void test_custom_settings_table(void);
 void test_custom_save_is_atomic(void);
 void test_custom_clears_unknown_flags(void);
+void test_args_custom(void);
+void test_custom_copy_plays_like_the_original(void);
+void test_custom_exit_ends_the_run(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -919,6 +922,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "custom_settings_table", test_custom_settings_table },
     { "custom_save_is_atomic", test_custom_save_is_atomic },
     { "custom_clears_unknown_flags", test_custom_clears_unknown_flags },
+    { "args_custom", test_args_custom },
+    { "custom_copy_plays_like_the_original", test_custom_copy_plays_like_the_original },
+    { "custom_exit_ends_the_run", test_custom_exit_ends_the_run },
 };
 
 int main(int argc, char **argv) {

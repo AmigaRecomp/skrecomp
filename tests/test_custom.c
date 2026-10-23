@@ -7,8 +7,8 @@
 
 static sk_custom sample(void) {
     sk_custom c = {0}; sk_err e = {0};
-    custom_alloc(&c, 4, 20, 13, &e);
-    for (int i = 0; i < 20 * 13; i++) { c.cells[i] = (uint16_t)(i * 7); c.states[i] = (uint8_t)(i & 3); }
+    custom_alloc(&c, 4, 22, 13, &e);
+    for (int i = 0; i < 22 * 13; i++) { c.cells[i] = (uint16_t)(i * 7); c.states[i] = (uint8_t)(i & 3); }
     return c;
 }
 
@@ -16,12 +16,12 @@ void test_custom_round_trip(void) {
     sk_custom c = sample(), r = {0};
     uint8_t *d = NULL; size_t n = 0; sk_err e = {0};
     CHECK(custom_write(&c, &d, &n));
-    CHECK_EQ(n, 8 + 8 + 20 * 13 * 3);
+    CHECK_EQ(n, 8 + 8 + 22 * 13 * 3);
     CHECK(memcmp(d, "SKLEVEL1", 8) == 0);
     CHECK(custom_parse(d, n, &r, &e));
-    CHECK_EQ(r.setting, 4); CHECK_EQ(r.w, 20); CHECK_EQ(r.h, 13);
-    CHECK(memcmp(r.cells, c.cells, 20 * 13 * 2) == 0);
-    CHECK(memcmp(r.states, c.states, 20 * 13) == 0);
+    CHECK_EQ(r.setting, 4); CHECK_EQ(r.w, 22); CHECK_EQ(r.h, 13);
+    CHECK(memcmp(r.cells, c.cells, 22 * 13 * 2) == 0);
+    CHECK(memcmp(r.states, c.states, 22 * 13) == 0);
     free(d); custom_free(&c); custom_free(&r);
 }
 
@@ -35,8 +35,8 @@ void test_custom_rejects_bad_files(void) {
     d[9] = 5; CHECK(!custom_parse(d, n, &r, &e)); CHECK_STR(e.msg, "setting 5"); d[9] = 4;   /* LONDON2: a boss level */
     d[10] = 0x02; d[11] = 0x58; d[12] = 0; d[13] = 40;                                     /* 600 x 40 */
     CHECK(!custom_parse(d, n, &r, &e)); CHECK_STR(e.msg, "600x40 exceeds 16384 cells");
-    d[10] = 0; d[11] = 17; d[13] = 13; CHECK(!custom_parse(d, n, &r, &e)); CHECK_STR(e.msg, "at least 18x13");
-    d[11] = 20; d[15] = 1; CHECK(!custom_parse(d, n, &r, &e)); CHECK_STR(e.msg, "marker table"); d[15] = 0;
+    d[10] = 0; d[11] = 21; d[13] = 13; CHECK(!custom_parse(d, n, &r, &e)); CHECK_STR(e.msg, "at least 22x13");
+    d[11] = 22; d[15] = 1; CHECK(!custom_parse(d, n, &r, &e)); CHECK_STR(e.msg, "marker table"); d[15] = 0;
     CHECK(!custom_parse(d, n - 12, &r, &e)); CHECK_STR(e.msg, "12 bytes short");
     CHECK(!custom_parse(d, n + 1, &r, &e)); CHECK_STR(e.msg, "1 byte too long");
     CHECK(custom_parse(d, n, &r, &e));
@@ -56,7 +56,7 @@ void test_custom_save_is_atomic(void) {
     sk_custom c = sample(), r = {0}; sk_err e = {0};
     char path[] = "/tmp/sk_custom_XXXXXX"; int fd = mkstemp(path); close(fd);
     CHECK(custom_save(path, &c, &e));
-    CHECK(custom_load(path, &r, &e)); CHECK_EQ(r.w, 20); custom_free(&r);
+    CHECK(custom_load(path, &r, &e)); CHECK_EQ(r.w, 22); custom_free(&r);
     CHECK(!custom_save("/nonexistent-dir/x.skl", &c, &e)); CHECK_STR(e.msg, "/nonexistent-dir/x.skl");
     CHECK(custom_load(path, &r, &e));                         /* the earlier file is intact */
     remove(path); custom_free(&r); custom_free(&c);

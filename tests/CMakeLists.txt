@@ -68,7 +68,8 @@ add_executable(sk_tests
   test_controls.c
   test_remap.c
   test_scale.c
-  test_custom.c)
+  test_custom.c
+  test_custom_play.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skcore)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -530,7 +531,10 @@ set(SK_TEST_NAMES
   custom_rejects_bad_files
   custom_settings_table
   custom_save_is_atomic
-  custom_clears_unknown_flags)
+  custom_clears_unknown_flags
+  args_custom
+  custom_copy_plays_like_the_original
+  custom_exit_ends_the_run)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
