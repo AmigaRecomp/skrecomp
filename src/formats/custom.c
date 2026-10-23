@@ -133,12 +133,17 @@ bool custom_load(const char *path, sk_custom *c, sk_err *e) {
     return ok ? true : sk_fail(e, "%s: %s", path, inner.msg);
 }
 
-int custom_clear_unknown_flags(sk_custom *c, const sk_level *setting) {
-    bool used[128] = { false };
+void custom_defined_flags(const sk_level *setting, bool used[128]) {
+    memset(used, 0, 128 * sizeof *used);
     for (int i = 0; i < setting->map.width * setting->map.height; i++) used[setting->map.cells[i] >> SK_FLAG_SHIFT] = true;
     for (int f = 1; f <= 31; f++)
         if (SK_PALS_TYPE + (size_t)f < setting->pals_len && setting->pals[SK_PALS_TYPE + f]) used[f] = true;
     used[0] = true; used[32] = false;
+}
+
+int custom_clear_unknown_flags(sk_custom *c, const sk_level *setting) {
+    bool used[128];
+    custom_defined_flags(setting, used);
     int changed = 0;
     for (int i = 0; i < c->w * c->h; i++)
         if (!used[c->cells[i] >> SK_FLAG_SHIFT]) { c->cells[i] &= (1 << SK_FLAG_SHIFT) - 1; changed++; }

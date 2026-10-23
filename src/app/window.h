@@ -24,6 +24,7 @@ typedef struct {
     bool prev_pause, prev_back; /* the pause and back actions act on a press */
     sk_axis_arm axes;           /* the remap screen takes a stick pushed out from rest */
     bool remap_wait;            /* the remap screen waits until every key and pad input is released */
+    bool attached;              /* window_attach: the window and renderer belong to someone else (skld) */
 } sk_window;
 
 bool window_open(sk_window *w, int scale, sk_err *e);
@@ -36,6 +37,9 @@ uint8_t window_input_bits(const bool *keys);
 unsigned window_frontend_keys(const bool *keys);    /* SK_FE_KEY_TAB and F1..F10 */
 int window_typed_key(SDL_Keycode k);                /* last_ascii_key for the save name, 0 none */
 void window_close(sk_window *w);
+/* The game's texture on a window and renderer someone else owns (skld's play-test); detach gives them back as they were. */
+bool window_attach(sk_window *w, SDL_Window *win, SDL_Renderer *ren, sk_err *e);
+void window_detach(sk_window *w);
 
 /* Moves the camera by (dx, dy) * step pixels, clamped to the scene's limits (pure, for tests). */
 void window_step_camera(sk_scene *s, int dx, int dy, int step);

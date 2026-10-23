@@ -136,6 +136,13 @@ if(WIN32)                                               # a window, no console; 
     COMMAND_EXPAND_LISTS)
 endif()
 
+add_executable(skld src/editor/skld.c src/editor/ui.c ${SK_EMBEDDED_C})   # the level designer, with the same data inside
+add_dependencies(skld embed_data)
+target_link_libraries(skld PRIVATE skedit SDL3::SDL3)
+if(WIN32)
+  set_target_properties(skld PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
+
 if(APPLE)                                               # cmake --build build --target app: Soccer Kid.app
   add_executable(skicon tools/skicon.c)
   target_link_libraries(skicon PRIVATE skcore)

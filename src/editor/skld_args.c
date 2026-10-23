@@ -20,11 +20,13 @@ bool skld_args_parse(int argc, char **argv, skld_args *a, sk_err *e) {
         const char *o = argv[i], *v = i + 1 < argc ? argv[i + 1] : NULL;
         if (strcmp(o, "--settings") == 0) { settings = true; continue; }
         if (strcmp(o, "--help") == 0 || strcmp(o, "-h") == 0) { help = true; continue; }
-        if (strcmp(o, "--roms") == 0 || strcmp(o, "--data") == 0 || strcmp(o, "--size") == 0) {
+        if (strcmp(o, "--roms") == 0 || strcmp(o, "--data") == 0 || strcmp(o, "--size") == 0 || strcmp(o, "--exit-after") == 0 || strcmp(o, "--screenshot") == 0) {
             if (!v) return sk_fail(e, "%s needs a value", o);
             i++;
             if (o[2] == 'r') a->roms = v;
             else if (o[2] == 'd') a->data_path = v;
+            else if (o[2] == 's' && o[3] == 'c') a->screenshot = v;
+            else if (o[2] == 'e') { a->exit_after = atoi(v); if (a->exit_after <= 0) return sk_fail(e, "--exit-after: a positive count, got %s", v); }
             else {
                 char *x = NULL;
                 long w = strtol(v, &x, 10), h = x && *x == 'x' ? strtol(x + 1, &x, 10) : -1;

@@ -32,6 +32,7 @@ bool custom_save(const char *path, const sk_custom *c, sk_err *e);      /* a tem
 bool custom_load(const char *path, sk_custom *c, sk_err *e);
 /* A cell flag the setting does not have becomes 0: markers 1..31 need a type in the PALS table or a use in the
    setting's map, attributes 33..127 a use in the setting's map, flag 32 is never valid. Returns the cells changed. */
+void custom_defined_flags(const sk_level *setting, bool defined[128]);   /* the rule below, per flag */
 int custom_clear_unknown_flags(sk_custom *c, const sk_level *setting);
 bool custom_apply(const sk_custom *c, sk_level *lv);            /* replaces lv->map; false: out of memory */
 

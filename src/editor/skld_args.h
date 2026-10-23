@@ -14,6 +14,8 @@ typedef struct {
     bool copy;                      /* new: start from the setting's own map (else empty, w x h) */
     int w, h;
     const char *roms, *data_path;
+    const char *screenshot;         /* tests: the first frame as a PNG, then exit */
+    int exit_after;                 /* tests: stop after this many redraws (0: run until quit) */
 } skld_args;
 
 bool skld_args_parse(int argc, char **argv, skld_args *a, sk_err *e);

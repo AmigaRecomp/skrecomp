@@ -276,7 +276,28 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
     return rc;
 }
 
+bool window_attach(sk_window *w, SDL_Window *win, SDL_Renderer *ren, sk_err *e) {
+    memset(w, 0, sizeof *w);
+    w->win = win; w->ren = ren; w->attached = true;
+    SDL_SetRenderLogicalPresentation(ren, SK_SCREEN_W, SK_SCREEN_H, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
+    w->tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, SK_SCREEN_W, SK_SCREEN_H);
+    if (!w->tex) { window_detach(w); return sk_fail(e, "SDL texture: %s", SDL_GetError()); }
+    SDL_SetTextureScaleMode(w->tex, SDL_SCALEMODE_NEAREST);
+    w->pixels = calloc((size_t)SK_SCREEN_W * SK_SCREEN_H, sizeof *w->pixels);
+    if (!w->pixels) { window_detach(w); return sk_fail(e, "out of memory"); }
+    return true;
+}
+
+void window_detach(sk_window *w) {
+    if (w->pad) { SDL_CloseGamepad(w->pad); w->pad = NULL; }
+    free(w->pixels);
+    if (w->tex) SDL_DestroyTexture(w->tex);
+    if (w->ren) SDL_SetRenderLogicalPresentation(w->ren, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED);
+    memset(w, 0, sizeof *w);
+}
+
 void window_close(sk_window *w) {
+    if (w->attached) { window_detach(w); return; }
     if (w->pad) { SDL_CloseGamepad(w->pad); w->pad = NULL; }
     free(w->pixels);
     if (w->tex) SDL_DestroyTexture(w->tex);
