@@ -32,6 +32,7 @@ add_library(skcore STATIC
   src/core/hunk.c
   src/core/tables.c
   src/formats/level.c
+  src/formats/custom.c
   src/formats/sections.c
   src/formats/bobs.c
   src/formats/screens.c
