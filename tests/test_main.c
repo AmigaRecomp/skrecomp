@@ -471,6 +471,9 @@ void test_doc_fill_copy_paste(void);
 void test_doc_resize(void);
 void test_doc_undo_redo(void);
 void test_doc_new_empty(void);
+void test_check_clean_level(void);
+void test_check_start_exit_cards_crowding(void);
+void test_check_skips_the_exit_without_one_in_the_setting(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -937,6 +940,9 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "doc_resize", test_doc_resize },
     { "doc_undo_redo", test_doc_undo_redo },
     { "doc_new_empty", test_doc_new_empty },
+    { "check_clean_level", test_check_clean_level },
+    { "check_start_exit_cards_crowding", test_check_start_exit_cards_crowding },
+    { "check_skips_the_exit_without_one_in_the_setting", test_check_skips_the_exit_without_one_in_the_setting },
 };
 
 int main(int argc, char **argv) {

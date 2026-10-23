@@ -116,7 +116,8 @@ endif()
 
 # The level designer's document, checks, names and map drawing (no window), shared by skld and the tests.
 add_library(skedit STATIC
-  src/editor/doc.c)
+  src/editor/doc.c
+  src/editor/check.c)
 target_include_directories(skedit PUBLIC src)
 target_link_libraries(skedit PUBLIC skcore)
 
