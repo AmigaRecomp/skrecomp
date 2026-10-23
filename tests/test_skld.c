@@ -18,6 +18,12 @@ void test_skld_args(void) {
     CHECK(!skld_args_parse(6, (char **)n3, &a, &e)); CHECK_STR(e.msg, "at least 22x13");
     const char *n4[] = { "skld", "new", "nowhere", "a.skl" };
     CHECK(!skld_args_parse(4, (char **)n4, &a, &e)); CHECK_STR(e.msg, "unknown setting \"nowhere\""); CHECK_STR(e.msg, "skld --settings");
+    const char *c1[] = { "skld", "new", "london1", "a.skl", "--copy" };
+    CHECK(skld_args_parse(5, (char **)c1, &a, &e)); CHECK(a.copy);
+    const char *c2[] = { "skld", "new", "london1", "a.skl", "--copy", "--size", "40x13" };
+    CHECK(!skld_args_parse(7, (char **)c2, &a, &e)); CHECK_STR(e.msg, "--copy or --size");
+    const char *c3[] = { "skld", "new", "london1", "a.skl", "--size", "4294967318x13" };
+    CHECK(!skld_args_parse(6, (char **)c3, &a, &e)); CHECK_STR(e.msg, "exceeds");
     const char *n5[] = { "skld", "new", "london1" };
     CHECK(!skld_args_parse(3, (char **)n5, &a, &e)); CHECK_STR(e.msg, "new SETTING FILE");
     const char *o1[] = { "skld", "--data", "x.dat", "level.skl" };

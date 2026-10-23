@@ -119,3 +119,36 @@ void test_doc_new_empty(void) {
     CHECK(d.dirty);
     doc_free(&d);
 }
+
+void test_doc_undo_and_resize_end_an_open_stroke(void) {   /* review 2: a stroke left open must not swallow later steps */
+    make_setting();
+    sk_doc d; sk_err e = {0};
+    CHECK(doc_new_copy(&d, &g_lv, 4, &e));
+    doc_begin_stroke(&d);
+    doc_paint(&d, 1, 1, 5);
+    CHECK(doc_resize(&d, 1, 0, 0, 0, &e));                       /* its own step, and the stroke is over */
+    CHECK(!d.in_stroke);
+    doc_fill(&d, 0, 0, 3, 3, SK_LAYER_TILE, 6, 0);
+    CHECK(doc_undo(&d)); CHECK_EQ(d.lvl.w, 31); CHECK_EQ(cell(&d, 2, 1), 5);   /* only the fill went */
+    CHECK(doc_undo(&d)); CHECK_EQ(d.lvl.w, 30); CHECK_EQ(cell(&d, 1, 1), 5);   /* then the resize */
+    doc_begin_stroke(&d);
+    doc_paint(&d, 7, 7, 4);
+    CHECK(doc_undo(&d)); CHECK(!d.in_stroke); CHECK_EQ(cell(&d, 7, 7), g_cells[7 * 30 + 7]);
+    doc_fill(&d, 0, 0, 1, 1, SK_LAYER_TILE, 3, 0);
+    CHECK(!doc_redo(&d));                                         /* the fill dropped the redo tail */
+    doc_free(&d);
+}
+
+void test_doc_move_start(void) {                           /* review 9: one start, moved in one step */
+    make_setting();
+    sk_doc d; sk_err e = {0};
+    CHECK(doc_new_copy(&d, &g_lv, 4, &e));
+    doc_place_start(&d, 5, 5);                                     /* a second start */
+    doc_move_start(&d, 20, 3);
+    int starts = 0;
+    for (int i = 0; i < 30 * 13; i++) starts += (d.lvl.cells[i] & SK_INDEX_MASK) == SK_START_TILE;
+    CHECK_EQ(starts, 1); CHECK_EQ(cell(&d, 20, 3) & SK_INDEX_MASK, SK_START_TILE);
+    CHECK_EQ(cell(&d, 2, 9) & SK_INDEX_MASK, 0);                  /* the old one is an empty cell */
+    CHECK(doc_undo(&d)); CHECK_EQ(cell(&d, 2, 9) & SK_INDEX_MASK, SK_START_TILE); CHECK_EQ(cell(&d, 5, 5) & SK_INDEX_MASK, SK_START_TILE);
+    doc_free(&d);
+}

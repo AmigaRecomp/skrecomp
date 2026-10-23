@@ -126,6 +126,14 @@ void doc_place_flag(sk_doc *d, int x, int y, int flag) {
 
 void doc_place_start(sk_doc *d, int x, int y) { doc_paint(d, x, y, SK_START_TILE); }
 
+void doc_move_start(sk_doc *d, int x, int y) {
+    if (!inside(d, x, y)) return;
+    begin_op(d);
+    for (int i = 0; i < d->lvl.w * d->lvl.h; i++)
+        if ((d->lvl.cells[i] & SK_INDEX_MASK) == SK_START_TILE) { d->lvl.cells[i] &= (uint16_t)~SK_INDEX_MASK; d->lvl.states[i] = 0; }
+    set_tile(d, y * d->lvl.w + x, SK_START_TILE);
+}
+
 void doc_erase(sk_doc *d, int x, int y, int layer) {
     if (!inside(d, x, y)) return;
     begin_op(d);
@@ -186,6 +194,7 @@ void doc_paste(sk_doc *d, const sk_clip *c, int x, int y) {
 void clip_free(sk_clip *c) { free(c->cells); free(c->states); memset(c, 0, sizeof *c); }
 
 bool doc_resize(sk_doc *d, int left, int top, int right, int bottom, sk_err *e) {
+    d->in_stroke = false;                                    /* its own step, never part of a stroke */
     int w = d->lvl.w + left + right, h = d->lvl.h + top + bottom;
     if (!custom_check_size(w, h, e)) return false;
     sk_custom n;
@@ -204,6 +213,7 @@ bool doc_resize(sk_doc *d, int left, int top, int right, int bottom, sk_err *e) 
 }
 
 static bool swap_from(sk_doc *d, sk_custom *from, int *from_n, sk_custom *to, int *to_n) {
+    d->in_stroke = false;                                    /* an undo inside a stroke ends it */
     if (*from_n == 0) return false;
     push(to, to_n, &d->lvl);
     custom_free(&d->lvl);

@@ -552,7 +552,12 @@ set(SK_TEST_NAMES
   edit_render_matches_the_viewer
   skld_args
   playtest_leaves_the_document_alone
-  skld_usage_lists_the_settings)
+  skld_usage_lists_the_settings
+  doc_undo_and_resize_end_an_open_stroke
+  custom_bonus_keeps_its_timer_after_game_over
+  custom_round_trip_through_the_file_plays_the_same
+  playtest_game_over_returns
+  doc_move_start)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

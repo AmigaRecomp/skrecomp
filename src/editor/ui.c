@@ -222,7 +222,7 @@ static void draw_status(skld *k, int ww, int wh) {
     char s[300], l[64] = "";
     const sk_custom *c = &k->doc.lvl;
     if (k->msg[0] && SDL_GetTicks() < k->msg_until) snprintf(s, sizeof s, "%s", k->msg);
-    else if (k->cell_ok) {
+    else if (k->cell_ok && k->cell_x < c->w && k->cell_y < c->h) {
         uint16_t w = c->cells[k->cell_y * c->w + k->cell_x];
         edit_flag_label(&k->scene.level, w >> SK_FLAG_SHIFT, l, sizeof l);
         snprintf(s, sizeof s, "%d,%d  tile %03X  %s", k->cell_x, k->cell_y, w & SK_INDEX_MASK, (w & SK_INDEX_MASK) == SK_START_TILE ? "start" : l);

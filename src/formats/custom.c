@@ -5,6 +5,9 @@
 #include "formats/custom.h"
 #include "core/zipfile.h"
 #include "game/world.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #define HEADER 16
 
@@ -119,9 +122,11 @@ bool custom_save(const char *path, const sk_custom *c, sk_err *e) {
     free(d);
     if (!ok) { remove(tmp); return sk_fail(e, "%s: cannot write the level", path); }
 #ifdef _WIN32
-    remove(path);                                            /* rename does not replace on Windows */
+    bool moved = MoveFileExA(tmp, path, MOVEFILE_REPLACE_EXISTING) != 0;   /* rename does not replace on Windows */
+#else
+    bool moved = rename(tmp, path) == 0;
 #endif
-    if (rename(tmp, path) != 0) { remove(tmp); return sk_fail(e, "%s: cannot replace the level", path); }
+    if (!moved) return sk_fail(e, "%s: cannot replace the level (the new version is in %s)", path, tmp);
     return true;
 }
 

@@ -11,10 +11,13 @@ const char *skld_usage(void) {                              /* built once from t
     static char u[4096];
     if (u[0]) return u;
     size_t n = (size_t)snprintf(u, sizeof u,
-        "usage: skld new SETTING FILE [--size WxH]   make a new level on SETTING, from a copy of its map\n"
-        "                                            (or, with --size, an empty map with a floor, a start and an exit)\n"
-        "       skld FILE                            open a level made earlier\n"
-        "       skld --settings                      list the settings\n"
+        "usage: skld new SETTING FILE [--copy | --size WxH]\n"
+        "           a new level on SETTING: a copy of its map (the default),\n"
+        "           or with --size an empty map with a floor, a start and an exit\n"
+        "       skld FILE\n"
+        "           open a level made earlier\n"
+        "       skld --settings\n"
+        "           list the settings\n"
         "options: --roms DIR (your disk images) or --data FILE (a soccerkid.dat); default: the data built in\n"
         "\n"
         "SETTING is one of the original levels; the new level uses its tiles, enemies, objects, backdrop and music:\n");
@@ -48,10 +51,11 @@ bool skld_args_parse(int argc, char **argv, skld_args *a, sk_err *e) {
     a->copy = true;
     const char *pos[3];
     int npos = 0;
-    bool settings = false, help = false;
+    bool settings = false, help = false, copy_given = false;
     for (int i = 1; i < argc; i++) {
         const char *o = argv[i], *v = i + 1 < argc ? argv[i + 1] : NULL;
         if (strcmp(o, "--settings") == 0) { settings = true; continue; }
+        if (strcmp(o, "--copy") == 0) { copy_given = true; continue; }
         if (strcmp(o, "--help") == 0 || strcmp(o, "-h") == 0) { help = true; continue; }
         if (strcmp(o, "--roms") == 0 || strcmp(o, "--data") == 0 || strcmp(o, "--size") == 0 || strcmp(o, "--exit-after") == 0 || strcmp(o, "--screenshot") == 0) {
             if (!v) return sk_fail(e, "%s needs a value", o);
@@ -64,6 +68,7 @@ bool skld_args_parse(int argc, char **argv, skld_args *a, sk_err *e) {
                 char *x = NULL;
                 long w = strtol(v, &x, 10), h = x && *x == 'x' ? strtol(x + 1, &x, 10) : -1;
                 if (!x || *x || w <= 0 || h <= 0) return sk_fail(e, "--size: expected WxH, got %s", v);
+                if (w > SK_CUSTOM_MAX_CELLS || h > SK_CUSTOM_MAX_CELLS) return sk_fail(e, "map %ldx%ld exceeds %d cells", w, h, SK_CUSTOM_MAX_CELLS);
                 if (!custom_check_size((int)w, (int)h, e)) return false;
                 a->w = (int)w; a->h = (int)h; a->copy = false;
             }
@@ -73,6 +78,7 @@ bool skld_args_parse(int argc, char **argv, skld_args *a, sk_err *e) {
         if (npos == 3) return sk_fail(e, "too many arguments");
         pos[npos++] = o;
     }
+    if (copy_given && !a->copy) return sk_fail(e, "give --copy or --size, not both");
     if (help) { a->mode = SKLD_HELP; return true; }
     if (settings) { a->mode = SKLD_SETTINGS; return true; }
     if (npos == 0) { a->mode = SKLD_HELP; return true; }
@@ -84,7 +90,7 @@ bool skld_args_parse(int argc, char **argv, skld_args *a, sk_err *e) {
         return true;
     }
     if (npos != 1) return sk_fail(e, "expected one level file, or: skld new SETTING FILE");
-    if (!a->copy) return sk_fail(e, "--size is for skld new");
+    if (!a->copy || copy_given) return sk_fail(e, "--size and --copy are for skld new");
     a->mode = SKLD_OPEN; a->file = pos[0];
     return true;
 }

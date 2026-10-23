@@ -279,6 +279,7 @@ int window_run(sk_window *w, sk_play *p, int exit_after) {
 bool window_attach(sk_window *w, SDL_Window *win, SDL_Renderer *ren, sk_err *e) {
     memset(w, 0, sizeof *w);
     w->win = win; w->ren = ren; w->attached = true;
+    SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);                   /* the game's borders are black */
     SDL_SetRenderLogicalPresentation(ren, SK_SCREEN_W, SK_SCREEN_H, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
     w->tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, SK_SCREEN_W, SK_SCREEN_H);
     if (!w->tex) { window_detach(w); return sk_fail(e, "SDL texture: %s", SDL_GetError()); }

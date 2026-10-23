@@ -34,6 +34,7 @@ int doc_floor_tile(const sk_level *setting);                /* the first solid t
 void doc_paint(sk_doc *d, int x, int y, int tile);          /* keeps the flag; the state from tile_state */
 void doc_place_flag(sk_doc *d, int x, int y, int flag);     /* a marker or attribute replaces the other */
 void doc_place_start(sk_doc *d, int x, int y);
+void doc_move_start(sk_doc *d, int x, int y);              /* every start cell emptied, then one here: one step */
 void doc_erase(sk_doc *d, int x, int y, int layer);
 void doc_fill(sk_doc *d, int x0, int y0, int x1, int y1, int layer, int tile, int flag);
 bool doc_copy(const sk_doc *d, int x0, int y0, int x1, int y1, sk_clip *out);

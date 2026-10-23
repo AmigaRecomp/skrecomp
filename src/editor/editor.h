@@ -36,6 +36,7 @@ typedef struct {
     int tab, tile, flag;            /* the selection: tile index (tiles), flag (objects, specials) */
     bool start;                     /* specials: the start position is selected */
     int scroll[ED_TABS];            /* each tab's list scroll, in rows */
+    float wheel_list, wheel_zoom;   /* trackpad wheel steps not yet whole */
     bool grid, overlay, solid, frame, help, quit_prompt, running;
     int mouse_x, mouse_y, cell_x, cell_y;
     bool cell_ok;                   /* the mouse is over a cell of the map */

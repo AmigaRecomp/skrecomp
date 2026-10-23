@@ -479,6 +479,11 @@ void test_edit_render_matches_the_viewer(void);
 void test_skld_args(void);
 void test_playtest_leaves_the_document_alone(void);
 void test_skld_usage_lists_the_settings(void);
+void test_doc_undo_and_resize_end_an_open_stroke(void);
+void test_custom_bonus_keeps_its_timer_after_game_over(void);
+void test_custom_round_trip_through_the_file_plays_the_same(void);
+void test_playtest_game_over_returns(void);
+void test_doc_move_start(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -953,6 +958,11 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "skld_args", test_skld_args },
     { "playtest_leaves_the_document_alone", test_playtest_leaves_the_document_alone },
     { "skld_usage_lists_the_settings", test_skld_usage_lists_the_settings },
+    { "doc_undo_and_resize_end_an_open_stroke", test_doc_undo_and_resize_end_an_open_stroke },
+    { "custom_bonus_keeps_its_timer_after_game_over", test_custom_bonus_keeps_its_timer_after_game_over },
+    { "custom_round_trip_through_the_file_plays_the_same", test_custom_round_trip_through_the_file_plays_the_same },
+    { "playtest_game_over_returns", test_playtest_game_over_returns },
+    { "doc_move_start", test_doc_move_start },
 };
 
 int main(int argc, char **argv) {
