@@ -7,6 +7,7 @@
 #include "formats/custom.h"
 #include "game/world.h"
 #include "game/level_flow.h"
+#include "game/player.h"
 
 void test_args_custom(void) {
     sk_args a; sk_err e = {0};
@@ -83,5 +84,59 @@ void test_custom_exit_ends_the_run(void) {                     /* ROM-backed: a 
     for (; i < 900 && !p.quit; i++) play_step(&p, 0);
     CHECK(p.custom_done); CHECK(p.quit);
     printf("custom level: %d frames, kid %d,%d state %d lives %d outcome %d\n", i, p.game.player.x, p.game.player.y, p.game.player.state, p.game.player.lives, (int)game_outcome(&p.game));
+    play_close(&p); custom_free(&c);
+}
+
+void test_custom_bonus_keeps_its_timer_after_game_over(void) {   /* review 3: ROM-backed, ENGLAND BONUS as a setting */
+    /* (named for the review finding: the bonus level's own end is a death, which ends a custom run) */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    static sk_play p; sk_err e = {0};
+    sk_args a = { .roms = roms, .level = 36, .scale = 1, .section = -1, .near_type = -1, .cup = -1 };
+    CHECK(play_open(&p, &a, &e));
+    sk_custom c; CHECK(copy_level(&p.scene.level, 36, &c));
+    play_close(&p);
+    a.custom = &c;
+    CHECK(play_open(&p, &a, &e));
+    CHECK(p.game.timeout_armed);
+    p.game.player.lives = 0;
+    kill_player(&p.game);                                         /* a death ends a bonus level, as in the original */
+    for (int i = 0; i < 2000 && !p.quit; i++) play_step(&p, 0);
+    CHECK(p.quit); CHECK(!p.custom_done);                         /* the run ends: no title screen, no other level */
+    CHECK_EQ(p.scene.level_index, 36); CHECK_EQ(p.scene.level.map.width, c.w);
+    play_close(&p); custom_free(&c);
+}
+
+void test_custom_round_trip_through_the_file_plays_the_same(void) {   /* review 13: write, parse, then play */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    static sk_play a, b; sk_err e = {0};
+    sk_args aa = { .roms = roms, .level = 4, .scale = 1, .section = -1, .script = ".180,R400,RU20,R700", .near_type = -1 };
+    CHECK(play_open(&a, &aa, &e));
+    sk_custom c, r = {0}; uint8_t *d = NULL; size_t n = 0;
+    CHECK(copy_level(&a.scene.level, 4, &c));
+    CHECK(custom_write(&c, &d, &n)); CHECK(custom_parse(d, n, &r, &e));
+    sk_args ab = aa; ab.custom = &r;
+    CHECK(play_open(&b, &ab, &e));
+    int diffs = 0;
+    for (int i = 0; i < 1300; i++) { play_step(&a, 0); play_step(&b, 0); diffs += a.game.player.x != b.game.player.x || a.game.player.y != b.game.player.y; }
+    CHECK_EQ(diffs, 0);
+    play_close(&a); play_close(&b); custom_free(&c); custom_free(&r); free(d);
+}
+
+void test_playtest_game_over_returns(void) {                  /* review 6: skld's play-test ends on game over */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    static sk_play p; sk_err e = {0};
+    sk_args a = { .roms = roms, .level = 4, .scale = 1, .section = -1, .near_type = -1, .cup = -1 };
+    CHECK(play_open(&p, &a, &e));
+    sk_custom c; CHECK(copy_level(&p.scene.level, 4, &c));
+    play_close(&p);
+    a.custom = &c; a.custom_quit_on_game_over = true;
+    CHECK(play_open(&p, &a, &e));
+    p.game.player.lives = 0;
+    kill_player(&p.game);
+    for (int i = 0; i < 2000 && !p.quit; i++) play_step(&p, 0);
+    CHECK(p.quit); CHECK(!p.custom_done); CHECK(p.custom_game_over);
     play_close(&p); custom_free(&c);
 }

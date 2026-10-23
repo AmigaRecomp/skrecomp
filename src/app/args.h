@@ -12,6 +12,7 @@ typedef struct {
     const char *data_path;      /* --data FILE: a soccerkid.dat made by skextract */
     const char *custom_path;    /* --custom FILE: a level made with skld */
     const struct sk_custom_level *custom;   /* the loaded custom level (main, skld) */
+    bool custom_quit_on_game_over;          /* skld's play-test: a game over returns to the editor */
     const uint8_t *data; size_t data_len;   /* the archive in memory (main: the embedded copy or --data's file) */
     int level;                  /* data index 0..41 (0 = England 1, 12 = bonus) */
     const char *section_file;   /* --section fileNNN:S[:WxH]: graphics-set file name on the level's disk */

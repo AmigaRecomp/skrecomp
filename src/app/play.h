@@ -65,6 +65,7 @@ typedef struct sk_play {
     sk_custom custom;               /* --custom: a private copy of the level, applied over its setting's map */
     bool has_custom, custom_applied;
     bool custom_done;               /* the custom level's exit was reached: the run ends */
+    bool custom_quit_on_game_over, custom_game_over;   /* skld: a game over ends the run (and says so) */
     int custom_cleared;             /* cells whose flags the setting does not have */
 } sk_play;
 

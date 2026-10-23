@@ -93,6 +93,7 @@ bool play_open(sk_play *p, const sk_args *a, sk_err *e) {
     p->game.sk = &p->scene.sk;
     p->game.tables = &p->scene.tables;
     if (a->custom) { if (!custom_copy(&p->custom, a->custom)) { scene_close(&p->scene); return sk_fail(e, "out of memory"); } p->has_custom = true; }
+    p->custom_quit_on_game_over = a->custom_quit_on_game_over;
     p->script = a->script;
     p->script_cursor = a->script;
     int pos = -1;
@@ -499,6 +500,7 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
     if (p->fade_wait > 0) {                                         /* fade_music_out blocks the game for 64 frames */
         sound_step(p);
         if (--p->fade_wait > 0) return;
+        if (p->leaving && p->has_custom) { p->leaving = false; p->custom_game_over = true; p->quit = true; return; }   /* a bonus level's death: the run ends */
         if (p->leaving) { p->leaving = false; session_start(p); return; }   /* play_level returned: the outer loop, the title */
         if (p->has_custom) { p->custom_done = true; p->quit = true; return; }   /* a custom level is played alone */
         play_advance(p);                                            /* play_level loops: level_number moved on by the exit */
@@ -535,6 +537,8 @@ void play_step(sk_play *p, uint8_t keyboard_input) {
                 play_advance(p);
                 break;
             }
+            if (p->has_custom && p->custom_quit_on_game_over) { p->custom_game_over = true; p->quit = true; break; }   /* skld: back to the editor */
+            if (p->has_custom && idx >= 36 && idx <= 40) { p->game.timeout_armed = true; p->game.timer_rate = 0x32; p->game.fulltime_level = back; }   /* still timed */
             if (p->cup_arg >= 0) p->game.cup_pieces = (uint8_t)p->cup_arg;   /* --cup holds through a game over */
             if (p->level_pos >= 0) p->game.level_number = p->level_pos;
             if (!play_start_level(p, p->level_pos, p->scene.level_index, &e)) { p->load_failed = true; p->load_err = e; }
