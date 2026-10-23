@@ -484,6 +484,7 @@ void test_custom_bonus_keeps_its_timer_after_game_over(void);
 void test_custom_round_trip_through_the_file_plays_the_same(void);
 void test_playtest_game_over_returns(void);
 void test_doc_move_start(void);
+void test_present_rows_clamps_a_sky_offset_above_the_table(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -963,6 +964,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "custom_round_trip_through_the_file_plays_the_same", test_custom_round_trip_through_the_file_plays_the_same },
     { "playtest_game_over_returns", test_playtest_game_over_returns },
     { "doc_move_start", test_doc_move_start },
+    { "present_rows_clamps_a_sky_offset_above_the_table", test_present_rows_clamps_a_sky_offset_above_the_table },
 };
 
 int main(int argc, char **argv) {

@@ -127,3 +127,15 @@ void test_present_curtain_blacks_rows(void) {
     CHECK_EQ(out[(SK_PLAY_Y + SK_VIEW_H - 11) * SK_SCREEN_W + SK_PLAY_X + 5], 0xABCDEF);
     fb_free(&fb);
 }
+
+void test_present_rows_clamps_a_sky_offset_above_the_table(void) {   /* skld scrolls above the map: negative offsets */
+    sk_fb fb; CHECK(fb_init(&fb, 4, 2));
+    fb_clear(&fb, 1 << 4);                                         /* playfield 2 colour 1: the COLOR17 sky */
+    sk_palette pal = {0};
+    static const uint16_t c17[2] = { 0x0F00, 0x00F0 }, c18[2] = { 0x000F, 0x000F };
+    sk_sky sky = { c17, 2, -5, c18, 2, -5 };
+    uint32_t out[8];
+    present_rows(&fb, &pal, &sky, 0, 0, 4, 2, out);
+    CHECK_EQ(out[0], rgb12_to_xrgb(0x0F00));                       /* line -5 shows the table's first word */
+    fb_free(&fb);
+}

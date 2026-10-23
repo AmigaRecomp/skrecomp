@@ -557,7 +557,8 @@ set(SK_TEST_NAMES
   custom_bonus_keeps_its_timer_after_game_over
   custom_round_trip_through_the_file_plays_the_same
   playtest_game_over_returns
-  doc_move_start)
+  doc_move_start
+  present_rows_clamps_a_sky_offset_above_the_table)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

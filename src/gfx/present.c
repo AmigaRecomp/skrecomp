@@ -19,7 +19,7 @@ static inline uint32_t resolve(const sk_palette *pal, uint8_t v, uint32_t c17, u
 #endif
 }
 
-static uint32_t sky_word(const uint16_t *t, int len, int i) { return rgb12_to_xrgb(t[i < len ? i : len - 1]); }
+static uint32_t sky_word(const uint16_t *t, int len, int i) { return rgb12_to_xrgb(t[i < 0 ? 0 : i < len ? i : len - 1]); }
 
 void present_rows(const sk_fb *fb, const sk_palette *pal, const sk_sky *sky,
                   int src_x, int src_y, int w, int h, uint32_t *out) {
