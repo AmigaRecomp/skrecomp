@@ -22,6 +22,7 @@ const sk_setting *custom_setting_at(int i);
 const sk_setting *custom_setting_by_name(const char *name);     /* case-insensitive, NULL when unknown */
 const sk_setting *custom_setting_by_index(int data_index);      /* NULL when the level cannot be a setting */
 
+bool custom_check_size(int w, int h, sk_err *e);                 /* the limits above, with the message */
 bool custom_alloc(sk_custom *c, int setting, int w, int h, sk_err *e);   /* zeroed cells and states */
 void custom_free(sk_custom *c);
 bool custom_copy(sk_custom *dst, const sk_custom *src);          /* false: out of memory */

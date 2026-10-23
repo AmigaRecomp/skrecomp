@@ -114,6 +114,12 @@ if(NOT MSVC)
   set_source_files_properties(${SK_EMBEDDED_C} PROPERTIES COMPILE_OPTIONS "-w")
 endif()
 
+# The level designer's document, checks, names and map drawing (no window), shared by skld and the tests.
+add_library(skedit STATIC
+  src/editor/doc.c)
+target_include_directories(skedit PUBLIC src)
+target_link_libraries(skedit PUBLIC skcore)
+
 add_executable(soccerkid src/app/main.c ${SK_EMBEDDED_C})
 add_dependencies(soccerkid embed_data)
 target_link_libraries(soccerkid PRIVATE skcore SDL3::SDL3)

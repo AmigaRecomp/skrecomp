@@ -69,9 +69,10 @@ add_executable(sk_tests
   test_remap.c
   test_scale.c
   test_custom.c
-  test_custom_play.c)
+  test_custom_play.c
+  test_edit_doc.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(sk_tests PRIVATE skcore)
+target_link_libraries(sk_tests PRIVATE skedit)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
 
 # One ctest entry per test function; keep in step with the table in test_main.c.
@@ -534,7 +535,13 @@ set(SK_TEST_NAMES
   custom_clears_unknown_flags
   args_custom
   custom_copy_plays_like_the_original
-  custom_exit_ends_the_run)
+  custom_exit_ends_the_run
+  doc_tile_states_and_flags
+  doc_paint_flag_erase
+  doc_fill_copy_paste
+  doc_resize
+  doc_undo_redo
+  doc_new_empty)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

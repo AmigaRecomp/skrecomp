@@ -465,6 +465,12 @@ void test_custom_clears_unknown_flags(void);
 void test_args_custom(void);
 void test_custom_copy_plays_like_the_original(void);
 void test_custom_exit_ends_the_run(void);
+void test_doc_tile_states_and_flags(void);
+void test_doc_paint_flag_erase(void);
+void test_doc_fill_copy_paste(void);
+void test_doc_resize(void);
+void test_doc_undo_redo(void);
+void test_doc_new_empty(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -925,6 +931,12 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "args_custom", test_args_custom },
     { "custom_copy_plays_like_the_original", test_custom_copy_plays_like_the_original },
     { "custom_exit_ends_the_run", test_custom_exit_ends_the_run },
+    { "doc_tile_states_and_flags", test_doc_tile_states_and_flags },
+    { "doc_paint_flag_erase", test_doc_paint_flag_erase },
+    { "doc_fill_copy_paste", test_doc_fill_copy_paste },
+    { "doc_resize", test_doc_resize },
+    { "doc_undo_redo", test_doc_undo_redo },
+    { "doc_new_empty", test_doc_new_empty },
 };
 
 int main(int argc, char **argv) {

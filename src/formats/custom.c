@@ -67,7 +67,7 @@ bool custom_copy(sk_custom *dst, const sk_custom *src) {
 
 static unsigned be16(const uint8_t *p) { return (unsigned)p[0] << 8 | p[1]; }
 
-static bool check_size(int w, int h, sk_err *e) {
+bool custom_check_size(int w, int h, sk_err *e) {
     if ((long)w * h > SK_CUSTOM_MAX_CELLS) return sk_fail(e, "map %dx%d exceeds %d cells", w, h, SK_CUSTOM_MAX_CELLS);
     if (w < SK_CUSTOM_MIN_W || h < SK_CUSTOM_MIN_H) return sk_fail(e, "map %dx%d: a level is at least %dx%d", w, h, SK_CUSTOM_MIN_W, SK_CUSTOM_MIN_H);
     return true;
@@ -82,7 +82,7 @@ bool custom_parse(const uint8_t *d, size_t n, sk_custom *c, sk_err *e) {
             return sk_fail(e, "custom level: setting %d (%s) cannot be used for custom levels", setting, excluded[setting]);
         return sk_fail(e, "custom level: unknown setting %d", setting);
     }
-    if (!check_size(w, h, e)) return false;
+    if (!custom_check_size(w, h, e)) return false;
     if (markers != 0) return sk_fail(e, "custom level: a marker table (%d entries) is not supported by this version", markers);
     size_t want = HEADER + (size_t)w * h * 3;
     if (n < want) return sk_fail(e, "custom level: file is %zu bytes short", want - n);
