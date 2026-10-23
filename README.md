@@ -43,4 +43,18 @@ Without `data/soccerkid.dat` the program is built empty and asks for `--roms /pa
 
 Arrows or WASD to move, up to jump, Space or X to kick, F10 or P to pause, Escape to leave a game. Gamepads work too, and F12 opens a screen to change the keys and buttons. Saves and the controls are kept in your user data folder.
 
+## Make your own levels
+
+`skld` is a level designer that's built along with the game. You pick one of the original levels as the setting and build a new level from its tiles, enemies and objects:
+
+```sh
+build/macos/skld --settings                          # the settings: home1, london1, venice2, bonus3, ...
+build/macos/skld new london1 mylevel.skl             # start from a copy of LONDON 1's map
+build/macos/skld new venice1 mylevel.skl --size 200x30   # or from an empty one
+build/macos/skld mylevel.skl                         # open it again
+build/macos/soccerkid --custom mylevel.skl           # play it
+```
+
+Paint with the mouse, F1 lists the keys, F5 plays the level right there. A `.skl` file only holds your map, never any of the game's data, so levels can be shared freely; whoever plays one needs their own copy of the game.
+
 More options and details: [docs/reference.md](docs/reference.md).

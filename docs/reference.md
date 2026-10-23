@@ -84,6 +84,51 @@ Each level plays its ProTracker module through the game's own replay routine, wh
 
 Keys in the viewer (`--viewer`): arrows scroll, PageUp/PageDown change level, `[` and `]` lay a graphics set's frames over the level and step through its sections (a debugging aid; `--section` starts with one shown). The window shows the 320x256 PAL frame with the game's 288x200 play area.
 
+## Level designer
+
+`skld` makes new levels on the setting of an original level: its tiles, its objects (each with the parameter the original gives it), its cell behaviours (coins, cards, exits, ladders, checkpoints, ...), backdrop, colours and music. It's built with the game and carries the same data inside (or takes `--roms` / `--data`).
+
+```sh
+skld --settings                          # list the settings
+skld new SETTING FILE                    # a new level from a copy of the setting's map
+skld new SETTING FILE --size WxH         # or an empty one: a floor, a start and an exit
+skld FILE                                # open a level
+soccerkid --custom FILE                  # play it (--start and --near work too)
+```
+
+The settings are the ordinary levels and the five bonus levels. The boss levels, the train, the battleship, the scoreboard and the ALIEN are left out: their code depends on their exact maps or their own scrolling.
+
+A level is at least 22 × 13 cells (the game's scroll buffer and view) and at most 16,384 cells, the size of the game's cell-state buffer (the largest original, 546 × 30, uses 16,380).
+
+The window shows the map as the game draws it, with the side panel on the right:
+
+- **Tiles:** the setting's tiles. Painting a tile keeps the cell's object or behaviour, and gives the cell the animation state the original map uses for that tile.
+- **Objects:** the setting's enemies and objects.
+- **Specials:** the start position and the setting's cell behaviours.
+
+A cell holds one object or one behaviour, so placing one replaces the other. The checks at the bottom of the panel list what would stop the level from working (no start, no exit) and what may surprise you (several starts, a different card count from the original's, more objects on one screen than the game's 16 slots); click one to jump to it.
+
+| input | action |
+|---|---|
+| left button | paint the selection |
+| right button | erase (tiles on the Tiles tab, else objects and behaviours) |
+| Shift + drag | fill a rectangle (right button: clear it) |
+| Alt + click | pick the tile, object or behaviour under the mouse |
+| Ctrl + drag, Ctrl+C, Ctrl+V, Del | select, copy, paste at the mouse, clear the selection |
+| middle drag, arrows, wheel | scroll (Shift: faster or sideways) |
+| 1 2 3, Ctrl + wheel | zoom |
+| Ctrl+Z, Ctrl+Y | undo, redo (256 steps) |
+| Ctrl + arrow | add a column or row on that side (with Shift: remove one) |
+| Tab | next panel tab |
+| G, O, B, V | the grid, the object and behaviour labels, the solid parts of the tiles, the game's view around the mouse |
+| F5, Shift+F5 | play from the start, or from the cell under the mouse; Escape comes back |
+| Ctrl+S | save |
+| F1 | the keys |
+
+Saving writes a temporary file and renames it over the level, so a failed save never damages the old file. Quitting with unsaved changes asks first.
+
+A `.skl` file is `SKLEVEL1`, the setting's data index, the width and height, an empty marker table (room for later), the cell words and their initial animation states. When a level is played, the setting's original level is loaded and its map replaced, so everything else (objects, behaviours, music, scrolling) runs exactly as in the original game: a copy of LONDON 1 plays frame for frame like LONDON 1. Under `--custom`, reaching the exit ends the run and losing every life restarts the level.
+
 ## Why no widescreen
 
 The game is shown as the original showed it: a 288x200 play area in a 320x256 PAL frame, scaled up with borders. I've left widescreen out on purpose, because the game's rules are built around that width, not just its drawing:
