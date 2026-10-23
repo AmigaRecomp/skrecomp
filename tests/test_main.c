@@ -474,6 +474,8 @@ void test_doc_new_empty(void);
 void test_check_clean_level(void);
 void test_check_start_exit_cards_crowding(void);
 void test_check_skips_the_exit_without_one_in_the_setting(void);
+void test_edit_names(void);
+void test_edit_render_matches_the_viewer(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -943,6 +945,8 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "check_clean_level", test_check_clean_level },
     { "check_start_exit_cards_crowding", test_check_start_exit_cards_crowding },
     { "check_skips_the_exit_without_one_in_the_setting", test_check_skips_the_exit_without_one_in_the_setting },
+    { "edit_names", test_edit_names },
+    { "edit_render_matches_the_viewer", test_edit_render_matches_the_viewer },
 };
 
 int main(int argc, char **argv) {
