@@ -72,7 +72,8 @@ add_executable(sk_tests
   test_custom_play.c
   test_edit_doc.c
   test_edit_check.c
-  test_edit_view.c)
+  test_edit_view.c
+  test_skld.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skedit)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -548,7 +549,9 @@ set(SK_TEST_NAMES
   check_start_exit_cards_crowding
   check_skips_the_exit_without_one_in_the_setting
   edit_names
-  edit_render_matches_the_viewer)
+  edit_render_matches_the_viewer
+  skld_args
+  playtest_leaves_the_document_alone)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

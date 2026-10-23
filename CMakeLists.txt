@@ -120,7 +120,9 @@ add_library(skedit STATIC
   src/editor/check.c
   src/editor/names.c
   src/editor/flag_label.c
-  src/editor/view.c)
+  src/editor/view.c
+  src/editor/skld_args.c
+  src/editor/playtest.c)
 target_include_directories(skedit PUBLIC src)
 target_link_libraries(skedit PUBLIC skcore)
 
