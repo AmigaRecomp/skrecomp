@@ -299,7 +299,8 @@ int main(int argc, char **argv) {
     if (!skld_args_parse(argc, argv, &a, &e)) { fprintf(stderr, "skld: %s\n%s", e.msg, skld_usage()); return 2; }
     if (a.mode == SKLD_HELP) { fputs(skld_usage(), stdout); return 0; }
     if (a.mode == SKLD_SETTINGS) {
-        for (int i = 0; i < custom_setting_count(); i++) printf("%-11s %s\n", custom_setting_at(i)->name, custom_setting_at(i)->title);
+        const char *u = skld_usage(), *from = strstr(u, "SETTING is one of"), *to = strstr(u, "\nexamples");
+        printf("%.*s", (int)(to - from), from);
         return 0;
     }
     skld *k = &g_k;

@@ -58,3 +58,11 @@ void test_playtest_leaves_the_document_alone(void) {      /* ROM-backed */
     CHECK_EQ(d.past_n, past); CHECK(d.dirty);
     custom_free(&before); doc_free(&d); scene_close(&s);
 }
+
+void test_skld_usage_lists_the_settings(void) {
+    const char *u = skld_usage();
+    CHECK_STR(u, "SETTING is one of");
+    for (int i = 0; i < custom_setting_count(); i++) { CHECK_STR(u, custom_setting_at(i)->name); CHECK_STR(u, custom_setting_at(i)->title); }
+    CHECK_STR(u, "Not available");                                /* the levels left out, and why */
+    CHECK_STR(u, "skld new london1 mylevel.skl");                 /* an example */
+}

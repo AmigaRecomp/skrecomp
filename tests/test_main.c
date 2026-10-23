@@ -478,6 +478,7 @@ void test_edit_names(void);
 void test_edit_render_matches_the_viewer(void);
 void test_skld_args(void);
 void test_playtest_leaves_the_document_alone(void);
+void test_skld_usage_lists_the_settings(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -951,6 +952,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "edit_render_matches_the_viewer", test_edit_render_matches_the_viewer },
     { "skld_args", test_skld_args },
     { "playtest_leaves_the_document_alone", test_playtest_leaves_the_document_alone },
+    { "skld_usage_lists_the_settings", test_skld_usage_lists_the_settings },
 };
 
 int main(int argc, char **argv) {

@@ -551,7 +551,8 @@ set(SK_TEST_NAMES
   edit_names
   edit_render_matches_the_viewer
   skld_args
-  playtest_leaves_the_document_alone)
+  playtest_leaves_the_document_alone
+  skld_usage_lists_the_settings)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

@@ -22,7 +22,8 @@ static const sk_setting settings[] = {
     { 23, "wildwest1", "WILDWEST 1" },    { 24, "wildwest2", "WILDWEST 2" },
     { 25, "beach1", "USA BEACH1" },       { 26, "beach2", "USA BEACH2" },
     { 27, "city1", "USA CITY1" },
-    { 36, "bonus1", "BONUS 1" }, { 37, "bonus2", "BONUS 2" }, { 38, "bonus3", "BONUS 3" }, { 39, "bonus4", "BONUS 4" }, { 40, "bonus5", "BONUS 5" },
+    { 36, "bonus1", "ENGLAND BONUS" }, { 37, "bonus2", "ITALY BONUS" }, { 38, "bonus3", "RUSSIA BONUS" },   /* each world's bonus level */
+    { 39, "bonus4", "JAPAN BONUS" },   { 40, "bonus5", "USA BONUS" },
 };
 #define N_SETTINGS (int)(sizeof settings / sizeof *settings)
 
