@@ -55,6 +55,6 @@ build/macos/skld mylevel.skl                         # open it again
 build/macos/soccerkid --custom mylevel.skl           # play it
 ```
 
-Paint with the mouse, F1 lists the keys, F5 plays the level right there. A `.skl` file only holds your map, never any of the game's data, so levels can be shared freely; whoever plays one needs their own copy of the game.
+Paint with the mouse, place whole things like a car or a post box from the Pieces tab, F1 lists the keys, F5 plays the level right there. A `.skl` file only holds your map, never any of the game's data, so levels can be shared freely; whoever plays one needs their own copy of the game.
 
 More options and details: [docs/reference.md](docs/reference.md).

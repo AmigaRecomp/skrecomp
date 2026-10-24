@@ -105,13 +105,16 @@ The window shows the map as the game draws it, with the side panel on the right:
 - **Tiles:** the setting's tiles. Painting a tile keeps the cell's object or behaviour, and gives the cell the animation state the original map uses for that tile.
 - **Objects:** the setting's enemies and objects.
 - **Specials:** the start position and the setting's cell behaviours.
+- **Pieces:** the things the original map builds from several tiles, like LONDON 1's taxi, post box and lamp post, placed whole with one click. A click puts the piece's bottom-left corner on the cell under the mouse and changes only the piece's own cells, keeping their objects and behaviours.
+
+skld finds the pieces itself from the setting's original map. Two tiles belong together when one's neighbour on a side is always the other, and the other's on the opposite side is always the one, at least twice in the map. The map's three commonest tiles (sky, wall, ground) never join anything, and pieces of fewer than three tiles are left out. Something the original places only once can't be told apart from what happens to sit next to it, so it isn't a piece; copy it from a copy of the original map instead.
 
 A cell holds one object or one behaviour, so placing one replaces the other. The checks at the bottom of the panel list what would stop the level from working (no start, no exit) and what may surprise you (several starts, a different card count from the original's, more objects on one screen than the game's 16 slots); click one to jump to it.
 
 | input | action |
 |---|---|
 | left button | paint the selection |
-| right button | erase (tiles on the Tiles tab, else objects and behaviours) |
+| right button | erase (tiles on the Tiles and Pieces tabs, else objects and behaviours) |
 | Shift + drag | fill a rectangle (right button: clear it) |
 | Alt + click | pick the tile, object or behaviour under the mouse |
 | Ctrl + drag, Ctrl+C, Ctrl+V, Del | select, copy, paste at the mouse, clear the selection |
