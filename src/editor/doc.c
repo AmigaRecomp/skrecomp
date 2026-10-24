@@ -233,3 +233,15 @@ void doc_stamp(sk_doc *d, int x, int y, int w, int h, const int16_t *tiles) {
         for (int cx = 0; cx < w; cx++)
             if (tiles[cy * w + cx] >= 0 && inside(d, x + cx, y + cy)) set_tile(d, (y + cy) * d->lvl.w + x + cx, tiles[cy * w + cx]);
 }
+
+void doc_fill_pattern(sk_doc *d, int x0, int y0, int x1, int y1, int w, int h, const int16_t *tiles) {
+    if (x0 > x1) { int t = x0; x0 = x1; x1 = t; }
+    if (y0 > y1) { int t = y0; y0 = y1; y1 = t; }
+    if (x1 < 0 || y1 < 0 || x0 >= d->lvl.w || y0 >= d->lvl.h) return;
+    begin_op(d);
+    for (int y = y0; y <= y1; y++)
+        for (int x = x0; x <= x1; x++) {
+            int t = tiles[(y - y0) % h * w + (x - x0) % w];
+            if (t >= 0 && inside(d, x, y)) set_tile(d, y * d->lvl.w + x, t);
+        }
+}

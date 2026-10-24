@@ -204,3 +204,46 @@ void edit_pieces_free(sk_pieces *p) {
     free(p->v);
     memset(p, 0, sizeof *p);
 }
+
+static bool brush(sk_piece *out, int w, int h) {
+    memset(out, 0, sizeof *out);
+    out->tiles = malloc((size_t)w * h * sizeof *out->tiles);
+    if (!out->tiles) return false;
+    out->w = w; out->h = h; out->uses = 1;
+    return true;
+}
+
+bool edit_brush_from_palette(int count, int cols, int a, int b, sk_piece *out) {
+    int c0 = a % cols, r0 = a / cols, c1 = b % cols, r1 = b / cols;
+    if (c0 > c1) { int t = c0; c0 = c1; c1 = t; }
+    if (r0 > r1) { int t = r0; r0 = r1; r1 = t; }
+    if (!brush(out, c1 - c0 + 1, r1 - r0 + 1)) return false;
+    for (int r = r0; r <= r1; r++)
+        for (int c = c0; c <= c1; c++) {
+            int t = r * cols + c;
+            out->tiles[(r - r0) * out->w + c - c0] = (int16_t)(t < count ? t : -1);
+            out->cells += t < count;
+        }
+    if (!out->cells) edit_piece_free(out);
+    return out->cells > 0;
+}
+
+bool edit_brush_from_map(const sk_custom *c, int x0, int y0, int x1, int y1, sk_piece *out) {
+    if (x0 > x1) { int t = x0; x0 = x1; x1 = t; }
+    if (y0 > y1) { int t = y0; y0 = y1; y1 = t; }
+    if (x0 < 0) x0 = 0;
+    if (y0 < 0) y0 = 0;
+    if (x1 >= c->w) x1 = c->w - 1;
+    if (y1 >= c->h) y1 = c->h - 1;
+    if (x0 > x1 || y0 > y1 || !brush(out, x1 - x0 + 1, y1 - y0 + 1)) { memset(out, 0, sizeof *out); return false; }
+    for (int y = y0; y <= y1; y++)
+        for (int x = x0; x <= x1; x++) {
+            int t = c->cells[y * c->w + x] & SK_INDEX_MASK;
+            out->tiles[(y - y0) * out->w + x - x0] = (int16_t)(t ? t : -1);
+            out->cells += t != 0;
+        }
+    if (!out->cells) edit_piece_free(out);
+    return out->cells > 0;
+}
+
+void edit_piece_free(sk_piece *p) { free(p->tiles); memset(p, 0, sizeof *p); }

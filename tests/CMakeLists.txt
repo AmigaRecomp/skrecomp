@@ -565,7 +565,10 @@ set(SK_TEST_NAMES
   edit_pieces_never_join_the_fillers
   doc_stamp_a_piece
   edit_pieces_of_london1
-  edit_pieces_grow_the_trunk)
+  edit_pieces_grow_the_trunk
+  edit_brush_from_the_palette
+  edit_brush_from_the_map
+  doc_fill_with_a_pattern)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()

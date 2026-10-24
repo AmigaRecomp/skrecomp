@@ -41,6 +41,8 @@ bool doc_copy(const sk_doc *d, int x0, int y0, int x1, int y1, sk_clip *out);
 void doc_paste(sk_doc *d, const sk_clip *c, int x, int y);
 /* A w x h block of tiles at (x, y), -1 = leave the cell; flags kept, as painting: one step, none if all outside. */
 void doc_stamp(sk_doc *d, int x, int y, int w, int h, const int16_t *tiles);
+/* The rectangle between two corners tiled with a w x h pattern from its top left corner (-1 = leave): one step. */
+void doc_fill_pattern(sk_doc *d, int x0, int y0, int x1, int y1, int w, int h, const int16_t *tiles);
 void clip_free(sk_clip *c);
 bool doc_resize(sk_doc *d, int left, int top, int right, int bottom, sk_err *e);   /* > 0 adds, < 0 removes on that side */
 bool doc_undo(sk_doc *d);

@@ -136,3 +136,44 @@ void test_edit_pieces_grow_the_trunk(void) {
     for (int i = 0; i < p.n; i++) CHECK(p.v[i].tiles[0] != 97 && p.v[i].tiles[0] != 95);
     edit_pieces_free(&p);
 }
+
+void test_edit_brush_from_the_palette(void) {
+    sk_piece b;
+    CHECK(edit_brush_from_palette(30, 13, 15, 1, &b));        /* corners in either order: columns 1..2, rows 0..1 */
+    CHECK_EQ(b.w, 2); CHECK_EQ(b.h, 2); CHECK_EQ(b.cells, 4);
+    if (b.tiles) { CHECK_EQ(b.tiles[0], 1); CHECK_EQ(b.tiles[1], 2); CHECK_EQ(b.tiles[2], 14); CHECK_EQ(b.tiles[3], 15); }
+    edit_piece_free(&b);
+    CHECK(edit_brush_from_palette(30, 13, 28, 42, &b));       /* past the last tile (41, 42): holes */
+    CHECK_EQ(b.w, 2); CHECK_EQ(b.h, 2); CHECK_EQ(b.cells, 2);
+    if (b.tiles) { CHECK_EQ(b.tiles[0], 28); CHECK_EQ(b.tiles[1], 29); CHECK_EQ(b.tiles[2], -1); CHECK_EQ(b.tiles[3], -1); }
+    edit_piece_free(&b);
+    CHECK(!edit_brush_from_palette(30, 13, 31, 35, &b));      /* nothing there */
+}
+
+void test_edit_brush_from_the_map(void) {
+    sk_custom c = {0}; sk_err e = {0};
+    CHECK(custom_alloc(&c, 4, 30, 13, &e));
+    c.cells[2 * 30 + 3] = 7 | 3 << 9; c.cells[3 * 30 + 4] = 8; c.cells[12 * 30 + 29] = 9;
+    sk_piece b;
+    CHECK(edit_brush_from_map(&c, 4, 3, 3, 2, &b));
+    CHECK_EQ(b.w, 2); CHECK_EQ(b.h, 2); CHECK_EQ(b.cells, 2);
+    if (b.tiles) { CHECK_EQ(b.tiles[0], 7); CHECK_EQ(b.tiles[1], -1); CHECK_EQ(b.tiles[2], -1); CHECK_EQ(b.tiles[3], 8); }   /* no flags */
+    edit_piece_free(&b);
+    CHECK(edit_brush_from_map(&c, 28, 11, 40, 40, &b));      /* clipped to the map */
+    CHECK_EQ(b.w, 2); CHECK_EQ(b.h, 2);
+    edit_piece_free(&b);
+    custom_free(&c);
+}
+
+void test_doc_fill_with_a_pattern(void) {
+    make_map();
+    sk_level lv; memset(&lv, 0, sizeof lv); lv.map = g_map;
+    sk_doc d; sk_err e = {0};
+    CHECK(doc_new_empty(&d, &lv, 4, 30, 13, &e));
+    const int16_t pat[2] = { 5, -1 };
+    uint16_t keep = d.lvl.cells[2 * 30 + 4];
+    doc_fill_pattern(&d, 5, 4, 3, 2, 2, 1, pat);
+    CHECK_EQ(d.lvl.cells[2 * 30 + 3] & 0x1FF, 5); CHECK_EQ(d.lvl.cells[2 * 30 + 4], keep); CHECK_EQ(d.lvl.cells[4 * 30 + 5] & 0x1FF, 5);
+    CHECK(doc_undo(&d)); CHECK_EQ(d.lvl.cells[2 * 30 + 3] & 0x1FF, 0); CHECK_EQ(d.lvl.cells[4 * 30 + 5] & 0x1FF, 0);   /* one step */
+    doc_free(&d);
+}
