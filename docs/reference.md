@@ -102,12 +102,12 @@ A level is at least 22 × 13 cells (the game's scroll buffer and view) and at mo
 
 The window shows the map as the game draws it, with the side panel on the right:
 
-- **Tiles:** the setting's tiles. Painting a tile keeps the cell's object or behaviour, and gives the cell the animation state the original map uses for that tile.
+- **Tiles:** the setting's tiles. Painting a tile keeps the cell's object or behaviour, and gives the cell the animation state the original map uses for that tile. Dragging across the tiles makes a brush of several, and so does Alt + drag on the map (its empty cells are left out). A brush goes down with its top-left corner on the mouse, repeats on its own grid while you drag, and Shift + drag fills a rectangle with it.
 - **Objects:** the setting's enemies and objects.
 - **Specials:** the start position and the setting's cell behaviours.
 - **Pieces:** the things the original map builds from several tiles, like LONDON 1's taxi, post box and lamp post, placed whole with one click. A click puts the piece's bottom-left corner on the cell under the mouse and changes only the piece's own cells, keeping their objects and behaviours.
 
-skld finds the pieces itself from the setting's original map. Two tiles belong together when one's neighbour on a side is always the other, and the other's on the opposite side is always the one, at least twice in the map. The map's three commonest tiles (sky, wall, ground) never join anything, and pieces of fewer than three tiles are left out. Something the original places only once can't be told apart from what happens to sit next to it, so it isn't a piece; copy it from a copy of the original map instead.
+skld finds the pieces itself from the setting's original map. Two tiles belong together when one's neighbour on a side is always the other, and the other's on the opposite side is always the one, at least twice in the map. The pieces then grow into the tiles around them that belong to them but repeat inside one thing, like a tree's trunk: a tile used at least twice joins where it touches a piece, as long as at least half the places it's used do and it isn't more than three times as common as the piece's tile it touches, so ground that's everywhere stays out. A grown piece bigger than 24 × 16 cells is ground after all and goes back to its parts. The map's three commonest tiles (sky, wall, ground) never join anything, and pieces of fewer than three tiles are left out. Something the original places only once can't be told apart from what happens to sit next to it, so it isn't a piece; take it from a copy of the original map with Alt + drag instead.
 
 A cell holds one object or one behaviour, so placing one replaces the other. The checks at the bottom of the panel list what would stop the level from working (no start, no exit) and what may surprise you (several starts, a different card count from the original's, more objects on one screen than the game's 16 slots); click one to jump to it.
 
@@ -117,6 +117,7 @@ A cell holds one object or one behaviour, so placing one replaces the other. The
 | right button | erase (tiles on the Tiles and Pieces tabs, else objects and behaviours) |
 | Shift + drag | fill a rectangle (right button: clear it) |
 | Alt + click | pick the tile, object or behaviour under the mouse |
+| drag on the tiles, Alt + drag on the map | a brush of several tiles |
 | Ctrl + drag, Ctrl+C, Ctrl+V, Del | select, copy, paste at the mouse, clear the selection |
 | middle drag, arrows, wheel | scroll (Shift: faster or sideways) |
 | 1 2 3, Ctrl + wheel | zoom |

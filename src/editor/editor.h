@@ -26,7 +26,7 @@
 #define ED_ISSUES_H 136             /* the checks at the bottom of the panel */
 
 enum { ED_TAB_TILES, ED_TAB_OBJECTS, ED_TAB_SPECIALS, ED_TAB_PIECES, ED_TABS };
-enum { ED_DRAG_NONE, ED_DRAG_PAINT, ED_DRAG_ERASE, ED_DRAG_FILL, ED_DRAG_SELECT, ED_DRAG_SCROLL };
+enum { ED_DRAG_NONE, ED_DRAG_PAINT, ED_DRAG_ERASE, ED_DRAG_FILL, ED_DRAG_SELECT, ED_DRAG_SCROLL, ED_DRAG_PICK };
 
 typedef struct {
     SDL_Window *win;
@@ -42,6 +42,9 @@ typedef struct {
     int cam_x, cam_y, zoom;         /* the world pixel at the view's top left */
     int tab, tile, flag, piece;     /* the selection: tile index (tiles), flag (objects, specials), piece */
     sk_pieces pieces;               /* the setting's pieces, from its original map */
+    sk_piece brush;                 /* tiles: several at once (tiles != NULL), else the one tile */
+    bool pal_drag, pal_brush;       /* the palette rectangle pal_a..pal_b is being dragged, or is the brush */
+    int pal_a, pal_b;
     bool start;                     /* specials: the start position is selected */
     int scroll[ED_TABS];            /* each tab's list scroll, in rows */
     float wheel_list, wheel_zoom;   /* trackpad wheel steps not yet whole */
@@ -61,6 +64,7 @@ void ed_view_size(const skld *k, int *w, int *h);    /* the map view in window p
 void ed_draw(skld *k);
 void ed_message(skld *k, const char *fmt, ...);
 bool ed_build_tiles(skld *k);                        /* the tile palette texture */
+int ed_tile_at(const skld *k, int x, int y, bool clamp);   /* the palette tile under a window point, -1 none */
 int ed_piece_at(const skld *k, int x, int y);         /* the piece under a window point on the panel, -1 none */
 void ed_piece_origin(const skld *k, int *x, int *y);  /* the cell for the selected piece's top left: it stands on the mouse */
 

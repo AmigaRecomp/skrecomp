@@ -87,6 +87,17 @@ static float piece_size(const sk_piece *p) {                 /* the tile size th
     return s > 32 ? 32 : s;
 }
 
+int ed_tile_at(const skld *k, int x, int y, bool clamp) {
+    int vw, vh;
+    ed_view_size(k, &vw, &vh);
+    x -= vw + 8; y -= ED_TABS_H + 4;
+    int col = x < 0 ? -1 : x / ED_TILE_CELL, row = y < 0 ? -1 : y / ED_TILE_CELL;
+    if (clamp) { col = col < 0 ? 0 : col >= ED_TILE_COLS ? ED_TILE_COLS - 1 : col; row = row < 0 ? 0 : row; }
+    if (col < 0 || row < 0 || col >= ED_TILE_COLS || y >= vh - ED_ISSUES_H - ED_TABS_H - 4) return -1;
+    int t = (row + k->scroll[ED_TAB_TILES]) * ED_TILE_COLS + col, n = k->scene.level.tiles_a.count;
+    return t < n ? t : clamp && n > 0 ? n - 1 : -1;
+}
+
 int ed_piece_at(const skld *k, int x, int y) {
     int vw, vh;
     ed_view_size(k, &vw, &vh);
@@ -174,21 +185,23 @@ static void draw_overlays(skld *k, int vw, int vh) {
                 if (k->zoom > 1 || at == 13) { snprintf(s, sizeof s, at == 13 ? "EX" : "%d", at); text_small(k, r.x + 1, r.y + r.h - 9, 0x40D0F0, s); }
             }
         }
-    if (k->has_sel || k->drag == ED_DRAG_SELECT || k->drag == ED_DRAG_FILL) {      /* the selection or the fill being dragged */
+    if (k->has_sel || k->drag == ED_DRAG_SELECT || k->drag == ED_DRAG_FILL || k->drag == ED_DRAG_PICK) {      /* the selection or the fill being dragged */
         int a = k->drag ? k->ax : k->sx0, b = k->drag ? k->ay : k->sy0, cx = k->drag ? k->cell_x : k->sx1, cy = k->drag ? k->cell_y : k->sy1;
         if (a > cx) { int t = a; a = cx; cx = t; }
         if (b > cy) { int t = b; b = cy; cy = t; }
         SDL_FRect r0, r1; cell_rect(k, a, b, &r0); cell_rect(k, cx, cy, &r1);
-        uint32_t col = k->drag == ED_DRAG_FILL ? 0xFF8040 : 0x80C0FF;
+        uint32_t col = k->drag == ED_DRAG_FILL ? 0xFF8040 : k->drag == ED_DRAG_PICK ? 0x60FF80 : 0x80C0FF;
         rect(k, r0.x, r0.y, r1.x + r1.w - r0.x, r1.y + r1.h - r0.y, col, 50, true);
         rect(k, r0.x, r0.y, r1.x + r1.w - r0.x, r1.y + r1.h - r0.y, col, 255, false);
     }
     if (k->cell_ok) {
         SDL_FRect r; cell_rect(k, k->cell_x, k->cell_y, &r);
-        if (k->tab == ED_TAB_TILES && k->tiles_tex && !k->drag) {        /* the selected tile under the mouse */
-            SDL_FRect src; tile_src(k->tile, &src);
+        if (k->tab == ED_TAB_TILES && k->tiles_tex && !k->drag) {        /* the selected tile or brush under the mouse */
             SDL_SetTextureAlphaMod(k->tiles_tex, 160);
-            SDL_RenderTexture(k->ren, k->tiles_tex, &src, &r);
+            if (k->brush.tiles) {
+                draw_piece(k, &k->brush, r.x, r.y, r.w);
+                rect(k, r.x, r.y, r.w * (float)k->brush.w, r.h * (float)k->brush.h, 0xFFFFFF, 120, false);
+            } else { SDL_FRect src; tile_src(k->tile, &src); SDL_RenderTexture(k->ren, k->tiles_tex, &src, &r); }
             SDL_SetTextureAlphaMod(k->tiles_tex, 255);
         }
         if (k->tab == ED_TAB_PIECES && k->piece < k->pieces.n && !k->drag) {   /* the piece, standing on the mouse */
@@ -228,7 +241,18 @@ static void draw_panel(skld *k, int px, int ph) {
             rect(k, x, y, 32, 32, 0x101014, 255, true);
             SDL_FRect src, dst = { x, y, 32, 32 }; tile_src(i, &src);
             if (k->tiles_tex) SDL_RenderTexture(k->ren, k->tiles_tex, &src, &dst);
-            if (i == k->tile) { rect(k, x - 1, y - 1, 34, 34, 0xFFFFFF, 255, false); rect(k, x - 2, y - 2, 36, 36, 0xFFFFFF, 255, false); }
+            if (i == k->tile && !k->brush.tiles && !k->pal_drag) { rect(k, x - 1, y - 1, 34, 34, 0xFFFFFF, 255, false); rect(k, x - 2, y - 2, 36, 36, 0xFFFFFF, 255, false); }
+        }
+        if (k->pal_drag || k->pal_brush) {                              /* the palette rectangle of the brush */
+            int c0 = k->pal_a % ED_TILE_COLS, r0 = k->pal_a / ED_TILE_COLS - k->scroll[0], c1 = k->pal_b % ED_TILE_COLS, r1 = k->pal_b / ED_TILE_COLS - k->scroll[0];
+            if (c0 > c1) { int t = c0; c0 = c1; c1 = t; }
+            if (r0 > r1) { int t = r0; r0 = r1; r1 = t; }
+            float x = (float)(px + 8 + c0 * ED_TILE_CELL), y = (float)(top + r0 * ED_TILE_CELL);
+            float w = (float)((c1 - c0 + 1) * ED_TILE_CELL - 2), h = (float)((r1 - r0 + 1) * ED_TILE_CELL - 2);
+            SDL_Rect clip = { px, top, ED_PANEL_W, bottom - top };
+            SDL_SetRenderClipRect(k->ren, &clip);
+            rect(k, x - 1, y - 1, w + 2, h + 2, 0xFFFFFF, 255, false); rect(k, x - 2, y - 2, w + 4, h + 4, 0xFFFFFF, 255, false);
+            SDL_SetRenderClipRect(k->ren, NULL);
         }
     } else if (k->tab == ED_TAB_PIECES) {
         for (int i = k->scroll[ED_TAB_PIECES] * ED_PIECE_COLS; i < k->pieces.n; i++) {
@@ -328,6 +352,8 @@ void ed_draw(skld *k) {
             "               else objects and specials",
             "Shift + drag   fill a rectangle",
             "Alt + click    pick from the map",
+            "Drag on the tiles, or Alt + drag on the map:",
+            "               a brush of several tiles",
             "Ctrl + drag    select: Ctrl+C copy, Ctrl+V paste",
             "               at the mouse, Del clear",
             "Pieces tab     a click places the whole piece,",

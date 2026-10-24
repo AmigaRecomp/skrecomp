@@ -73,7 +73,9 @@ static void apply(skld *k, int x, int y, bool erase) {       /* one cell of a pa
         doc_erase(&k->doc, x, y, layer);
         return;
     }
-    if (k->tab == ED_TAB_TILES) doc_paint(&k->doc, x, y, k->tile);
+    if (k->tab == ED_TAB_TILES && k->brush.tiles) {          /* a brush repeats on its own grid from where the stroke began */
+        if ((x - k->ax) % k->brush.w == 0 && (y - k->ay) % k->brush.h == 0) doc_stamp(&k->doc, x, y, k->brush.w, k->brush.h, k->brush.tiles);
+    } else if (k->tab == ED_TAB_TILES) doc_paint(&k->doc, x, y, k->tile);
     else if (k->tab == ED_TAB_OBJECTS ? k->flag >= 1 && k->flag <= 31 : k->flag >= 33) doc_place_flag(&k->doc, x, y, k->flag);
 }
 
@@ -95,11 +97,13 @@ static void stroke_to(skld *k, int x, int y, bool erase) {   /* every cell on th
     k->last_x = x; k->last_y = y;
 }
 
+static void single_tile(skld *k, int t) { edit_piece_free(&k->brush); k->pal_brush = false; k->tile = t; }
+
 static void pick(skld *k) {                                  /* Alt + click: the tile, object or special under the mouse */
     uint16_t w = k->doc.lvl.cells[k->cell_y * k->doc.lvl.w + k->cell_x];
     int f = w >> SK_FLAG_SHIFT;
     if (k->tab == ED_TAB_PIECES) k->tab = ED_TAB_TILES;          /* a piece cannot be picked: its tile can */
-    if (k->tab == ED_TAB_TILES) { k->tile = w & SK_INDEX_MASK; if (k->tile == SK_START_TILE) { k->tab = ED_TAB_SPECIALS; k->start = true; } return; }
+    if (k->tab == ED_TAB_TILES) { single_tile(k, w & SK_INDEX_MASK); if (k->tile == SK_START_TILE) { k->tab = ED_TAB_SPECIALS; k->start = true; } return; }
     if ((w & SK_INDEX_MASK) == SK_START_TILE) { k->tab = ED_TAB_SPECIALS; k->start = true; return; }
     if (f >= 1 && f <= 31) { k->tab = ED_TAB_OBJECTS; k->flag = f; k->start = false; }
     else if (f >= 33) { k->tab = ED_TAB_SPECIALS; k->flag = f; k->start = false; }
@@ -215,10 +219,9 @@ static void panel_click(skld *k, int x, int y) {
     }
     int top = ED_TABS_H + 4;
     if (k->tab == ED_TAB_PIECES) { int i = ed_piece_at(k, x + vw, y); if (i >= 0) k->piece = i; return; }
-    if (k->tab == ED_TAB_TILES) {
-        int col = (x - 8) / ED_TILE_CELL, row = (y - top) / ED_TILE_CELL + k->scroll[0];
-        int t = row * ED_TILE_COLS + col;
-        if (col >= 0 && col < ED_TILE_COLS && y >= top && t < k->scene.level.tiles_a.count) k->tile = t;
+    if (k->tab == ED_TAB_TILES) {                             /* a click picks a tile, a drag a rectangle of them */
+        int t = ed_tile_at(k, x + vw, y, false);
+        if (t >= 0) { k->pal_drag = true; k->pal_a = k->pal_b = t; }
         return;
     }
     int row = (y - top + 3) / ED_ROW_H + k->scroll[k->tab];
@@ -237,6 +240,7 @@ static void event(skld *k, const SDL_Event *ev) {
     case SDL_EVENT_MOUSE_MOTION:
         k->mouse_x = (int)ev->motion.x; k->mouse_y = (int)ev->motion.y; k->mouse_in = true;
         mouse_cell(k);
+        if (k->pal_drag) { int t = ed_tile_at(k, k->mouse_x, k->mouse_y, true); if (t >= 0) k->pal_b = t; }
         if (k->drag == ED_DRAG_SCROLL) {
             k->cam_x = k->drag_cx - (k->mouse_x - k->drag_mx) / k->zoom; k->cam_y = k->drag_cy - (k->mouse_y - k->drag_my) / k->zoom;
             clamp_camera(k);
@@ -257,7 +261,11 @@ static void event(skld *k, const SDL_Event *ev) {
         if (!k->cell_ok) break;
         SDL_Keymod mod = SDL_GetModState();
         k->ax = k->cell_x; k->ay = k->cell_y;
-        if (ev->button.button == SDL_BUTTON_LEFT && (mod & SDL_KMOD_ALT)) { pick(k); break; }
+        if (ev->button.button == SDL_BUTTON_LEFT && (mod & SDL_KMOD_ALT)) {
+            if (k->tab == ED_TAB_TILES) k->drag = ED_DRAG_PICK;   /* a click picks one tile, a drag a brush */
+            else pick(k);
+            break;
+        }
         if (ev->button.button == SDL_BUTTON_LEFT && (mod & (SDL_KMOD_CTRL | SDL_KMOD_GUI))) { k->drag = ED_DRAG_SELECT; k->has_sel = false; break; }
         if (ev->button.button != SDL_BUTTON_LEFT && ev->button.button != SDL_BUTTON_RIGHT) break;
         bool erase = ev->button.button == SDL_BUTTON_RIGHT;
@@ -277,12 +285,31 @@ static void event(skld *k, const SDL_Event *ev) {
         break;
     }
     case SDL_EVENT_MOUSE_BUTTON_UP:
+        if (k->pal_drag && ev->button.button == SDL_BUTTON_LEFT) {   /* the palette: one tile, or a brush of several */
+            k->pal_drag = false;
+            sk_piece b;
+            if (k->pal_a == k->pal_b) single_tile(k, k->pal_a);
+            else if (edit_brush_from_palette(k->scene.level.tiles_a.count, ED_TILE_COLS, k->pal_a, k->pal_b, &b)) {
+                single_tile(k, k->tile); k->brush = b; k->pal_brush = true;
+            }
+            break;
+        }
         if (k->drag == ED_DRAG_FILL && k->cell_ok) {
             bool erase = k->last_x == SDL_BUTTON_RIGHT;
             int layer = layer_of_tab(k);
             if (erase) doc_fill(&k->doc, k->ax, k->ay, k->cell_x, k->cell_y, layer, 0, 0);
+            else if (k->tab == ED_TAB_TILES && k->brush.tiles) doc_fill_pattern(&k->doc, k->ax, k->ay, k->cell_x, k->cell_y, k->brush.w, k->brush.h, k->brush.tiles);
             else if (k->tab == ED_TAB_TILES) doc_fill(&k->doc, k->ax, k->ay, k->cell_x, k->cell_y, SK_LAYER_TILE, k->tile, 0);
             else if (!start_selected(k)) doc_fill(&k->doc, k->ax, k->ay, k->cell_x, k->cell_y, SK_LAYER_FLAG, 0, k->flag);
+        } else if (k->drag == ED_DRAG_PICK && k->cell_ok) {
+            if (k->cell_x == k->ax && k->cell_y == k->ay) pick(k);
+            else {
+                sk_piece b;
+                if (edit_brush_from_map(&k->doc.lvl, k->ax, k->ay, k->cell_x, k->cell_y, &b)) {
+                    single_tile(k, k->tile); k->brush = b;
+                    ed_message(k, "Brush of %dx%d tiles: click or drag to place it", b.w, b.h);
+                } else ed_message(k, "Nothing there to take");
+            }
         } else if (k->drag == ED_DRAG_SELECT && k->cell_ok) {
             k->has_sel = true; k->sx0 = k->ax; k->sy0 = k->ay; k->sx1 = k->cell_x; k->sy1 = k->cell_y;
             if (k->sx0 > k->sx1) { int t = k->sx0; k->sx0 = k->sx1; k->sx1 = t; }
@@ -316,7 +343,7 @@ static void event(skld *k, const SDL_Event *ev) {
     }
     case SDL_EVENT_WINDOW_RESIZED: clamp_camera(k); break;
     case SDL_EVENT_WINDOW_MOUSE_LEAVE: k->mouse_in = false; mouse_cell(k); break;
-    case SDL_EVENT_WINDOW_FOCUS_LOST: end_drag(k); break;
+    case SDL_EVENT_WINDOW_FOCUS_LOST: end_drag(k); k->pal_drag = false; break;
     default: break;
     }
 }
@@ -414,6 +441,7 @@ int main(int argc, char **argv) {
     }
     clip_free(&k->clip);
     edit_pieces_free(&k->pieces);
+    edit_piece_free(&k->brush);
     doc_free(&k->doc);
     scene_close(&k->scene);
     if (k->map_tex) SDL_DestroyTexture(k->map_tex);
