@@ -1,5 +1,7 @@
 # Soccer Kid
 
+![The intro, the title screen with the kit designer, and the first level](docs/images/header.png)
+
 A native port of **Soccer Kid** (Krisalis Software, 1993), the Amiga AGA version, for macOS, Linux and Windows.
 
 It isn't an emulator. I disassembled the original 68000 program and rewrote its game logic in C, routine by routine: the levels, objects, bosses, the ball, the scoreboard, the world map, the title, the intro and the music replay. The pictures, sounds, music, levels and texts are read from your own copy of the game, so **no game data is in this repository**.
