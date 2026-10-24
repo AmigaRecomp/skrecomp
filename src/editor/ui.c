@@ -49,9 +49,16 @@ static void colour(skld *k, uint32_t rgb, int a) {
     SDL_SetRenderDrawColor(k->ren, (Uint8)(rgb >> 16), (Uint8)(rgb >> 8), (Uint8)rgb, (Uint8)a);
 }
 
-static void text(skld *k, float x, float y, uint32_t rgb, const char *s) {
+static void text_small(skld *k, float x, float y, uint32_t rgb, const char *s) {   /* the 8 x 8 font: labels in map cells */
     colour(k, rgb, 255);
     SDL_RenderDebugText(k->ren, x, y, s);
+}
+
+static void text(skld *k, float x, float y, uint32_t rgb, const char *s) {         /* the panel, status and boxes: twice as big */
+    colour(k, rgb, 255);
+    SDL_SetRenderScale(k->ren, ED_CHAR / 8, ED_CHAR / 8);
+    SDL_RenderDebugText(k->ren, x * 8 / ED_CHAR, y * 8 / ED_CHAR, s);
+    SDL_SetRenderScale(k->ren, 1, 1);
 }
 
 static void rect(skld *k, float x, float y, float w, float h, uint32_t rgb, int a, bool fill) {
@@ -61,6 +68,38 @@ static void rect(skld *k, float x, float y, float w, float h, uint32_t rgb, int 
 }
 
 static void tile_src(int t, SDL_FRect *r) { r->x = (float)(t % 16 * 16); r->y = (float)(t / 16 * 16); r->w = r->h = 16; }
+
+/* A piece's tiles with their top left at (x, y), each tile size pixels. */
+static void draw_piece(skld *k, const sk_piece *p, float x, float y, float size) {
+    if (!k->tiles_tex) return;
+    for (int cy = 0; cy < p->h; cy++)
+        for (int cx = 0; cx < p->w; cx++) {
+            int t = p->tiles[cy * p->w + cx];
+            if (t < 0 || t >= k->scene.level.tiles_a.count) continue;
+            SDL_FRect src, dst = { x + (float)cx * size, y + (float)cy * size, size, size };
+            tile_src(t, &src);
+            SDL_RenderTexture(k->ren, k->tiles_tex, &src, &dst);
+        }
+}
+
+static float piece_size(const sk_piece *p) {                 /* the tile size that fits a piece in its box, at most 2x */
+    float s = (float)(ED_PIECE_CELL - 8) / (float)(p->w > p->h ? p->w : p->h);
+    return s > 32 ? 32 : s;
+}
+
+int ed_piece_at(const skld *k, int x, int y) {
+    int vw, vh;
+    ed_view_size(k, &vw, &vh);
+    x -= vw + 8; y -= ED_TABS_H + 4;
+    if (x < 0 || y < 0 || y >= vh - ED_ISSUES_H - ED_TABS_H - 4) return -1;
+    int col = x / ED_PIECE_CELL, i = (y / ED_PIECE_CELL + k->scroll[ED_TAB_PIECES]) * ED_PIECE_COLS + col;
+    return col < ED_PIECE_COLS && i < k->pieces.n ? i : -1;
+}
+
+void ed_piece_origin(const skld *k, int *x, int *y) {
+    *x = k->cell_x; *y = k->cell_y;
+    if (k->piece >= 0 && k->piece < k->pieces.n) *y -= k->pieces.v[k->piece].h - 1;
+}
 
 /* The map picture: the game's renderer, then the solidity tint and the area past the map's edges. */
 static void draw_map(skld *k, int vw, int vh) {
@@ -121,18 +160,18 @@ static void draw_overlays(skld *k, int vw, int vh) {
             char s[8];
             if ((w & SK_INDEX_MASK) == SK_START_TILE) {
                 rect(k, r.x, r.y, r.w, r.h, 0x30E040, 140, true);
-                text(k, r.x + 2, r.y + 2, 0xFFFFFF, "S");
+                text_small(k, r.x + 2, r.y + 2, 0xFFFFFF, "S");
                 continue;
             }
             if (!k->overlay || !f) continue;
             if (f <= 31) {
                 rect(k, r.x, r.y, r.w, r.h, 0xFFD020, 230, false);
                 snprintf(s, sizeof s, "%d", f < (int)lv->pals_len - SK_PALS_TYPE ? lv->pals[SK_PALS_TYPE + f] : 0);
-                text(k, r.x + 1, r.y + 1, 0xFFD020, s);
+                text_small(k, r.x + 1, r.y + 1, 0xFFD020, s);
             } else if (f >= 33) {
                 rect(k, r.x, r.y, r.w, r.h, 0x40D0F0, 120, false);
                 int at = SK_PALS_ATTR + (size_t)(f - 33) < lv->pals_len ? lv->pals[SK_PALS_ATTR + f - 33] : -1;
-                if (k->zoom > 1 || at == 13) { snprintf(s, sizeof s, at == 13 ? "EX" : "%d", at); text(k, r.x + 1, r.y + r.h - 9, 0x40D0F0, s); }
+                if (k->zoom > 1 || at == 13) { snprintf(s, sizeof s, at == 13 ? "EX" : "%d", at); text_small(k, r.x + 1, r.y + r.h - 9, 0x40D0F0, s); }
             }
         }
     if (k->has_sel || k->drag == ED_DRAG_SELECT || k->drag == ED_DRAG_FILL) {      /* the selection or the fill being dragged */
@@ -152,6 +191,15 @@ static void draw_overlays(skld *k, int vw, int vh) {
             SDL_RenderTexture(k->ren, k->tiles_tex, &src, &r);
             SDL_SetTextureAlphaMod(k->tiles_tex, 255);
         }
+        if (k->tab == ED_TAB_PIECES && k->piece < k->pieces.n && !k->drag) {   /* the piece, standing on the mouse */
+            const sk_piece *p = &k->pieces.v[k->piece];
+            int ox, oy; ed_piece_origin(k, &ox, &oy);
+            SDL_FRect o; cell_rect(k, ox, oy, &o);
+            if (k->tiles_tex) SDL_SetTextureAlphaMod(k->tiles_tex, 170);
+            draw_piece(k, p, o.x, o.y, o.w);
+            if (k->tiles_tex) SDL_SetTextureAlphaMod(k->tiles_tex, 255);
+            rect(k, o.x, o.y, o.w * (float)p->w, o.h * (float)p->h, 0xFFFFFF, 120, false);
+        }
         rect(k, r.x, r.y, r.w, r.h, 0xFFFFFF, 255, false);
         if (k->frame) {                                                   /* the game's 288 x 200 view around the cell */
             int fx = k->cell_x * 16 - 144, fy = k->cell_y * 16 - 100;
@@ -162,11 +210,11 @@ static void draw_overlays(skld *k, int vw, int vh) {
 
 static void draw_panel(skld *k, int px, int ph) {
     rect(k, (float)px, 0, ED_PANEL_W, (float)ph, 0x26262C, 255, true);
-    static const char *const names[ED_TABS] = { "Tiles", "Objects", "Specials" };
+    static const char *const names[ED_TABS] = { "Tiles", "Objects", "Specials", "Pieces" };
     for (int t = 0; t < ED_TABS; t++) {
-        float x = (float)(px + 8 + t * 102);
-        rect(k, x, 6, 98, 20, t == k->tab ? 0x4A5A8A : 0x34343C, 255, true);
-        text(k, x + 49 - (float)strlen(names[t]) * 4, 12, 0xFFFFFF, names[t]);
+        float x = (float)(px + 8 + t % 2 * (ED_TAB_W + 8)), y = (float)(6 + t / 2 * (ED_TAB_H + 6));
+        rect(k, x, y, ED_TAB_W, ED_TAB_H, t == k->tab ? 0x4A5A8A : 0x34343C, 255, true);
+        text(k, x + (float)(ED_TAB_W - (int)strlen(names[t]) * ED_CHAR) / 2, y + (ED_TAB_H - ED_CHAR) / 2, 0xFFFFFF, names[t]);
     }
     int top = ED_TABS_H + 4, bottom = ph - ED_ISSUES_H;
     const sk_level *lv = &k->scene.level;
@@ -182,6 +230,18 @@ static void draw_panel(skld *k, int px, int ph) {
             if (k->tiles_tex) SDL_RenderTexture(k->ren, k->tiles_tex, &src, &dst);
             if (i == k->tile) { rect(k, x - 1, y - 1, 34, 34, 0xFFFFFF, 255, false); rect(k, x - 2, y - 2, 36, 36, 0xFFFFFF, 255, false); }
         }
+    } else if (k->tab == ED_TAB_PIECES) {
+        for (int i = k->scroll[ED_TAB_PIECES] * ED_PIECE_COLS; i < k->pieces.n; i++) {
+            int row = i / ED_PIECE_COLS - k->scroll[ED_TAB_PIECES];
+            float x = (float)(px + 8 + i % ED_PIECE_COLS * ED_PIECE_CELL), y = (float)(top + row * ED_PIECE_CELL);
+            if (y + ED_PIECE_CELL > (float)bottom) break;
+            const sk_piece *p = &k->pieces.v[i];
+            float size = piece_size(p), bw = ED_PIECE_CELL - 4;
+            rect(k, x, y, bw, bw, 0x101014, 255, true);
+            draw_piece(k, p, x + (bw - size * (float)p->w) / 2, y + (bw - size * (float)p->h) / 2, size);
+            if (i == k->piece) { rect(k, x - 1, y - 1, bw + 2, bw + 2, 0xFFFFFF, 255, false); rect(k, x - 2, y - 2, bw + 4, bw + 4, 0xFFFFFF, 255, false); }
+        }
+        if (!k->pieces.n) text(k, (float)px + 8, (float)top, 0xA0A0A0, "(none found)");
     } else {
         int n = k->tab == ED_TAB_OBJECTS ? k->n_markers : k->n_attrs + 1;
         for (int i = k->scroll[k->tab]; i < n; i++) {
@@ -202,8 +262,8 @@ static void draw_panel(skld *k, int px, int ph) {
                 snprintf(s, sizeof s, "%2d %s", f, l);
                 sel = !k->start && k->flag == f;
             }
-            if (sel) rect(k, (float)px + 4, y - 3, ED_PANEL_W - 8, ED_ROW_H, 0x4A5A8A, 255, true);
-            s[38] = 0;
+            if (sel) rect(k, (float)px + 4, y - 4, ED_PANEL_W - 8, ED_ROW_H, 0x4A5A8A, 255, true);
+            s[(ED_PANEL_W - 16) / ED_CHAR] = 0;
             text(k, (float)px + 8, y, k->tab == ED_TAB_OBJECTS ? 0xFFE070 : 0x90E0FF, s);
         }
         if (n == (k->tab == ED_TAB_OBJECTS ? 0 : 1)) text(k, (float)px + 8, (float)top, 0xA0A0A0, "(none in this setting)");
@@ -212,8 +272,8 @@ static void draw_panel(skld *k, int px, int ph) {
     if (!k->n_issues) text(k, (float)px + 8, (float)bottom + 8, 0x80E080, "No problems found");
     for (int i = 0; i < k->n_issues && i < 6; i++) {
         snprintf(s, sizeof s, "%s", k->issues[i].text);
-        s[38] = 0;
-        text(k, (float)px + 8, (float)(bottom + 8 + i * 12), k->issues[i].error ? 0xFF6060 : 0xFFB040, s);
+        s[(ED_PANEL_W - 16) / ED_CHAR] = 0;
+        text(k, (float)px + 8, (float)(bottom + 8 + i * ED_ISSUE_H), k->issues[i].error ? 0xFF6060 : 0xFFB040, s);
     }
 }
 
@@ -221,26 +281,30 @@ static void draw_status(skld *k, int ww, int wh) {
     rect(k, 0, (float)(wh - ED_STATUS_H), (float)ww, ED_STATUS_H, 0x18181C, 255, true);
     char s[300], l[64] = "";
     const sk_custom *c = &k->doc.lvl;
+    int hover = k->tab == ED_TAB_PIECES ? ed_piece_at(k, k->mouse_x, k->mouse_y) : -1;
     if (k->msg[0] && SDL_GetTicks() < k->msg_until) snprintf(s, sizeof s, "%s", k->msg);
-    else if (k->cell_ok && k->cell_x < c->w && k->cell_y < c->h) {
+    else if (hover >= 0) {
+        const sk_piece *p = &k->pieces.v[hover];
+        snprintf(s, sizeof s, "Piece %dx%d, %d tiles, %d in the original", p->w, p->h, p->cells, p->uses);
+    } else if (k->cell_ok && k->cell_x < c->w && k->cell_y < c->h) {
         uint16_t w = c->cells[k->cell_y * c->w + k->cell_x];
         edit_flag_label(&k->scene.level, w >> SK_FLAG_SHIFT, l, sizeof l);
         snprintf(s, sizeof s, "%d,%d  tile %03X  %s", k->cell_x, k->cell_y, w & SK_INDEX_MASK, (w & SK_INDEX_MASK) == SK_START_TILE ? "start" : l);
     } else s[0] = 0;
-    text(k, 8, (float)(wh - ED_STATUS_H + 7), 0xE0E0E0, s);
+    text(k, 8, (float)(wh - ED_STATUS_H + 9), 0xE0E0E0, s);
     int objects = 0;
     for (int i = 0; i < c->w * c->h; i++) { int f = c->cells[i] >> SK_FLAG_SHIFT; objects += f >= 1 && f <= 31; }
     snprintf(s, sizeof s, "%dx%d  %d objects  zoom %d  F1 help", c->w, c->h, objects, k->zoom);
-    text(k, (float)(ww - 8 - (int)strlen(s) * 8), (float)(wh - ED_STATUS_H + 7), 0x9090A0, s);
+    text(k, (float)(ww - 8 - (int)strlen(s) * ED_CHAR), (float)(wh - ED_STATUS_H + 9), 0x9090A0, s);
 }
 
 static void draw_box(skld *k, int ww, int wh, const char *const *lines, int n) {
     int w = 0;
     for (int i = 0; i < n; i++) if ((int)strlen(lines[i]) > w) w = (int)strlen(lines[i]);
-    float bw = (float)(w * 8 + 32), bh = (float)(n * 14 + 24), x = ((float)ww - bw) / 2, y = ((float)wh - bh) / 2;
+    float bw = (float)(w * ED_CHAR + 32), bh = (float)(n * (ED_CHAR + 6) + 24), x = ((float)ww - bw) / 2, y = ((float)wh - bh) / 2;
     rect(k, x, y, bw, bh, 0x1C1C24, 240, true);
     rect(k, x, y, bw, bh, 0x8080A0, 255, false);
-    for (int i = 0; i < n; i++) text(k, x + 16, y + 12 + (float)(i * 14), i == 0 ? 0xFFFFFF : 0xD0D0D8, lines[i]);
+    for (int i = 0; i < n; i++) text(k, x + 16, y + 12 + (float)(i * (ED_CHAR + 6)), i == 0 ? 0xFFFFFF : 0xD0D0D8, lines[i]);
 }
 
 void ed_draw(skld *k) {
@@ -259,17 +323,26 @@ void ed_draw(skld *k) {
     if (k->help) {
         static const char *const help[] = {
             "skld keys",
-            "Left button        paint the selection (a tile, an object, a special)",
-            "Right button       erase (tiles on the Tiles tab, else objects and specials)",
-            "Shift + drag       fill a rectangle      Alt + click   pick from the map",
-            "Ctrl + drag        select    Ctrl+C copy    Ctrl+V paste at the mouse    Del clear",
-            "Middle drag, arrows, wheel   scroll       Ctrl + wheel, 1 2 3   zoom",
-            "Ctrl+Z / Ctrl+Y    undo / redo           Ctrl+S   save",
-            "Ctrl+arrow         add a column or row on that side (with Shift: remove one)",
-            "Tab                next panel tab        G grid   O objects and specials   B solid parts",
-            "V                  the game's view around the mouse",
-            "F5                 play from the start   Shift+F5   play from the mouse (Esc returns)",
-            "Ctrl+Q             quit",
+            "Left button    paint the selection",
+            "Right button   erase: tiles on Tiles and Pieces,",
+            "               else objects and specials",
+            "Shift + drag   fill a rectangle",
+            "Alt + click    pick from the map",
+            "Ctrl + drag    select: Ctrl+C copy, Ctrl+V paste",
+            "               at the mouse, Del clear",
+            "Pieces tab     a click places the whole piece,",
+            "               standing on the mouse",
+            "Middle drag, arrows, wheel   scroll",
+            "Ctrl + wheel, 1 2 3          zoom",
+            "Ctrl+Z, Ctrl+Y undo, redo     Ctrl+S save",
+            "Ctrl+arrow     add a column or row on that side",
+            "               (with Shift: remove one)",
+            "Tab            next panel tab",
+            "G grid   O objects   B solid parts",
+            "V              the game's view around the mouse",
+            "F5             play from the start",
+            "Shift+F5       play from the mouse (Esc returns)",
+            "Ctrl+Q         quit",
         };
         draw_box(k, ww, wh, help, (int)(sizeof help / sizeof *help));
     }
