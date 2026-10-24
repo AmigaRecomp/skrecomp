@@ -58,3 +58,9 @@ build/macos/soccerkid --custom mylevel.skl           # play it
 Paint with the mouse, place whole things like a car or a post box from the Pieces tab, F1 lists the keys, F5 plays the level right there. A `.skl` file only holds your map, never any of the game's data, so levels can be shared freely; whoever plays one needs their own copy of the game.
 
 More options and details: [docs/reference.md](docs/reference.md).
+
+## License
+
+The port's code is free software under the GNU General Public License, version 3 or (at your option) any later version: see [LICENSE](LICENSE). You can share and change it, as long as what you share stays under the same terms with its source.
+
+That covers my code only. Soccer Kid itself, its pictures, sounds, music, levels and texts belong to their owners and aren't part of this repository or its license; you need your own copy of the game to play.
