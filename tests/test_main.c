@@ -485,6 +485,10 @@ void test_custom_round_trip_through_the_file_plays_the_same(void);
 void test_playtest_game_over_returns(void);
 void test_doc_move_start(void);
 void test_present_rows_clamps_a_sky_offset_above_the_table(void);
+void test_edit_pieces_found_from_the_map(void);
+void test_edit_pieces_small_ones_on_request(void);
+void test_edit_pieces_never_join_the_fillers(void);
+void test_doc_stamp_a_piece(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -965,6 +969,10 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "playtest_game_over_returns", test_playtest_game_over_returns },
     { "doc_move_start", test_doc_move_start },
     { "present_rows_clamps_a_sky_offset_above_the_table", test_present_rows_clamps_a_sky_offset_above_the_table },
+    { "edit_pieces_found_from_the_map", test_edit_pieces_found_from_the_map },
+    { "edit_pieces_small_ones_on_request", test_edit_pieces_small_ones_on_request },
+    { "edit_pieces_never_join_the_fillers", test_edit_pieces_never_join_the_fillers },
+    { "doc_stamp_a_piece", test_doc_stamp_a_piece },
 };
 
 int main(int argc, char **argv) {

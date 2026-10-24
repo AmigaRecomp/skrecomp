@@ -225,3 +225,11 @@ static bool swap_from(sk_doc *d, sk_custom *from, int *from_n, sk_custom *to, in
 
 bool doc_undo(sk_doc *d) { return swap_from(d, d->past, &d->past_n, d->future, &d->future_n); }
 bool doc_redo(sk_doc *d) { return swap_from(d, d->future, &d->future_n, d->past, &d->past_n); }
+
+void doc_stamp(sk_doc *d, int x, int y, int w, int h, const int16_t *tiles) {
+    if (x >= d->lvl.w || y >= d->lvl.h || x + w <= 0 || y + h <= 0) return;
+    begin_op(d);
+    for (int cy = 0; cy < h; cy++)
+        for (int cx = 0; cx < w; cx++)
+            if (tiles[cy * w + cx] >= 0 && inside(d, x + cx, y + cy)) set_tile(d, (y + cy) * d->lvl.w + x + cx, tiles[cy * w + cx]);
+}

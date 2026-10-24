@@ -1,0 +1,83 @@
+#include <string.h>
+#include "check.h"
+#include "editor/doc.h"
+#include "editor/pieces.h"
+
+/* A 30 x 13 map: tiles 1, 2, 3 are the fillers (sky, wall, ground); the rest are placed on top of them. */
+static uint16_t g_cells[30 * 13];
+static sk_tilemap g_map = { 30, 13, g_cells, NULL };
+static void put(int x, int y, int t) { g_cells[y * 30 + x] = (uint16_t)t; }
+static void make_map(void) {
+    for (int i = 0; i < 30 * 13; i++) g_cells[i] = (uint16_t)(i / 30 < 9 ? 1 : i / 30 < 11 ? 2 : 3);
+    for (int i = 0; i < 2; i++) {
+        int x = 2 + i * 6;
+        put(x, 5, 10); put(x + 1, 5, 11); put(x, 6, 12); put(x + 1, 6, 13);        /* a 2 x 2 car, twice */
+        put(x, 1, 20); put(x, 2, 21); put(x + 1, 2, 22);                            /* an L of three cells, twice */
+        put(x, 8, 50); put(x + 1, 8, 51);                                            /* two cells, twice */
+        for (int j = 0; j < 4; j++) put(20 + j, 1 + i * 2, 80);                      /* a run of one tile, twice */
+        put(20, 6 + i, 0x1FF | 3 << 9); put(21, 6 + i, 60);                          /* the start (flagged) beside 60 */
+    }
+    put(16, 5, 30); put(17, 5, 31);                                                  /* once: not a piece */
+    put(20, 9, 40); put(21, 9, 41); put(24, 9, 40); put(25, 9, 42);                  /* 40's neighbour varies */
+}
+
+static const sk_piece *find(const sk_pieces *p, int corner) {
+    for (int i = 0; i < p->n; i++) if (p->v[i].tiles[0] == corner) return &p->v[i];
+    return NULL;
+}
+
+void test_edit_pieces_found_from_the_map(void) {
+    make_map();
+    sk_pieces p;
+    CHECK(edit_find_pieces(&g_map, 3, &p));
+    CHECK_EQ(p.n, 2);
+    const sk_piece *car = find(&p, 10), *l = find(&p, 20);
+    CHECK(car && l);
+    if (car) {
+        CHECK_EQ(car->w, 2); CHECK_EQ(car->h, 2); CHECK_EQ(car->cells, 4); CHECK_EQ(car->uses, 2);
+        CHECK_EQ(car->tiles[1], 11); CHECK_EQ(car->tiles[2], 12); CHECK_EQ(car->tiles[3], 13);
+        CHECK(car == &p.v[0]);                                                        /* largest first */
+    }
+    if (l) { CHECK_EQ(l->w, 2); CHECK_EQ(l->h, 2); CHECK_EQ(l->cells, 3); CHECK_EQ(l->tiles[1], -1); CHECK_EQ(l->tiles[3], 22); }
+    edit_pieces_free(&p);
+    CHECK_EQ(p.n, 0);
+}
+
+void test_edit_pieces_small_ones_on_request(void) {
+    make_map();
+    sk_pieces p;
+    CHECK(edit_find_pieces(&g_map, 2, &p));
+    CHECK_EQ(p.n, 3);                                     /* 50 51 as well; never 30 31, 40 41, the run of 80 or the start */
+    CHECK(find(&p, 50) != NULL);
+    CHECK(find(&p, 30) == NULL); CHECK(find(&p, 40) == NULL); CHECK(find(&p, 80) == NULL); CHECK(find(&p, 0x1FF) == NULL);
+    edit_pieces_free(&p);
+}
+
+void test_edit_pieces_never_join_the_fillers(void) {
+    make_map();
+    for (int x = 0; x < 30; x++) put(x, 12, x % 2 ? 3 : 2);                       /* 2 and 3 alternate: always each other */
+    sk_pieces p;
+    CHECK(edit_find_pieces(&g_map, 2, &p));
+    for (int i = 0; i < p.n; i++) CHECK(p.v[i].tiles[0] != 2 && p.v[i].tiles[0] != 3);
+    edit_pieces_free(&p);
+}
+
+void test_doc_stamp_a_piece(void) {
+    make_map();
+    sk_level lv; memset(&lv, 0, sizeof lv); lv.map = g_map;
+    sk_doc d; sk_err e = {0};
+    CHECK(doc_new_empty(&d, &lv, 4, 30, 13, &e));
+    doc_place_flag(&d, 6, 4, 3);
+    const int16_t l[4] = { 20, -1, 21, 22 };
+    uint16_t before = d.lvl.cells[3 * 30 + 6];
+    doc_stamp(&d, 5, 3, 2, 2, l);
+    CHECK_EQ(d.lvl.cells[3 * 30 + 5], 20); CHECK_EQ(d.lvl.cells[3 * 30 + 6], before);   /* the hole left alone */
+    CHECK_EQ(d.lvl.cells[4 * 30 + 5], 21); CHECK_EQ(d.lvl.cells[4 * 30 + 6], 3 << 9 | 22);   /* the marker kept */
+    uint16_t corner = d.lvl.cells[12 * 30 + 29];
+    doc_stamp(&d, 29, 12, 2, 2, l);                                                        /* clipped at the edge */
+    CHECK_EQ(d.lvl.cells[12 * 30 + 29] & 0x1FF, 20);
+    doc_stamp(&d, 40, 40, 2, 2, l);                                                        /* outside: no step */
+    CHECK(doc_undo(&d)); CHECK_EQ(d.lvl.cells[12 * 30 + 29], corner);
+    CHECK(doc_undo(&d)); CHECK_EQ(d.lvl.cells[3 * 30 + 5], 0); CHECK_EQ(d.lvl.cells[4 * 30 + 6], 3 << 9);   /* one step each */
+    doc_free(&d);
+}

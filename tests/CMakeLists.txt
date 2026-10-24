@@ -73,7 +73,8 @@ add_executable(sk_tests
   test_edit_doc.c
   test_edit_check.c
   test_edit_view.c
-  test_skld.c)
+  test_skld.c
+  test_edit_pieces.c)
 target_include_directories(sk_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(sk_tests PRIVATE skedit)
 target_compile_definitions(sk_tests PRIVATE SK_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/")
@@ -558,7 +559,11 @@ set(SK_TEST_NAMES
   custom_round_trip_through_the_file_plays_the_same
   playtest_game_over_returns
   doc_move_start
-  present_rows_clamps_a_sky_offset_above_the_table)
+  present_rows_clamps_a_sky_offset_above_the_table
+  edit_pieces_found_from_the_map
+  edit_pieces_small_ones_on_request
+  edit_pieces_never_join_the_fillers
+  doc_stamp_a_piece)
 foreach(t ${SK_TEST_NAMES})
   add_test(NAME ${t} COMMAND sk_tests ${t})
 endforeach()
