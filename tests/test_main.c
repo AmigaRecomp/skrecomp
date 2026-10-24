@@ -490,6 +490,7 @@ void test_edit_pieces_small_ones_on_request(void);
 void test_edit_pieces_never_join_the_fillers(void);
 void test_doc_stamp_a_piece(void);
 void test_edit_pieces_of_london1(void);
+void test_edit_pieces_grow_the_trunk(void);
 static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "sk_fail_formats_and_returns_false", test_sk_fail_formats_and_returns_false },
     { "bk_unpacks_literal_fixture", test_bk_unpacks_literal_fixture },
@@ -975,6 +976,7 @@ static const struct { const char *name; void (*fn)(void); } tests[] = {
     { "edit_pieces_never_join_the_fillers", test_edit_pieces_never_join_the_fillers },
     { "doc_stamp_a_piece", test_doc_stamp_a_piece },
     { "edit_pieces_of_london1", test_edit_pieces_of_london1 },
+    { "edit_pieces_grow_the_trunk", test_edit_pieces_grow_the_trunk },
 };
 
 int main(int argc, char **argv) {

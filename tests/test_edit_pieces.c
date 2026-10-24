@@ -24,6 +24,19 @@ static void make_map(void) {
     put(20, 9, 40); put(21, 9, 41); put(24, 9, 40); put(25, 9, 42);                  /* 40's neighbour varies */
 }
 
+/* Growing: a 2-wide crown (93 94) on a trunk of 92s, twice, a one-off crown (95) on 92 once, and 97 scattered
+   7 times, once beside a crown: the trunk joins its crowns, 97 does not. */
+static void make_trees(void) {
+    make_map();
+    for (int i = 0; i < 2; i++) {
+        int x = 14 + i * 5;
+        put(x, 4, 93); put(x + 1, 4, 94); put(x, 5, 92); put(x, 6, 92 + i * 4);      /* trunk 92 92, then 92 96 */
+    }
+    put(26, 4, 95); put(26, 5, 92);
+    put(15, 5, 97);
+    for (int j = 0; j < 6; j++) put(j * 4 + 1, 10, 97);
+}
+
 static const sk_piece *find(const sk_pieces *p, int corner) {
     for (int i = 0; i < p->n; i++) if (p->v[i].tiles[0] == corner) return &p->v[i];
     return NULL;
@@ -92,9 +105,34 @@ void test_edit_pieces_of_london1(void) {                  /* ROM-backed: the sam
     static sk_scene s; sk_err e = {0};
     CHECK(scene_open(&s, &base, &e));
     sk_pieces p;
-    CHECK(edit_find_pieces(&s.level.map, 2, &p));
-    CHECK_EQ(p.n, 44);
-    if (p.n) { CHECK_EQ(p.v[0].w, 9); CHECK_EQ(p.v[0].h, 4); CHECK_EQ(p.v[0].uses, 5); }   /* the black taxi */
+    CHECK(edit_find_pieces(&s.level.map, 3, &p));
+    CHECK_EQ(p.n, 37);
+    if (p.n) { CHECK_EQ(p.v[0].w, 19); CHECK_EQ(p.v[0].h, 13); }                         /* the bus */
+    bool tree = false, taxi = false;
+    for (int i = 0; i < p.n; i++) {
+        bool crown = false, trunk = false;
+        for (int j = 0; j < p.v[i].w * p.v[i].h; j++) { crown |= p.v[i].tiles[j] == 0x199; trunk |= p.v[i].tiles[j] == 0x184; }
+        tree |= crown && trunk;
+        taxi |= p.v[i].w == 9 && p.v[i].h == 4 && p.v[i].uses == 4;
+    }
+    CHECK(tree); CHECK(taxi);                                                               /* the tree with its trunk */
     edit_pieces_free(&p);
     scene_close(&s);
+}
+
+void test_edit_pieces_grow_the_trunk(void) {
+    make_trees();
+    sk_pieces p;
+    CHECK(edit_find_pieces(&g_map, 3, &p));
+    const sk_piece *a = NULL, *b = NULL;
+    for (int i = 0; i < p.n; i++) if (p.v[i].tiles[0] == 93) { if (!a) a = &p.v[i]; else b = &p.v[i]; }
+    CHECK(a && b);
+    if (a && b) {
+        const sk_piece *two = a->h == 3 ? a : b, *one = a->h == 3 ? b : a;                 /* 96 is used once: not grown */
+        CHECK_EQ(two->w, 2); CHECK_EQ(two->h, 3); CHECK_EQ(two->tiles[2], 92); CHECK_EQ(two->tiles[4], 92);
+        CHECK_EQ(two->tiles[3], -1); CHECK_EQ(two->tiles[5], -1);                         /* 97 stays out */
+        CHECK_EQ(one->h, 2); CHECK_EQ(one->tiles[2], 92); CHECK_EQ(one->tiles[3], -1);
+    }
+    for (int i = 0; i < p.n; i++) CHECK(p.v[i].tiles[0] != 97 && p.v[i].tiles[0] != 95);
+    edit_pieces_free(&p);
 }
