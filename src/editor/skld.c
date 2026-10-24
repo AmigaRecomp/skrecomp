@@ -384,8 +384,11 @@ int main(int argc, char **argv) {
     k->zoom = 2; k->overlay = true; k->running = true; k->tile = 1;
     for (int i = 0; i < k->doc.lvl.w * k->doc.lvl.h; i++)       /* the view starts at the start position */
         if ((k->doc.lvl.cells[i] & SK_INDEX_MASK) == SK_START_TILE) { k->cam_x = (i % k->doc.lvl.w) * 16 - 64; k->cam_y = (i / k->doc.lvl.w) * 16 - 160; break; }
+    SDL_SetHint(SDL_HINT_FORCE_RAISEWINDOW, "1");                    /* started from a terminal: take the focus */
+    SDL_SetHint(SDL_HINT_WINDOW_ACTIVATE_WHEN_RAISED, "1");
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) { fprintf(stderr, "skld: SDL: %s\n", SDL_GetError()); return 1; }
     k->win = SDL_CreateWindow("skld", 1280, 800, SDL_WINDOW_RESIZABLE);
+    if (k->win) SDL_RaiseWindow(k->win);
     k->ren = k->win ? SDL_CreateRenderer(k->win, NULL) : NULL;
     if (!k->ren) { fprintf(stderr, "skld: SDL: %s\n", SDL_GetError()); return 1; }
     SDL_SetWindowMinimumSize(k->win, 1000, 640);
