@@ -1,5 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "check.h"
+#include "app/scene.h"
 #include "editor/doc.h"
 #include "editor/pieces.h"
 
@@ -80,4 +83,18 @@ void test_doc_stamp_a_piece(void) {
     CHECK(doc_undo(&d)); CHECK_EQ(d.lvl.cells[12 * 30 + 29], corner);
     CHECK(doc_undo(&d)); CHECK_EQ(d.lvl.cells[3 * 30 + 5], 0); CHECK_EQ(d.lvl.cells[4 * 30 + 6], 3 << 9);   /* one step each */
     doc_free(&d);
+}
+
+void test_edit_pieces_of_london1(void) {                  /* ROM-backed: the same pieces as the survey in re/ */
+    const char *roms = getenv("SOCCERKID_ROMS");
+    if (!roms) { puts("skipped: SOCCERKID_ROMS not set"); return; }
+    sk_args base = { .roms = roms, .level = 4, .scale = 1, .section = -1, .near_type = -1, .cup = -1 };
+    static sk_scene s; sk_err e = {0};
+    CHECK(scene_open(&s, &base, &e));
+    sk_pieces p;
+    CHECK(edit_find_pieces(&s.level.map, 2, &p));
+    CHECK_EQ(p.n, 44);
+    if (p.n) { CHECK_EQ(p.v[0].w, 9); CHECK_EQ(p.v[0].h, 4); CHECK_EQ(p.v[0].uses, 5); }   /* the black taxi */
+    edit_pieces_free(&p);
+    scene_close(&s);
 }
